@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘 뭐 입지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4eee6;
+    --card: #fffdf9;
+    --text: #3a2f27;
+    --muted: #8c7f72;
+    --line: #e7ddd0;
+    --accent: #b0603f;
+    --accent-text: #ffffff;
+    --chip: #efe5d8;
+    --warn-bg: #f8e6d6;
+    --warn-text: #8a4b2a;
+    --bar: #c9906f;
+    --sw-border: rgba(0, 0, 0, .15);
+    --shadow: 0 1px 2px rgba(80, 55, 30, .06), 0 8px 24px rgba(80, 55, 30, .07);
+    --shadow-hover: 0 2px 4px rgba(80, 55, 30, .08), 0 16px 36px rgba(80, 55, 30, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1e1a17; --card: #29231f; --text: #f1e9df; --muted: #a8998a; --line: #3b332c;
+      --accent: #e09a76; --accent-text: #1e1a17; --chip: #3a312a; --warn-bg: #3d2c20; --warn-text: #f0c09a; --bar: #e09a76;
+      --sw-border: rgba(255, 255, 255, .3);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+      --shadow-hover: 0 2px 4px rgba(0, 0, 0, .35), 0 16px 36px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1e1a17; --card: #29231f; --text: #f1e9df; --muted: #a8998a; --line: #3b332c;
+    --accent: #e09a76; --accent-text: #1e1a17; --chip: #3a312a; --warn-bg: #3d2c20; --warn-text: #f0c09a; --bar: #e09a76;
+    --sw-border: rgba(255, 255, 255, .3);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+    --shadow-hover: 0 2px 4px rgba(0, 0, 0, .35), 0 16px 36px rgba(0, 0, 0, .35);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    line-height: 1.6;
+  }
+  main { max-width: 1080px; margin: 0 auto; padding: 40px 16px 72px; }
+  h1, h2, .serif { font-family: "Gowun Batang", "Nanum Myeongjo", serif; font-weight: 700; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.15; margin: 4px 0 8px; }
+  h2 { font-size: 1.35rem; margin: 0 0 12px; }
+  h3 { font-size: 0.95rem; margin: 20px 0 10px; }
+  .eyebrow { font-size: 0.75rem; letter-spacing: 0.2em; color: var(--accent); font-weight: 700; }
+  .subtitle { color: var(--muted); margin: 0; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  a { color: var(--accent); }
+  .card {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  button, select, input { font: inherit; color: var(--text); }
+  select, input[type="text"] {
+    padding: 9px 14px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+  .btn {
+    padding: 9px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s ease, opacity .15s ease;
+  }
+  .btn:hover { opacity: .9; }
+  .btn:active { transform: scale(.97); }
+  .btn.ghost { background: var(--chip); color: var(--text); font-weight: 500; }
+  .chip {
+    display: inline-block;
+    padding: 5px 14px;
+    margin: 0 6px 8px 0;
+    border-radius: 999px;
+    background: var(--chip);
+    border: 0;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  button.chip:hover, a.chip:hover { background: var(--line); }
+  .chip.static { cursor: default; }
+  .chip.on { background: var(--text); color: var(--card); }
+  .sw {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    vertical-align: -2px;
+    margin-right: 6px;
+    border: 1px solid var(--sw-border);
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  /* 머리말 + 날씨 */
+  .hero { display: grid; grid-template-columns: 1fr minmax(260px, 340px); gap: 20px; align-items: end; margin-bottom: 28px; }
+  .weather-card { margin: 0; padding: 20px 22px; }
+  .weather { display: flex; gap: 16px; align-items: center; }
+  .temp-big { font-family: "Gowun Batang", serif; font-size: 3.4rem; font-weight: 700; line-height: 1; }
+  .weather-info { flex: 1; min-width: 0; font-size: 0.9rem; }
+  .weather-card .row { margin-top: 10px; }
+  .weather-card select, .weather-card .btn { padding: 6px 12px; font-size: 0.85rem; }
+  .slider-row { margin-top: 14px; display: flex; gap: 10px; align-items: center; font-size: 0.85rem; }
+  .slider-row input { flex: 1; accent-color: var(--accent); min-width: 0; }
+  .guide { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); font-size: 0.88rem; }
+  .guide .chip { font-size: 0.8rem; padding: 3px 10px; margin-bottom: 4px; }
+
+  /* 검색 */
+  .search-card { padding: 28px; }
+  .search {
+    display: flex; align-items: center;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 6px 6px 22px;
+    transition: border-color .15s ease;
+  }
+  .search:focus-within { border-color: var(--accent); }
+  .search input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 10px 0; font-size: 1.05rem; outline: none; }
+  .search .btn { padding: 12px 22px; }
+  .examples { margin-top: 16px; }
+  .search-opts { display: flex; flex-wrap: wrap; gap: 4px 20px; align-items: center; margin-top: 4px; }
+  .search-opts summary { font-weight: 500; cursor: pointer; }
+  #wordHelp p { margin: 6px 0; }
+
+  /* 결과: 보드 머리 */
+  .board-head { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .board-head .big-sw { width: 72px; height: 72px; border-radius: 50%; border: 4px solid var(--card); box-shadow: 0 0 0 1px var(--line); flex: none; }
+  .board-head h2 { margin: 0; font-size: 1.6rem; }
+  .warn { margin-top: 14px; padding: 12px 16px; border-radius: 16px; background: var(--warn-bg); color: var(--warn-text); font-size: 0.92rem; }
+  .ext { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .ext .muted { margin-right: 4px; }
+  a.chip { color: var(--text); text-decoration: none; margin: 0; }
+
+  /* 결과: 무드보드 핀 */
+  /* 추천은 4개뿐이라 칸을 세로로 채우는 columns 대신 가로로 채우는 grid를 쓴다 */
+  .combos { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; align-items: stretch; margin-top: 8px; }
+  .pin {
+    margin: 0;
+    display: flex; flex-direction: column;
+    background: var(--card);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .pin:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+  .pin-visual { position: relative; padding: 26px 16px 18px; }
+  .pin-visual svg { display: block; width: 128px; height: 176px; margin: 0 auto; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .12)); }
+  .pin-no { position: absolute; top: 12px; left: 16px; font-family: "Gowun Batang", serif; font-weight: 700; font-size: 0.95rem; color: var(--text); opacity: .55; }
+  .pin-save {
+    position: absolute; top: 10px; right: 10px;
+    padding: 5px 12px; border-radius: 999px;
+    background: #e60023; color: #fff; font-size: 0.78rem; font-weight: 700; text-decoration: none;
+    opacity: 0; transition: opacity .2s ease;
+  }
+  .pin:hover .pin-save, .pin:focus-within .pin-save { opacity: 1; }
+  @media (hover: none) { .pin-save { opacity: 1; } }
+  .palette { display: flex; height: 10px; }
+  .palette span { flex: 1; }
+  .pin-body { padding: 14px 18px 18px; flex: 1; display: flex; flex-direction: column; }
+  .pin .piece { margin: 3px 0; font-weight: 600; font-size: 0.95rem; }
+  .pin .piece small { font-weight: 400; color: var(--muted); margin-left: 2px; white-space: nowrap; }
+  .pin .piece.minor { font-weight: 500; font-size: 0.88rem; }
+  .pin details { margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--line); padding-top: 8px; }
+  .pin details { position: relative; }
+  .pin details[open] ul {
+    position: absolute; left: -18px; right: -18px; bottom: calc(100% + 1px);
+    margin: 0; padding: 12px 18px 12px 34px;
+    background: var(--card); border-top: 1px dashed var(--line);
+    max-height: 260px; overflow-y: auto;
+  }
+  .pin summary { font-size: 0.85rem; color: var(--accent); font-weight: 700; cursor: pointer; }
+  .pin ul { margin: 6px 0 0; padding-left: 18px; font-size: 0.84rem; color: var(--muted); }
+
+  /* 분석 */
+  .section-title { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 36px 4px 14px; }
+  .section-title h2 { margin: 0; }
+  .tabs { margin-bottom: 8px; }
+  .stats { columns: 3 230px; column-gap: 18px; }
+  .stats > div { break-inside: avoid; display: inline-block; width: 100%; margin: 0 0 18px; background: var(--card); border-radius: 24px; padding: 4px 20px 16px; box-shadow: var(--shadow); }
+  .bar-row { display: grid; grid-template-columns: 96px 1fr 24px; gap: 8px; align-items: center; font-size: 0.88rem; margin: 6px 0; }
+  .bar { height: 8px; border-radius: 4px; background: var(--bar); }
+  .bar-track { background: var(--chip); border-radius: 4px; }
+  .pair { display: flex; align-items: center; gap: 4px; font-size: 0.88rem; margin: 6px 0; }
+  details > summary { cursor: pointer; }
+  .add-card summary { font-family: "Gowun Batang", serif; font-weight: 700; font-size: 1.15rem; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+  .form-grid label { font-size: 0.82rem; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+  .form-grid select { border-radius: 12px; }
+  .photo-tools { margin: 8px 0; }
+  .file-btn { display: inline-block; }
+  .photo-wrap { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; margin: 10px 0; }
+  .photo-wrap canvas { max-width: 100%; max-height: 480px; border-radius: 18px; cursor: crosshair; }
+  .picked { flex: 1; min-width: 180px; font-size: 0.92rem; }
+  .picked .pick-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .picked .raw { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .15); }
+  footer { color: var(--muted); font-size: 0.82rem; margin-top: 32px; text-align: center; }
+
+  @media (max-width: 720px) {
+    main { padding-top: 24px; }
+    .hero { grid-template-columns: 1fr; }
+    .card, .search-card { padding: 20px; border-radius: 20px; }
+    .combos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .stats { columns: 2 150px; column-gap: 12px; }
+    .pin { border-radius: 18px; }
+    .stats > div { margin-bottom: 12px; border-radius: 18px; }
+    .pin-visual svg { width: 100px; height: 138px; }
+    .pin-body { padding: 12px 14px 14px; }
+    .search { padding-left: 16px; }
+    .search .btn { padding: 10px 16px; }
+  }
+  @media (max-width: 420px) {
+    .stats { columns: 1; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div>
+      <div class="eyebrow">DAILY OUTFIT MOODBOARD</div>
+      <h1>오늘 뭐 입지?</h1>
+      <p class="subtitle">가진 옷 하나만 검색하면, 지금 기온에 맞는 하의·가방·모자·액세서리를 보드로 모아 드려요.</p>
+    </div>
+
+    <!-- 날씨 -->
+    <section class="card weather-card" aria-label="오늘 평년 기온">
+      <div class="weather">
+        <div class="temp-big" id="tempBig">--°</div>
+        <div class="weather-info">
+          <div id="weatherText" class="muted">기온을 계산하는 중…</div>
+        </div>
+      </div>
+      <div class="row">
+        <select id="city" aria-label="지역 선택"></select>
+        <button class="btn ghost" id="geoBtn" type="button">내 위치로</button>
+      </div>
+      <div class="slider-row">
+        <label for="tempSlider" class="muted">기온 조정</label>
+        <input type="range" id="tempSlider" min="-15" max="38" value="15">
+        <strong id="tempSliderVal">15°C</strong>
+      </div>
+      <div class="guide" id="guide"></div>
+    </section>
+  </header>
+
+  <!-- 검색 -->
+  <section class="card search-card" aria-label="옷 검색">
+    <form class="search" id="searchForm">
+      <input type="text" id="query" placeholder="가진 옷을 검색해 보세요 · 예: 남색 브이넥 니트" aria-label="옷 검색">
+      <button class="btn" type="submit">코디 보기</button>
+    </form>
+    <div class="examples" id="examples"></div>
+    <div class="search-opts muted">
+      <label><input type="checkbox" id="skirtToggle" checked> 스커트도 추천에 포함</label>
+      <details>
+        <summary>검색할 수 있는 단어 보기</summary>
+        <div id="wordHelp" style="font-size:0.88rem"></div>
+      </details>
+    </div>
+  </section>
+
+  <section id="result"></section>
+
+  <!-- 분석 -->
+  <div class="section-title">
+    <h2 id="a-title">계절별 코디 분석</h2>
+    <span class="muted" id="dataNote"></span>
+  </div>
+  <div class="tabs" id="seasonTabs"></div>
+  <div class="stats" id="stats"></div>
+
+  <section class="card add-card">
+    <details open>
+      <summary>인스타그램·핀터레스트에서 본 코디 추가하기</summary>
+      <p class="muted">
+        코디 사진을 저장하거나 캡처해서 올린 뒤, 사진에서 <strong>상의 → 하의 → 가방</strong> 순서로 한 번씩 클릭하세요.
+        클릭한 곳의 색을 읽어서 가장 가까운 색 이름으로 채워 줘요. 옷 종류는 아래에서 골라 주세요.
+        사진은 서버로 보내지 않고 이 브라우저 안에서만 분석해요.
+      </p>
+      <div class="photo-tools row">
+        <label class="btn ghost file-btn">사진 올리기<input type="file" id="photoInput" accept="image/*" hidden></label>
+        <span id="pickModes"></span>
+      </div>
+      <div class="photo-wrap" id="photoWrap" hidden>
+        <canvas id="photoCanvas"></canvas>
+        <div class="picked" id="picked"></div>
+      </div>
+      <div class="form-grid" id="addForm"></div>
+      <div class="row">
+        <button class="btn" type="button" id="addBtn">코디 추가</button>
+        <button class="btn ghost" type="button" id="clearBtn">내가 추가한 코디 지우기</button>
+        <span class="muted" id="addMsg"></span>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    기온: 기상청 평년값(1991~2020)을 정리한 대략값이에요. 외부 날씨 API는 쓰지 않아요. ·
+    인스타그램·핀터레스트는 약관상 자동 수집이 막혀 있어서, 기본 데이터는 직접 정리한 예시 코디이고 직접 추가한 코디가 함께 쓰입니다.
+  </footer>
+</main>
+
+<script>
+// ───────── 데이터: 색 ─────────
+// partners: 이 색과 잘 어울리는 상대 색, 앞쪽일수록 우선
+const COLORS = {
+  black:      { name: '블랙', en: 'black',     hex: '#1f1f1f', alias: ['블랙', '검정', '검은', 'black'],          partners: ['white', 'gray', 'beige', 'denim', 'camel', 'black'] },
+  white:      { name: '화이트', en: 'white',   hex: '#f7f7f5', alias: ['화이트', '흰', '하얀', 'white'],          partners: ['denim', 'navy', 'black', 'beige', 'khaki', 'gray'] },
+  ivory:      { name: '아이보리', en: 'cream', hex: '#f1ead8', alias: ['아이보리', '크림', '오프화이트', '오트밀'], partners: ['brown', 'denim', 'navy', 'camel', 'khaki', 'black'] },
+  beige:      { name: '베이지', en: 'beige',   hex: '#d9c6a5', alias: ['베이지', '샌드', 'beige'],                partners: ['white', 'navy', 'brown', 'denim', 'black', 'ivory'] },
+  camel:      { name: '카멜', en: 'camel',     hex: '#b5824c', alias: ['카멜'],                                   partners: ['black', 'ivory', 'navy', 'denim', 'charcoal', 'white'] },
+  brown:      { name: '브라운', en: 'brown',   hex: '#6b4a33', alias: ['브라운', '갈색', '초코', '모카'],         partners: ['ivory', 'beige', 'denim', 'khaki', 'black', 'white'] },
+  gray:       { name: '그레이', en: 'grey',   hex: '#9a9a9a', alias: ['그레이', '회색', '멜란지', '연그레이', '연회색'], partners: ['black', 'white', 'navy', 'denim', 'charcoal', 'pink'] },
+  charcoal:   { name: '차콜', en: 'charcoal',     hex: '#3e4144', alias: ['차콜', '진회색', '다크그레이'],           partners: ['white', 'gray', 'beige', 'black', 'camel', 'denim'] },
+  navy:       { name: '네이비', en: 'navy',   hex: '#1f2a44', alias: ['네이비', '남색', '곤색', 'navy'],         partners: ['beige', 'ivory', 'gray', 'white', 'denim', 'camel'] },
+  blue:       { name: '블루', en: 'blue',     hex: '#2f5fb3', alias: ['블루', '파랑', '파란'],                   partners: ['white', 'beige', 'gray', 'navy', 'black', 'ivory'] },
+  skyblue:    { name: '스카이블루', en: 'light blue', hex: '#9cc3e6', alias: ['스카이블루', '하늘', '소라', '라이트블루'], partners: ['white', 'navy', 'beige', 'denim', 'gray', 'ivory'] },
+  khaki:      { name: '카키', en: 'olive',     hex: '#6f6b45', alias: ['카키', '올리브'],                         partners: ['white', 'ivory', 'black', 'beige', 'denim', 'brown'] },
+  green:      { name: '그린', en: 'green',     hex: '#2f6b4f', alias: ['그린', '초록', '녹색', '포레스트'],       partners: ['ivory', 'beige', 'denim', 'black', 'brown', 'white'] },
+  burgundy:   { name: '버건디', en: 'burgundy',   hex: '#6d1f2c', alias: ['버건디', '와인'],                         partners: ['black', 'gray', 'denim', 'beige', 'charcoal', 'ivory'] },
+  red:        { name: '레드', en: 'red',     hex: '#c0392b', alias: ['레드', '빨강', '빨간'],                   partners: ['black', 'denim', 'white', 'navy', 'beige', 'gray'] },
+  pink:       { name: '핑크', en: 'pink',     hex: '#f2b8c6', alias: ['핑크', '분홍', '연핑크', '베이비핑크'],   partners: ['gray', 'white', 'denim', 'ivory', 'navy', 'beige'] },
+  lavender:   { name: '라벤더', en: 'lavender',   hex: '#c3b5e0', alias: ['라벤더', '연보라', '보라', '퍼플'],       partners: ['white', 'gray', 'denim', 'ivory', 'black', 'beige'] },
+  yellow:     { name: '옐로우', en: 'yellow',   hex: '#f1d36b', alias: ['옐로우', '노랑', '노란', '레몬'],         partners: ['denim', 'white', 'gray', 'navy', 'beige', 'black'] },
+  mustard:    { name: '머스타드', en: 'mustard', hex: '#c9a227', alias: ['머스타드', '겨자'],                       partners: ['denim', 'brown', 'black', 'navy', 'ivory', 'charcoal'] },
+  orange:     { name: '오렌지', en: 'orange',   hex: '#e67e22', alias: ['오렌지', '주황'],                         partners: ['denim', 'white', 'navy', 'beige', 'black', 'ivory'] },
+  coral:      { name: '코랄', en: 'coral',     hex: '#f08a6c', alias: ['코랄', '살구'],                           partners: ['white', 'denim', 'beige', 'navy', 'ivory', 'gray'] },
+  mint:       { name: '민트', en: 'mint',     hex: '#a8dccb', alias: ['민트'],                                   partners: ['white', 'beige', 'denim', 'gray', 'ivory', 'navy'] },
+  denim:      { name: '중청', en: 'mid wash',     hex: '#4a6a94', alias: ['중청', '데님', '청'],                     partners: ['white', 'black', 'gray', 'navy', 'beige', 'ivory'] },
+  lightdenim: { name: '연청', en: 'light wash',     hex: '#8fb0d3', alias: ['연청'],                                   partners: ['white', 'navy', 'black', 'beige', 'gray', 'ivory'] },
+  darkdenim:  { name: '진청', en: 'dark wash',     hex: '#2b3a55', alias: ['진청', '흑청', '인디고'],                 partners: ['white', 'gray', 'beige', 'black', 'camel', 'ivory'] },
+};
+const DENIMS = ['denim', 'lightdenim', 'darkdenim'];
+const NEUTRAL = new Set(['black', 'white', 'ivory', 'beige', 'camel', 'brown', 'gray', 'charcoal', 'navy', 'khaki', ...DENIMS]);
+
+// ───────── 데이터: 옷 ─────────
+// temp: 입기 좋은 기온 범위(°C), style: minimal / casual / office / street / romantic
+// colors: 이 색들로만 나오는 옷, denimOk: 일반 색 + 데님 색 모두 가능
+const ITEMS = [
+  // 상의
+  { id: 'knit',       cat: 'top', name: '니트', en: 'sweater',         alias: ['니트', '스웨터', '캐시미어'],      material: '울·캐시미어', temp: [0, 17],   style: ['minimal', 'casual', 'romantic'], crop: true, over: true },
+  { id: 'turtleneck', cat: 'top', name: '터틀넥', en: 'turtleneck',       alias: ['터틀넥', '폴라', '목폴라'],        material: '울 니트',     temp: [-10, 14], style: ['minimal', 'office'], over: true },
+  { id: 'cardigan',   cat: 'top', name: '가디건', en: 'cardigan',       alias: ['가디건'],                          material: '니트',        temp: [10, 22],  style: ['casual', 'romantic', 'minimal'], crop: true, over: true },
+  { id: 'knitvest',   cat: 'top', name: '니트 조끼', en: 'sweater vest',    alias: ['니트조끼', '조끼', '베스트'],      material: '니트',        temp: [12, 20],  style: ['casual', 'office'] },
+  { id: 'shirt',      cat: 'top', name: '셔츠', en: 'button down shirt',         alias: ['셔츠', '옥스포드'],                material: '코튼',        temp: [15, 25],  style: ['office', 'minimal', 'casual'], crop: true, over: true },
+  { id: 'linenshirt', cat: 'top', name: '린넨 셔츠', en: 'linen shirt',    alias: ['린넨셔츠', '린넨', '마셔츠'],      material: '린넨',        temp: [23, 35],  style: ['casual', 'minimal'], over: true },
+  { id: 'blouse',     cat: 'top', name: '블라우스', en: 'blouse',     alias: ['블라우스'],                        material: '레이온·실크', temp: [17, 27],  style: ['romantic', 'office'], crop: true },
+  { id: 'longtee',    cat: 'top', name: '긴팔 티셔츠', en: 'long sleeve tee',  alias: ['긴팔티', '롱티'],                   material: '코튼',        temp: [17, 23],  style: ['casual', 'minimal'], crop: true, over: true },
+  { id: 'tee',        cat: 'top', name: '반팔 티셔츠', en: 't-shirt',  alias: ['반팔티', '티셔츠', '티'],          material: '코튼',        temp: [22, 35],  style: ['casual', 'street', 'minimal'], sleeve: 'shortsleeve', crop: true, over: true },
+  { id: 'sweatshirt', cat: 'top', name: '맨투맨', en: 'sweatshirt',       alias: ['맨투맨', '스웨트셔츠'],            material: '면 스웨트',   temp: [10, 20],  style: ['casual', 'street'], crop: true, over: true },
+  { id: 'hoodie',     cat: 'top', name: '후드티', en: 'hoodie',       alias: ['후드티', '후드', '후디'],          material: '기모 스웨트', temp: [6, 18],   style: ['street', 'casual'], crop: true, over: true },
+  { id: 'polo',       cat: 'top', name: '폴로 셔츠', en: 'polo shirt',    alias: ['폴로', '카라티', '피케'],          material: '코튼 피케',   temp: [20, 30],  style: ['casual', 'office'], sleeve: 'shortsleeve' },
+  { id: 'sleeveless', cat: 'top', name: '민소매', en: 'tank top',       alias: ['나시티', '민소매티'],              material: '코튼·린넨',   temp: [27, 40],  style: ['casual', 'romantic'], sleeve: 'nosleeve', crop: true },
+  // 아우터 (검색하면 상의처럼 하의를 추천)
+  { id: 'coat',        cat: 'outer', name: '울 코트', en: 'wool coat',     alias: ['코트', '울코트', '롱코트'],            material: '울',          temp: [-5, 11],  style: ['minimal', 'office'] },
+  { id: 'trench',      cat: 'outer', name: '트렌치코트', en: 'trench coat',  alias: ['트렌치코트', '트렌치', '바바리'],      material: '코튼 개버딘', temp: [9, 17],   style: ['minimal', 'office', 'romantic'] },
+  { id: 'padding',     cat: 'outer', name: '패딩', en: 'puffer jacket',        alias: ['패딩', '숏패딩', '롱패딩', '다운'],    material: '나일론·다운', temp: [-20, 5],  style: ['casual', 'street'] },
+  { id: 'blazer',      cat: 'outer', name: '블레이저', en: 'blazer',    alias: ['블레이저', '자켓', '재킷'],            material: '울·폴리',     temp: [12, 20],  style: ['office', 'minimal'] },
+  { id: 'leather',     cat: 'outer', name: '레더 자켓', en: 'leather jacket',   alias: ['레더자켓', '가죽자켓', '라이더자켓', '레더'], material: '레더',  temp: [9, 16],   style: ['street', 'minimal'] },
+  { id: 'denimjacket', cat: 'outer', name: '데님 자켓', en: 'denim jacket',   alias: ['청자켓', '데님자켓'],                  material: '데님',        temp: [13, 20],  style: ['casual', 'street'], colors: DENIMS },
+  { id: 'fleece',      cat: 'outer', name: '플리스', en: 'fleece jacket',      alias: ['플리스', '뽀글이', '후리스'],          material: '플리스',      temp: [-5, 12],  style: ['casual', 'street'] },
+  // 하의
+  { id: 'slacks',     cat: 'bottom', name: '슬랙스', en: 'trousers',        alias: ['슬랙스', '정장바지'],               material: '울·폴리',     temp: [-5, 26],  style: ['office', 'minimal'], sil: 'straight' },
+  { id: 'jeans',      cat: 'bottom', name: '청바지', en: 'jeans',        alias: ['청바지', '데님팬츠', '진'],         material: '데님',        temp: [-5, 25],  style: ['casual', 'minimal', 'street'], colors: [...DENIMS, 'black', 'white'], sil: 'straight' },
+  { id: 'widepants',  cat: 'bottom', name: '와이드 팬츠', en: 'wide leg pants',   alias: ['와이드팬츠'],                       material: '코튼·폴리',   temp: [8, 28],   style: ['casual', 'minimal', 'street'], sil: 'wide' },
+  { id: 'corduroy',   cat: 'bottom', name: '코듀로이 팬츠', en: 'corduroy pants', alias: ['코듀로이', '골덴'],                 material: '코듀로이',    temp: [-5, 15],  style: ['casual', 'romantic'], sil: 'straight' },
+  { id: 'chino',      cat: 'bottom', name: '치노 팬츠', en: 'chinos',     alias: ['치노', '면바지'],                   material: '코튼 트윌',   temp: [12, 26],  style: ['casual', 'office'], sil: 'straight' },
+  { id: 'cargo',      cat: 'bottom', name: '카고 팬츠', en: 'cargo pants',     alias: ['카고'],                             material: '코튼 립스탑', temp: [8, 26],   style: ['street'], sil: 'wide' },
+  { id: 'jogger',     cat: 'bottom', name: '조거 팬츠', en: 'joggers',     alias: ['조거', '트레이닝', '츄리닝'],       material: '면 스웨트',   temp: [-5, 20],  style: ['street', 'casual'], sil: 'slim' },
+  { id: 'linenpants', cat: 'bottom', name: '린넨 팬츠', en: 'linen pants',     alias: ['린넨팬츠', '린넨바지'],             material: '린넨',        temp: [23, 35],  style: ['casual', 'minimal'], sil: 'wide' },
+  { id: 'shorts',     cat: 'bottom', name: '반바지', en: 'shorts',        alias: ['반바지', '쇼츠', '버뮤다'],         material: '코튼·린넨',   temp: [25, 40],  style: ['casual', 'street'], denimOk: true, shape: 'shorts', sil: 'short' },
+  { id: 'longskirt',  cat: 'bottom', name: '롱스커트', en: 'maxi skirt',      alias: ['롱스커트', '맥시스커트'],           material: '레이온·울',   temp: [5, 30],   style: ['romantic', 'minimal'], skirt: true, shape: 'longskirt', sil: 'wide' },
+  { id: 'pleatskirt', cat: 'bottom', name: '플리츠 스커트', en: 'pleated skirt', alias: ['플리츠스커트', '플리츠', '주름치마'], material: '폴리',       temp: [10, 28],  style: ['romantic', 'office'], skirt: true, shape: 'skirt', sil: 'wide' },
+  { id: 'miniskirt',  cat: 'bottom', name: '미니스커트', en: 'mini skirt',    alias: ['미니스커트', '스커트', '치마'],     material: '울·트위드',   temp: [8, 30],   style: ['romantic', 'street'], skirt: true, shape: 'skirt', sil: 'short' },
+  { id: 'denimskirt', cat: 'bottom', name: '데님 스커트', en: 'denim skirt',   alias: ['데님스커트', '청치마'],             material: '데님',        temp: [15, 30],  style: ['casual', 'romantic'], skirt: true, shape: 'skirt', colors: ['denim', 'lightdenim', 'black', 'white'], sil: 'short' },
+];
+
+// ───────── 데이터: 옷 모양 (넥라인·소매·핏·기장) ─────────
+// cats: 이 조건이 적용되는 옷 종류, 같은 group 안에서는 가장 길게 일치하는 단어 하나만 쓴다
+const SHAPES = [
+  { id: 'vneck',        group: 'neck',   name: '브이넥', en: 'v-neck',       alias: ['브이넥', 'v넥', '브이'],                       cats: ['top'] },
+  { id: 'roundneck',    group: 'neck',   name: '라운드넥', en: 'crew neck',     alias: ['라운드넥', '라운드', '크루넥'],                 cats: ['top'] },
+  { id: 'halfneck',     group: 'neck',   name: '반폴라', en: 'mock neck',       alias: ['반폴라', '하프넥', '모크넥'],                   cats: ['top'] },
+  { id: 'collar',       group: 'neck',   name: '카라', en: 'collared',         alias: ['카라넥', '카라', '칼라'],                       cats: ['top', 'outer'] },
+  { id: 'squareneck',   group: 'neck',   name: '스퀘어넥', en: 'square neck',     alias: ['스퀘어넥', '스퀘어'],                           cats: ['top'] },
+  { id: 'offshoulder',  group: 'neck',   name: '오프숄더', en: 'off shoulder',     alias: ['오프숄더'],                                     cats: ['top'] },
+  { id: 'longsleeve',   group: 'sleeve', name: '긴팔', en: 'long sleeve',         alias: ['긴팔', '롱슬리브'],                             cats: ['top'] },
+  { id: 'threequarter', group: 'sleeve', name: '7부', en: '3/4 sleeve',          alias: ['7부', '칠부'],                                  cats: ['top'] },
+  { id: 'shortsleeve',  group: 'sleeve', name: '반팔', en: 'short sleeve',         alias: ['반팔', '숏슬리브'],                             cats: ['top'] },
+  { id: 'nosleeve',     group: 'sleeve', name: '민소매', en: 'sleeveless',       alias: ['민소매', '나시', '슬리브리스'],                 cats: ['top'] },
+  { id: 'oversize',     group: 'fit',    name: '오버핏', en: 'oversized',       alias: ['오버핏', '오버사이즈', '오버', '박시', '루즈핏', '루즈'], cats: ['top', 'outer'] },
+  { id: 'slim',         group: 'fit',    name: '슬림핏', en: 'slim fit',       alias: ['슬림핏', '슬림', '스키니', '타이트', '머슬핏'],  cats: ['top', 'bottom'] },
+  { id: 'regular',      group: 'fit',    name: '레귤러핏', en: '',     alias: ['레귤러핏', '레귤러', '정핏'],                   cats: ['top', 'outer', 'bottom'] },
+  { id: 'wide',         group: 'fit',    name: '와이드핏', en: 'wide leg',     alias: ['와이드핏', '와이드'],                           cats: ['bottom'] },
+  { id: 'straight',     group: 'fit',    name: '일자핏', en: 'straight leg',       alias: ['스트레이트', '일자핏', '일자'],                 cats: ['bottom'] },
+  { id: 'bootcut',      group: 'fit',    name: '부츠컷', en: 'bootcut',       alias: ['세미부츠컷', '부츠컷', '플레어'],               cats: ['bottom'] },
+  { id: 'crop',         group: 'length', name: '크롭', en: 'cropped',         alias: ['크롭', '숏기장'],                               cats: ['top', 'outer'] },
+  { id: 'longline',     group: 'length', name: '롱기장', en: 'longline',       alias: ['롱기장'],                                       cats: ['top', 'outer'] },
+  { id: 'highwaist',    group: 'rise',   name: '하이웨이스트', en: 'high waisted', alias: ['하이웨이스트', '하이웨스트', '하이라이즈'],     cats: ['bottom'] },
+];
+const SHAPE_GROUPS = { neck: '넥라인', sleeve: '소매', fit: '핏', length: '기장', rise: '허리' };
+// 긴팔 기준으로 입기 좋은 기온이 몇 도 올라가는지
+const SLEEVE_TEMP = { longsleeve: 0, threequarter: 3, shortsleeve: 6, nosleeve: 10 };
+const SLEEVE_ITEM = { shortsleeve: 'tee', longsleeve: 'longtee', threequarter: 'longtee', nosleeve: 'sleeveless' };
+
+// ───────── 데이터: 가방 ─────────
+const BAGS = [
+  { id: 'tote',      name: '레더 토트백',    alias: ['토트백', '토트'],       temp: [-20, 40], style: ['office', 'minimal'] },
+  { id: 'shoulder',  name: '숄더백',         alias: ['숄더백'],               temp: [-20, 40], style: ['minimal', 'romantic', 'office'] },
+  { id: 'cross',     name: '미니 크로스백',  alias: ['크로스백'],             temp: [-20, 40], style: ['casual', 'street', 'romantic'] },
+  { id: 'eco',       name: '캔버스 에코백',  alias: ['에코백'],               temp: [8, 35],   style: ['casual'], colors: ['ivory', 'black'] },
+  { id: 'backpack',  name: '나일론 백팩',    alias: ['백팩', '배낭'],         temp: [-20, 40], style: ['street', 'casual'] },
+  { id: 'hobo',      name: '스웨이드 호보백', alias: ['호보백'],              temp: [-10, 18], style: ['minimal', 'casual', 'romantic'], colors: ['brown', 'camel', 'beige', 'charcoal'] },
+  { id: 'rattan',    name: '라탄 바스켓백',  alias: ['라탄백', '라탄'],       temp: [23, 40],  style: ['romantic', 'casual'], colors: ['beige'] },
+  { id: 'chain',     name: '퀼팅 체인백',    alias: ['체인백'],               temp: [-20, 40], style: ['romantic', 'office'] },
+  { id: 'bucket',    name: '버킷백',         alias: ['버킷백'],               temp: [-20, 40], style: ['casual', 'minimal', 'romantic'] },
+  { id: 'messenger', name: '메신저백',       alias: ['메신저백'],             temp: [-20, 40], style: ['street', 'casual'] },
+  { id: 'furmini',   name: '퍼 미니백',      alias: ['퍼백', '털가방'],       temp: [-20, 8],  style: ['casual', 'romantic', 'street'], colors: ['ivory', 'brown', 'black', 'gray'] },
+];
+
+// ───────── 데이터: 예시 코디 (계절, 상의색, 상의, 하의색, 하의, 가방색, 가방) ─────────
+const SAMPLE_LOOKS = [
+  ['spring', 'ivory', 'cardigan', 'denim', 'jeans', 'brown', 'shoulder'],
+  ['spring', 'beige', 'trench', 'white', 'slacks', 'black', 'tote'],
+  ['spring', 'skyblue', 'shirt', 'beige', 'chino', 'brown', 'cross'],
+  ['spring', 'pink', 'knit', 'denim', 'jeans', 'ivory', 'bucket'],
+  ['spring', 'white', 'blouse', 'navy', 'pleatskirt', 'black', 'chain'],
+  ['spring', 'navy', 'cardigan', 'ivory', 'longskirt', 'brown', 'shoulder'],
+  ['spring', 'gray', 'sweatshirt', 'black', 'widepants', 'black', 'backpack'],
+  ['spring', 'lavender', 'knit', 'white', 'widepants', 'ivory', 'shoulder'],
+  ['spring', 'navy', 'blazer', 'beige', 'slacks', 'black', 'tote'],
+  ['spring', 'mint', 'longtee', 'lightdenim', 'jeans', 'ivory', 'eco'],
+  ['spring', 'white', 'shirt', 'navy', 'slacks', 'brown', 'tote'],
+  ['summer', 'white', 'tee', 'lightdenim', 'shorts', 'ivory', 'eco'],
+  ['summer', 'beige', 'linenshirt', 'white', 'linenpants', 'beige', 'rattan'],
+  ['summer', 'black', 'sleeveless', 'beige', 'longskirt', 'beige', 'rattan'],
+  ['summer', 'skyblue', 'linenshirt', 'white', 'shorts', 'beige', 'rattan'],
+  ['summer', 'white', 'tee', 'black', 'widepants', 'black', 'cross'],
+  ['summer', 'navy', 'polo', 'beige', 'chino', 'brown', 'messenger'],
+  ['summer', 'yellow', 'tee', 'lightdenim', 'jeans', 'ivory', 'eco'],
+  ['summer', 'ivory', 'blouse', 'khaki', 'linenpants', 'beige', 'rattan'],
+  ['summer', 'white', 'linenshirt', 'navy', 'shorts', 'black', 'cross'],
+  ['summer', 'pink', 'tee', 'white', 'denimskirt', 'ivory', 'bucket'],
+  ['summer', 'navy', 'tee', 'white', 'widepants', 'black', 'cross'],
+  ['autumn', 'navy', 'knit', 'beige', 'slacks', 'brown', 'hobo'],
+  ['autumn', 'navy', 'knit', 'ivory', 'widepants', 'camel', 'tote'],
+  ['autumn', 'navy', 'knit', 'gray', 'slacks', 'black', 'shoulder'],
+  ['autumn', 'ivory', 'knit', 'brown', 'corduroy', 'brown', 'hobo'],
+  ['autumn', 'burgundy', 'knit', 'denim', 'jeans', 'black', 'cross'],
+  ['autumn', 'camel', 'trench', 'black', 'slacks', 'black', 'tote'],
+  ['autumn', 'khaki', 'shirt', 'ivory', 'widepants', 'brown', 'messenger'],
+  ['autumn', 'brown', 'cardigan', 'ivory', 'longskirt', 'camel', 'bucket'],
+  ['autumn', 'mustard', 'knit', 'denim', 'jeans', 'brown', 'cross'],
+  ['autumn', 'gray', 'sweatshirt', 'khaki', 'cargo', 'black', 'backpack'],
+  ['autumn', 'black', 'leather', 'denim', 'jeans', 'black', 'chain'],
+  ['autumn', 'charcoal', 'blazer', 'white', 'slacks', 'black', 'tote'],
+  ['autumn', 'beige', 'knit', 'navy', 'slacks', 'brown', 'shoulder'],
+  ['winter', 'camel', 'coat', 'black', 'slacks', 'black', 'tote'],
+  ['winter', 'charcoal', 'coat', 'ivory', 'widepants', 'brown', 'hobo'],
+  ['winter', 'black', 'padding', 'gray', 'jogger', 'black', 'backpack'],
+  ['winter', 'ivory', 'turtleneck', 'brown', 'corduroy', 'camel', 'shoulder'],
+  ['winter', 'navy', 'turtleneck', 'beige', 'slacks', 'brown', 'hobo'],
+  ['winter', 'burgundy', 'knit', 'charcoal', 'slacks', 'black', 'chain'],
+  ['winter', 'gray', 'turtleneck', 'black', 'longskirt', 'black', 'furmini'],
+  ['winter', 'white', 'padding', 'darkdenim', 'jeans', 'ivory', 'furmini'],
+  ['winter', 'green', 'knit', 'ivory', 'corduroy', 'brown', 'tote'],
+  ['winter', 'beige', 'fleece', 'brown', 'corduroy', 'ivory', 'eco'],
+  ['winter', 'navy', 'coat', 'gray', 'slacks', 'black', 'tote'],
+  ['winter', 'navy', 'knit', 'darkdenim', 'jeans', 'camel', 'hobo'],
+].map(([season, topColor, top, bottomColor, bottom, bagColor, bag]) =>
+  ({ season, topColor, top, bottomColor, bottom, bagColor, bag }));
+
+// ───────── 데이터: 모자 ─────────
+const HATS = [
+  { id: 'cap',       name: '볼캡',          temp: [10, 35],  style: ['casual', 'street'],             colors: ['black', 'navy', 'ivory', 'beige', 'gray'] },
+  { id: 'buckethat', name: '버킷햇',        temp: [15, 35],  style: ['casual', 'street', 'romantic'], colors: ['beige', 'ivory', 'black', 'khaki'] },
+  { id: 'beanie',    name: '비니',          temp: [-20, 12], style: ['casual', 'street', 'minimal'],  colors: ['gray', 'charcoal', 'ivory', 'black', 'camel', 'burgundy'] },
+  { id: 'beret',     name: '베레모',        temp: [-5, 16],  style: ['romantic', 'minimal'],          colors: ['black', 'camel', 'burgundy', 'ivory', 'brown'] },
+  { id: 'straw',     name: '라탄 밀짚모자', temp: [24, 40],  style: ['romantic', 'casual'],           colors: ['beige'] },
+];
+
+// 따뜻한 색 옷에는 골드, 차가운 색 옷에는 실버 액세서리
+const WARM = new Set(['coral', 'camel', 'brown', 'beige', 'ivory', 'mustard', 'khaki', 'burgundy', 'orange', 'yellow', 'red', 'green']);
+
+const SEASONS = { spring: '봄', summer: '여름', autumn: '가을', winter: '겨울' };
+
+// 기온별 옷차림 (위에서부터 높은 기온)
+const BANDS = [
+  { min: 28,   label: '28°C 이상',  wear: ['민소매', '반팔', '반바지', '린넨 원피스'], mat: '린넨·시어서커·얇은 코튼' },
+  { min: 23,   label: '23~27°C',    wear: ['반팔', '얇은 셔츠', '반바지', '면바지'],     mat: '코튼·린넨' },
+  { min: 20,   label: '20~22°C',    wear: ['블라우스', '긴팔 티', '면바지', '슬랙스'],   mat: '코튼·레이온' },
+  { min: 17,   label: '17~19°C',    wear: ['얇은 니트', '가디건', '맨투맨', '청바지'],   mat: '코튼·얇은 니트' },
+  { min: 12,   label: '12~16°C',    wear: ['자켓', '셔츠', '가디건', '니트'],            mat: '울 혼방·데님·트윌' },
+  { min: 9,    label: '9~11°C',     wear: ['트렌치코트', '니트', '청바지', '스타킹'],    mat: '울·개버딘' },
+  { min: 5,    label: '5~8°C',      wear: ['울 코트', '히트텍', '가죽 자켓', '니트'],    mat: '울·캐시미어·레더' },
+  { min: -99,  label: '4°C 이하',   wear: ['패딩', '두꺼운 코트', '목도리', '기모'],     mat: '다운·울·플리스' },
+];
+
+// 지역별 평년 기온(기상청 1991~2020 평년값을 정리한 대략값). 외부 날씨 API는 쓰지 않는다.
+// [이름, 위도, 경도, 1~12월 평균 최고기온, 1~12월 평균 최저기온]
+const CITIES = [
+  ['서울', 37.57, 126.98, [1.6, 4.8, 10.9, 18.1, 23.6, 27.4, 28.9, 29.8, 25.9, 19.9, 11.6, 3.6], [-5.8, -3.3, 1.6, 7.7, 13.2, 18.2, 21.9, 22.4, 17.4, 10.5, 3.4, -3.4]],
+  ['인천', 37.46, 126.71, [1.5, 4.0, 9.5, 15.8, 21.4, 25.3, 27.7, 29.0, 25.6, 19.6, 11.6, 3.8], [-4.4, -2.3, 2.4, 8.0, 13.5, 18.3, 22.1, 22.8, 18.6, 12.0, 4.6, -2.1]],
+  ['수원', 37.26, 127.03, [2.4, 5.6, 11.6, 18.6, 23.9, 27.6, 29.3, 30.2, 26.3, 20.2, 12.1, 4.3], [-6.6, -4.2, 0.7, 6.5, 12.3, 17.6, 21.7, 22.0, 16.6, 9.1, 2.3, -4.2]],
+  ['춘천', 37.88, 127.73, [1.2, 4.9, 11.6, 19.1, 24.6, 28.2, 29.6, 30.2, 25.8, 19.3, 10.8, 3.1], [-10.4, -7.5, -1.6, 4.6, 10.8, 16.6, 20.9, 21.0, 15.0, 7.1, 0.4, -6.9]],
+  ['대전', 36.35, 127.38, [3.8, 7.0, 12.9, 19.8, 24.9, 28.3, 29.8, 30.6, 26.5, 20.9, 13.1, 5.6], [-5.2, -3.3, 1.4, 7.1, 12.8, 18.0, 22.0, 22.3, 17.1, 9.8, 2.8, -3.3]],
+  ['대구', 35.87, 128.60, [6.0, 8.9, 14.5, 21.0, 26.1, 29.2, 30.6, 31.3, 27.0, 21.8, 14.4, 7.8], [-3.2, -1.3, 3.2, 8.9, 14.1, 19.0, 22.5, 22.9, 18.0, 11.2, 4.2, -1.6]],
+  ['광주', 35.16, 126.85, [5.5, 8.2, 13.6, 20.0, 25.0, 28.0, 29.7, 30.9, 27.0, 21.6, 14.4, 7.6], [-2.7, -1.1, 3.1, 8.6, 14.2, 19.2, 23.0, 23.3, 18.6, 11.7, 4.9, -0.9]],
+  ['부산', 35.18, 129.08, [8.1, 10.0, 13.9, 18.7, 22.2, 24.9, 27.8, 29.6, 26.6, 22.4, 16.3, 10.4], [-0.3, 1.4, 5.3, 10.2, 14.6, 18.5, 22.4, 23.6, 19.8, 14.3, 7.8, 1.8]],
+  ['울산', 35.54, 129.31, [7.4, 9.4, 13.9, 19.7, 23.6, 26.3, 29.1, 30.0, 26.1, 21.4, 15.2, 9.4], [-2.3, -0.6, 3.6, 8.8, 13.6, 18.0, 22.2, 22.6, 18.2, 11.9, 5.4, -0.4]],
+  ['강릉', 37.75, 128.88, [5.1, 7.3, 12.0, 18.9, 23.6, 26.3, 28.6, 28.9, 24.9, 20.3, 13.4, 7.2], [-3.6, -2.2, 1.9, 7.4, 12.5, 16.9, 20.8, 21.4, 16.5, 10.4, 3.8, -1.9]],
+  ['제주', 33.50, 126.53, [8.6, 9.8, 13.2, 17.8, 21.8, 25.1, 29.1, 30.2, 26.6, 21.9, 16.4, 11.1], [3.3, 3.9, 6.8, 10.9, 15.1, 19.4, 24.1, 24.8, 21.0, 15.6, 10.0, 5.2]],
+];
+
+// ───────── 상태 ─────────
+const state = { temp: 15, season: seasonOfMonth(new Date().getMonth() + 1), lastQuery: '', statSeason: null };
+let userLooks = loadUserLooks();
+
+// ───────── 도우미 ─────────
+const $ = (s) => document.querySelector(s);
+const itemById = (id) => ITEMS.find((i) => i.id === id) || BAGS.find((b) => b.id === id);
+const isDenim = (c) => DENIMS.includes(c);
+const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+
+function seasonOfMonth(m) {
+  if (m >= 3 && m <= 5) return 'spring';
+  if (m >= 6 && m <= 8) return 'summer';
+  if (m >= 9 && m <= 11) return 'autumn';
+  return 'winter';
+}
+
+function hasBatchim(word) {
+  const code = word.charCodeAt(word.length - 1);
+  if (code < 0xac00 || code > 0xd7a3) return false;
+  return (code - 0xac00) % 28 !== 0;
+}
+function josa(word, withB, withoutB) { return word + (hasBatchim(word) ? withB : withoutB); }
+function josaRo(word) {
+  const code = word.charCodeAt(word.length - 1);
+  const isRieul = code >= 0xac00 && code <= 0xd7a3 && (code - 0xac00) % 28 === 8;
+  return word + (hasBatchim(word) && !isRieul ? '으로' : '로');
+}
+
+function lum(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+}
+
+function sw(colorId) {
+  return `<span class="sw" style="background:${COLORS[colorId].hex}"></span>`;
+}
+
+// 입기 좋은 기온 범위 안이면 3점, 멀어질수록 감점
+function tempFit(item, t) {
+  const [lo, hi] = item.temp;
+  if (t >= lo && t <= hi) return 3;
+  const d = t < lo ? lo - t : t - hi;
+  if (d <= 3) return 1;
+  if (d <= 6) return -2;
+  return -6;
+}
+
+function styleOverlap(a, b) { return a.style.filter((s) => b.style.includes(s)).length; }
+
+function allowsColor(item, c) {
+  if (item.colors) return item.colors.includes(c);
+  if (isDenim(c)) return !!item.denimOk;
+  return true;
+}
+
+function allLooks() { return SAMPLE_LOOKS.concat(userLooks); }
+
+// 검색어에서 가장 길게 일치하는 별칭 찾기
+function findBest(text, list) {
+  let best = null, bestLen = 0;
+  for (const it of list) {
+    for (const a of it.alias) {
+      const key = a.replace(/\s+/g, '').toLowerCase();
+      if (text.includes(key) && key.length > bestLen) { best = it; bestLen = key.length; }
+    }
+  }
+  return best;
+}
+
+function parseQuery(q) {
+  const text = q.replace(/\s+/g, '').toLowerCase();
+  const colorList = Object.entries(COLORS).map(([id, c]) => ({ id, alias: c.alias }));
+  const color = findBest(text, colorList);
+
+  // 모양 단어: 그룹마다 가장 길게 일치하는 것 하나
+  const found = {};
+  for (const group of Object.keys(SHAPE_GROUPS)) {
+    const hit = findBest(text, SHAPES.filter((sh) => sh.group === group));
+    if (hit) found[group] = hit;
+  }
+  const fitId = found.fit && found.fit.id;
+
+  let item = findBest(text, ITEMS);
+  // 옷 종류 없이 모양만 쓴 경우 ("반팔", "부츠컷", "와이드 바지")
+  if (!item) {
+    let id = null;
+    if (found.sleeve) id = SLEEVE_ITEM[found.sleeve.id];
+    else if (fitId === 'wide') id = 'widepants';
+    else if (/팬츠|바지/.test(text)) id = 'slacks';
+    else if (['bootcut', 'straight', 'slim'].includes(fitId) || found.rise) id = 'jeans';
+    else if (found.length || fitId === 'oversize') id = 'tee';
+    else if (found.neck) id = 'knit';
+    item = id ? itemById(id) : null;
+  }
+  // 티셔츠는 소매 길이에 따라 다른 옷으로 본다
+  if (item && found.sleeve && ['tee', 'longtee', 'sleeveless'].includes(item.id)) {
+    item = itemById(SLEEVE_ITEM[found.sleeve.id]);
+  }
+
+  const shapes = {}, ignored = [];
+  for (const [group, sh] of Object.entries(found)) {
+    if (item && sh.cats.includes(item.cat)) shapes[group] = sh;
+    else if (item) ignored.push(sh.name);
+  }
+  const bag = item ? null : findBest(text, BAGS);
+  return { colorId: color ? color.id : null, item, bag, shapes, ignored };
+}
+
+// 모양 조건을 반영한 옷 (소매 길이만큼 입기 좋은 기온을 옮긴다)
+function shapedItem(item, shapes) {
+  if (item.cat !== 'top' || !shapes.sleeve) return item;
+  const shift = SLEEVE_TEMP[shapes.sleeve.id] - SLEEVE_TEMP[item.sleeve || 'longsleeve'];
+  return shift ? { ...item, temp: [item.temp[0] + shift, item.temp[1] + shift] } : item;
+}
+
+// "브이넥 반팔 크롭 니트"처럼 이름 앞에 붙일 모양 글자 (옷 이름에 이미 담긴 건 뺀다)
+function shapeWords(item, shapes) {
+  const words = [];
+  for (const group of ['neck', 'sleeve', 'length', 'rise', 'fit']) {
+    const sh = shapes[group];
+    if (!sh) continue;
+    if (group === 'sleeve' && (sh.id === (item.sleeve || 'longsleeve') || ['tee', 'longtee', 'sleeveless'].includes(item.id))) continue;
+    if (group === 'fit' && sh.id === item.sil) continue;
+    words.push(sh.name);
+  }
+  return words;
+}
+
+// 하의 실루엣: 검색한 핏이 있으면 그것, 없으면 옷 기본값
+function bottomSil(bottom) {
+  const fit = bottom.shapes && bottom.shapes.fit;
+  if (fit && fit.id !== 'regular') return fit.id;
+  if (bottom.fitLabel === '슬림핏') return 'slim';
+  return bottom.item.sil || 'straight';
+}
+
+// 실루엣 균형 규칙: 검색한 옷의 핏·기장에 맞춰 상대 옷 점수와 붙일 핏 이름을 정한다
+function silhouetteRule(base) {
+  const sh = base.shapes;
+  if (base.item.cat !== 'bottom') {
+    if (sh.length && sh.length.id === 'crop') return {
+      score: (it) => (it.sil === 'wide' ? 2 : it.sil === 'straight' ? 1 : 0),
+      label: (it) => (it.sil === 'short' ? null : '하이웨이스트'),
+      reason: '크롭 기장 + 하이웨이스트 하의로 다리가 길어 보여요' };
+    if (sh.fit && sh.fit.id === 'oversize') return {
+      score: (it) => (['straight', 'slim', 'short'].includes(it.sil) ? 2 : -1),
+      label: (it) => (it.sil === 'straight' ? '일자핏' : null),
+      reason: '넉넉한 상의엔 일자·슬림한 하의로 실루엣 균형' };
+    if (sh.fit && sh.fit.id === 'slim') return {
+      score: (it) => (it.sil === 'wide' ? 2 : 0),
+      label: () => null,
+      reason: '몸에 붙는 상의엔 여유 있는 하의로 대비' };
+    if (sh.length && sh.length.id === 'longline') return {
+      score: (it) => (it.sil === 'slim' ? 2 : it.sil === 'straight' ? 1 : -1),
+      label: (it) => (it.sil === 'straight' ? '슬림핏' : null),
+      reason: '긴 기장 상의엔 슬림한 하의로 비율 정리' };
+    return null;
+  }
+  const sil = bottomSil(base);
+  if (sh.rise && sh.rise.id === 'highwaist') return {
+    score: (it) => (it.crop ? 2 : 0),
+    label: (it) => (it.crop ? '크롭' : null),
+    reason: '하이웨이스트엔 크롭 상의나 앞부분만 넣어 입기' };
+  if (sil === 'wide' || sil === 'bootcut') return {
+    score: (it) => (it.crop ? 2 : 0),
+    label: (it) => (it.crop ? '크롭' : null),
+    reason: '넉넉한 하의엔 짧은 상의로 상체를 가볍게' };
+  if (sil === 'slim' || sil === 'short') return {
+    score: (it) => (it.over ? 2 : 0),
+    label: (it) => (it.over ? '오버핏' : null),
+    reason: '슬림하거나 짧은 하의엔 오버핏 상의로 균형' };
+  return null;
+}
+
+// 계절이 같은 예시 코디는 가중치 1, 다른 계절은 0.3
+function lookBonus(base, partnerColor, partnerItem) {
+  const baseIsBottom = base.item.cat === 'bottom';
+  let colorHits = 0, itemHits = 0, score = 0;
+  for (const l of allLooks()) {
+    const w = l.season === state.season ? 1 : 0.3;
+    const bc = baseIsBottom ? l.bottomColor : l.topColor;
+    const bi = baseIsBottom ? l.bottom : l.top;
+    const pc = baseIsBottom ? l.topColor : l.bottomColor;
+    const pi = baseIsBottom ? l.top : l.bottom;
+    if (bc === base.colorId && pc === partnerColor) { score += 1.2 * w; colorHits++; }
+    if (bi === base.item.id && pi === partnerItem.id) { score += 1 * w; itemHits++; }
+  }
+  return { score: Math.min(score, 4), colorHits, itemHits };
+}
+
+// 데님 색은 기온에 따라 연청/중청/진청으로
+function seasonalDenim(c, t) {
+  if (c !== 'denim') return c;
+  if (t >= 22) return 'lightdenim';
+  if (t <= 8) return 'darkdenim';
+  return 'denim';
+}
+
+function colorReason(baseId, partnerId) {
+  const A = COLORS[baseId], B = COLORS[partnerId];
+  if (baseId === partnerId) return `${A.name} 원톤이라 길어 보이고 차분해요`;
+  if (isDenim(baseId) && isDenim(partnerId)) return '청청 코디는 톤 차이를 주면 세련돼 보여요';
+  const na = NEUTRAL.has(baseId), nb = NEUTRAL.has(partnerId);
+  if (!na && nb) return `${A.name} 포인트를 ${josa(B.name, '이', '가')} 차분하게 받쳐 줘요`;
+  if (na && !nb) return `${josaRo(B.name)} 생기 있는 포인트를 줘요`;
+  if (!na && !nb) return '두 가지 컬러가 만나 과감한 포인트 룩이 돼요';
+  if (Math.abs(lum(A.hex) - lum(B.hex)) > 0.4) return '명도 차이가 커서 또렷하고 깔끔한 인상';
+  return '비슷한 톤끼리 묶은 톤온톤이라 부드럽고 세련돼요';
+}
+
+function pickBagColor(bag, top, bottom, usedColors) {
+  let candidates;
+  if (bag.colors) candidates = bag.colors;
+  else if (state.temp >= 23) candidates = ['ivory', 'beige', 'black', 'white', 'brown'];
+  else if (state.temp <= 8) candidates = ['black', 'brown', 'burgundy', 'camel', 'charcoal'];
+  else candidates = ['brown', 'black', 'camel', 'ivory', 'beige'];
+
+  let best = null, bestScore = -Infinity;
+  for (const c of candidates) {
+    let s = 0;
+    if (c === top.colorId && NEUTRAL.has(c)) s += 2;
+    if (Math.abs(lum(COLORS[c].hex) - lum(COLORS[bottom.colorId].hex)) > 0.3) s += 1.5;
+    if (c === bottom.colorId) s -= 1;
+    if (usedColors.has(c)) s -= 0.6;
+    s -= candidates.indexOf(c) * 0.1;
+    if (s > bestScore) { bestScore = s; best = c; }
+  }
+  let reason;
+  if (best === top.colorId) reason = '상의 컬러와 맞춰 통일감을 줘요';
+  else if (lum(COLORS[best].hex) < lum(COLORS[bottom.colorId].hex)) reason = '밝은 하의 옆에서 룩을 잡아 주는 어두운 톤';
+  else if (lum(COLORS[best].hex) > lum(COLORS[bottom.colorId].hex) + 0.3) reason = '어두운 하의에 가벼움을 더하는 밝은 톤';
+  else reason = '전체 톤과 자연스럽게 섞이는 뉴트럴 컬러';
+  return { colorId: best, reason };
+}
+
+function pickBag(top, bottom, usedBags, usedColors) {
+  const styles = new Set([...top.item.style, ...bottom.item.style]);
+  let best = null, bestScore = -Infinity;
+  for (const bag of BAGS) {
+    if (usedBags.has(bag.id)) continue;
+    const tf = tempFit(bag, state.temp);
+    if (tf < 1) continue;
+    let s = tf + bag.style.filter((x) => styles.has(x)).length * 1.5;
+    for (const l of allLooks()) {
+      if (l.bag === bag.id && (l.top === top.item.id || l.bottom === bottom.item.id)) s += l.season === state.season ? 0.8 : 0.3;
+    }
+    if (s > bestScore) { bestScore = s; best = bag; }
+  }
+  if (!best) return { bag: null };
+  return { bag: best, ...pickBagColor(best, top, bottom, usedColors) };
+}
+
+function pickOuter(base, partner) {
+  const exclude = new Set([base.colorId, partner.colorId]);
+  let best = null, bestScore = -Infinity;
+  for (const it of ITEMS.filter((i) => i.cat === 'outer' && !i.colors)) {
+    const tf = tempFit(it, state.temp);
+    if (tf < 1) continue;
+    const s = tf + styleOverlap(it, base.item) * 1.2;
+    if (s > bestScore) { bestScore = s; best = it; }
+  }
+  if (!best) return null;
+  const colorId = ['camel', 'black', 'charcoal', 'beige', 'navy', 'brown'].find((c) => !exclude.has(c));
+  return { item: best, colorId };
+}
+
+function recommend(base) {
+  const t = state.temp;
+  const wantCats = base.item.cat === 'bottom' ? ['top'] : ['bottom'];
+  const allowSkirt = $('#skirtToggle').checked;
+  const pool = ITEMS.filter((i) => wantCats.includes(i.cat) && (allowSkirt || !i.skirt));
+  const partners = [...new Set(COLORS[base.colorId].partners.map((c) => seasonalDenim(c, t)))];
+  const rule = silhouetteRule(base);
+
+  const used = new Set();
+  const combos = [];
+  for (const c of partners) {
+    let best = null, bestScore = -Infinity, bestBonus = null;
+    for (const it of pool) {
+      if (used.has(it.id) || !allowsColor(it, c)) continue;
+      const tf = tempFit(it, t);
+      if (tf < 1) continue;
+      const bonus = lookBonus(base, c, it);
+      let s = tf + styleOverlap(it, base.item) * 1.5 + bonus.score;
+      if (isDenim(c) && it.id === 'jeans') s += 1;
+      if (rule) s += rule.score(it);
+      if (s > bestScore) { bestScore = s; best = it; bestBonus = bonus; }
+    }
+    if (best) {
+      used.add(best.id);
+      const fitLabel = rule ? rule.label(best) : null;
+      const silReason = rule && (fitLabel || rule.score(best) > 0) ? rule.reason : null;
+      combos.push({ partner: { colorId: c, item: best, shapes: {}, fitLabel }, bonus: bestBonus, silReason });
+    }
+    if (combos.length >= 4) break;
+  }
+
+  const usedBags = new Set(), usedBagColors = new Set();
+  for (const combo of combos) {
+    const top = base.item.cat === 'bottom' ? combo.partner : base;
+    const bottom = base.item.cat === 'bottom' ? base : combo.partner;
+    combo.top = top;
+    combo.bottom = bottom;
+    combo.bag = pickBag(top, bottom, usedBags, usedBagColors);
+    if (combo.bag.bag) { usedBags.add(combo.bag.bag.id); usedBagColors.add(combo.bag.colorId); }
+    if (t <= 11 && base.item.cat !== 'outer') combo.outer = pickOuter(base, combo.partner);
+    combo.hat = pickHat(top, bottom, combo.bag);
+    const taken = [combo.outer && combo.outer.colorId, combo.hat && combo.hat.colorId].filter(Boolean);
+    combo.accessories = pickAccessories(top, bottom, combo.bag, taken);
+  }
+  return combos;
+}
+
+function mainStyles(top, bottom) {
+  const both = top.item.style.filter((s) => bottom.item.style.includes(s));
+  return both.length ? both : top.item.style;
+}
+
+function pickHat(top, bottom, bag) {
+  const styles = mainStyles(top, bottom);
+  let best = null, bestScore = 0;
+  for (const h of HATS) {
+    if (tempFit(h, state.temp) < 3) continue;
+    const s = h.style.filter((x) => styles.includes(x)).length;
+    if (s > bestScore) { bestScore = s; best = h; }
+  }
+  if (!best) return null;
+  let colorId = best.colors.includes(bag.colorId) ? bag.colorId
+    : best.colors.find((c) => c !== top.colorId && c !== bottom.colorId) || best.colors[0];
+  const reason = colorId === bag.colorId ? '가방과 같은 색으로 맞춰 통일감' : '상하의와 겹치지 않는 색으로 얼굴 쪽에 포인트';
+  return { item: best, colorId, reason };
+}
+
+function pickAccessories(top, bottom, bag, taken) {
+  const t = state.temp;
+  const styles = mainStyles(top, bottom);
+  const metal = WARM.has(top.colorId) || WARM.has(bottom.colorId) ? '골드' : '실버';
+  const used = new Set([top.colorId, bottom.colorId, ...taken]);
+  const avoid = (list) => list.find((c) => !used.has(c)) || list[0];
+  const list = [];
+  if (t <= 8) list.push({ name: '울 머플러', colorId: avoid(['camel', 'gray', 'ivory', 'burgundy', 'charcoal']), reason: '목을 따뜻하게, 상하의와 다른 색으로 포인트' });
+  if (t >= 23) list.push({ name: '선글라스', colorId: 'black', reason: '햇빛 강한 날 여름 코디 마무리' });
+  const neck = top.shapes && top.shapes.neck ? top.shapes.neck.id : top.item.id === 'turtleneck' ? 'halfneck' : null;
+  const neckAcc = {
+    vneck: { name: `${metal} 펜던트 목걸이`, reason: '브이넥 라인을 따라 시선이 세로로 길어져요' },
+    roundneck: { name: `${metal} 레이어드 목걸이`, reason: '라운드넥 위 목선이 허전하지 않게' },
+    halfneck: { name: `${metal} 롱 목걸이`, reason: '목까지 덮는 넥라인엔 길게 떨어지는 목걸이' },
+    collar: { name: `${metal} 손목시계`, reason: '카라가 있는 단정한 상의엔 시계로 마무리' },
+    squareneck: { name: `${metal} 초커`, reason: '드러난 쇄골 라인을 살려 줘요' },
+    offshoulder: { name: `${metal} 초커`, reason: '드러난 어깨·쇄골 라인을 살려 줘요' },
+  }[neck];
+  if (neckAcc) list.push(neckAcc);
+  else if (styles.includes('romantic')) list.push({ name: '진주 귀걸이', colorId: 'ivory', reason: '로맨틱한 무드를 살려 줘요' });
+  else if (styles.includes('office') || styles.includes('minimal')) list.push({ name: `${metal} 손목시계`, reason: `${metal === '골드' ? '따뜻한' : '차가운'} 톤 옷에 어울리는 ${metal} 메탈` });
+  else list.push({ name: `${metal} 체인 목걸이`, reason: `${metal === '골드' ? '따뜻한' : '차가운'} 톤 옷에 어울리는 ${metal} 메탈` });
+  if (bottom.item.cat === 'bottom' && !bottom.item.skirt && bottom.item.id !== 'jogger' && t > 8 && t < 23) {
+    list.push({ name: '가죽 벨트', colorId: ['black', 'brown'].includes(bag.colorId) ? bag.colorId : 'brown', reason: '가방과 가죽 색을 맞추면 정돈돼 보여요' });
+  }
+  return list.slice(0, 2);
+}
+
+// 핀터레스트용 영어 이름: "light wash wide leg jeans"처럼 색 → 모양 → 옷 순서
+const FIT_LABEL_EN = { '하이웨이스트': 'high waisted', '일자핏': 'straight leg', '슬림핏': 'slim fit', '크롭': 'cropped', '오버핏': 'oversized' };
+function englishName(x) {
+  const shapeEn = (x.shapes ? shapeWords(x.item, x.shapes) : [])
+    .map((name) => SHAPES.find((sh) => sh.name === name).en);
+  let itemEn = x.item.en;
+  // 데님 색 반바지처럼 옷 이름에 데님이 안 들어가면 붙여 준다
+  if (isDenim(x.colorId) && !/jeans|denim/.test(itemEn)) itemEn = 'denim ' + itemEn;
+  return [COLORS[x.colorId].en, ...shapeEn, FIT_LABEL_EN[x.fitLabel], itemEn].filter(Boolean).join(' ');
+}
+
+// 사진 검색 링크 (새 탭에서 열기만 하고, 사이트 내용을 가져오지는 않는다)
+function pinterestUrl(q) { return `https://www.pinterest.co.kr/search/pins/?q=${encodeURIComponent(q)}`; }
+function instagramUrl(q) { return `https://www.instagram.com/explore/tags/${encodeURIComponent(q.replace(/\s+/g, ''))}/`; }
+
+// ───────── 그림 ─────────
+function figure(combo) {
+  const stroke = 'rgba(0,0,0,.25)';
+  const topHex = COLORS[combo.top.colorId].hex;
+  const bottomHex = COLORS[combo.bottom.colorId].hex;
+  const sil = bottomSil(combo.bottom);
+  const shape = combo.bottom.item.shape || ({ wide: 'wide', slim: 'slim', bootcut: 'bootcut' }[sil] || 'pants');
+  const isCrop = (combo.top.shapes && combo.top.shapes.length && combo.top.shapes.length.id === 'crop') || combo.top.fitLabel === '크롭';
+  const topEnd = isCrop ? 68 : 82;
+  const bottoms = {
+    pants: 'M40 80 L80 80 L82 160 L63 160 L60 104 L57 160 L38 160 Z',
+    wide: 'M38 80 L82 80 L92 160 L64 160 L60 104 L56 160 L28 160 Z',
+    slim: 'M41 80 L79 80 L74 160 L62 160 L60 104 L58 160 L46 160 Z',
+    bootcut: 'M40 80 L80 80 L78 136 L86 160 L63 160 L60 104 L57 160 L34 160 L42 136 Z',
+    shorts: 'M40 80 L80 80 L85 116 L63 116 L60 98 L57 116 L35 116 Z',
+    skirt: 'M40 80 L80 80 L92 124 L28 124 Z',
+    longskirt: 'M40 80 L80 80 L94 160 L26 160 Z',
+  };
+  let svg = `<svg viewBox="0 -14 120 179" role="img" aria-label="코디 미리보기">`;
+  if (combo.hat) {
+    const hatHex = COLORS[combo.hat.colorId].hex;
+    svg += `<path d="M49 9 Q60 -11 71 9 Z" fill="${hatHex}" stroke="${stroke}"/>`;
+    svg += `<rect x="44" y="8" width="32" height="4" rx="2" fill="${hatHex}" stroke="${stroke}"/>`;
+  }
+  if (combo.outer) {
+    svg += `<path d="M34 18 L52 12 L68 12 L86 18 L102 52 L90 58 L86 50 L86 116 L34 116 L34 50 L30 58 L18 52 Z" fill="${COLORS[combo.outer.colorId].hex}" stroke="${stroke}"/>`;
+  }
+  if (isCrop) svg += `<rect x="42" y="66" width="36" height="16" fill="#e9c9ae"/>`;
+  svg += `<path d="${bottoms[shape]}" fill="${bottomHex}" stroke="${stroke}"/>`;
+  if (combo.top.item.cat === 'outer' || !combo.outer) {
+    svg += `<path d="M38 20 L52 14 Q60 22 68 14 L82 20 L98 48 L86 54 L80 42 L80 ${topEnd} L40 ${topEnd} L40 42 L34 54 L22 48 Z" fill="${topHex}" stroke="${stroke}"/>`;
+  } else {
+    svg += `<path d="M48 16 L52 14 Q60 22 68 14 L72 16 L72 ${topEnd} L48 ${topEnd} Z" fill="${topHex}" stroke="${stroke}"/>`;
+  }
+  if (combo.bag.bag) {
+    const bagHex = COLORS[combo.bag.colorId].hex;
+    svg += `<path d="M80 22 Q102 58 104 92" fill="none" stroke="${bagHex}" stroke-width="2"/>`;
+    svg += `<rect x="93" y="90" width="24" height="20" rx="5" fill="${bagHex}" stroke="${stroke}"/>`;
+  }
+  return svg + '</svg>';
+}
+
+// ───────── 화면: 날씨 ─────────
+function bandOf(t) { return BANDS.find((b) => t >= b.min); }
+
+function renderGuide() {
+  const t = state.temp;
+  const b = bandOf(t);
+  $('#tempSliderVal').textContent = `${t}°C`;
+  $('#guide').innerHTML = `
+    <div><strong>${b.label}</strong> · ${SEASONS[state.season]} · 추천 소재: ${b.mat}</div>
+    <div style="margin-top:6px">${b.wear.map((w) => `<span class="chip static">${w}</span>`).join('')}</div>`;
+}
+
+function setTemp(t) {
+  state.temp = Math.round(t);
+  $('#tempSlider').value = state.temp;
+  renderGuide();
+  if (state.lastQuery) search(state.lastQuery);
+}
+
+// 오늘 날짜의 평년 기온: 달마다 15일을 기준으로 앞뒤 달 값을 이어서 계산한다
+function normalToday(hiList, loList, date = new Date()) {
+  const daysIn = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const pos = date.getMonth() + (date.getDate() - 15) / daysIn;
+  const i = Math.floor(pos), f = pos - i;
+  const at = (list, k) => list[(k + 12) % 12];
+  const mix = (list) => at(list, i) * (1 - f) + at(list, i + 1) * f;
+  return { max: Math.round(mix(hiList)), min: Math.round(mix(loList)) };
+}
+
+function loadWeather(cityIdx, note = '') {
+  const [name, , , hiList, loList] = CITIES[cityIdx];
+  const now = new Date();
+  const { max, min } = normalToday(hiList, loList, now);
+  const avg = Math.round((max + min) / 2);
+  const gap = max - min;
+  $('#city').value = cityIdx;
+  $('#tempBig').textContent = `${avg}°`;
+  $('#weatherText').innerHTML =
+    `<strong>${esc(note || name)}</strong> · ${now.getMonth() + 1}월 ${now.getDate()}일 평년 기온<br>` +
+    `최고 ${max}° / 최저 ${min}°` +
+    (gap >= 10 ? ` · <span style="color:var(--warn-text)">일교차 ${gap}°, 걸칠 옷을 챙기세요</span>` : '') +
+    `<br><small>해마다 이맘때 평균이라 오늘 날씨와 다를 수 있어요. 아래 슬라이더로 맞춰 주세요. ` +
+    `<a href="https://www.weather.go.kr/w/index.do" target="_blank" rel="noopener">오늘 날씨 보기 ↗</a></small>`;
+  setTemp(avg);
+}
+
+// 내 위치(브라우저 기능)에서 가장 가까운 지역을 고른다. 위치는 밖으로 보내지 않는다.
+function nearestCity(lat, lon) {
+  let best = 0, bestD = Infinity;
+  CITIES.forEach(([, la, lo], i) => {
+    const d = (la - lat) ** 2 + ((lo - lon) * Math.cos(lat * Math.PI / 180)) ** 2;
+    if (d < bestD) { bestD = d; best = i; }
+  });
+  return best;
+}
+
+// ───────── 화면: 검색 결과 ─────────
+function search(q) {
+  state.lastQuery = q;
+  const out = $('#result');
+  const { colorId, item: rawItem, bag, shapes, ignored } = parseQuery(q);
+  const item = rawItem && shapedItem(rawItem, shapes);
+
+  if (!item) {
+    out.innerHTML = `<div class="card">${bag
+      ? '가방보다는 상의나 하의로 검색해 주세요. 예: <strong>네이비 니트</strong>, <strong>베이지 슬랙스</strong>'
+      : `'${esc(q)}'에서 옷 종류를 찾지 못했어요. 니트, 셔츠, 슬랙스, 청바지, 코트처럼 입력해 주세요.`}</div>`;
+    return;
+  }
+
+  let color = colorId;
+  if (item.colors && !item.colors.includes(color)) color = item.colors[0];
+  if (!color) {
+    out.innerHTML = `<div class="card">
+      <strong>${esc(item.name)}</strong>${josa(item.name, '은', '는').slice(item.name.length)} 어떤 색인가요?
+      <div style="margin-top:10px">${Object.entries(COLORS).filter(([id]) => allowsColor(item, id))
+        .map(([id, c]) => `<button class="chip" type="button" data-q="${c.name} ${esc(q.trim())}">${sw(id)}${c.name}</button>`).join('')}</div></div>`;
+    return;
+  }
+
+  const base = { colorId: color, item, shapes };
+  const baseName = [...shapeWords(item, shapes), item.name].join(' ');
+  const combos = recommend(base);
+  const c = COLORS[color];
+  const fit = tempFit(item, state.temp);
+  let warn = '';
+  if (fit < 3) {
+    warn = state.temp > item.temp[1]
+      ? `지금 ${state.temp}°C에는 ${josa(item.name, '이', '가')} 조금 더울 수 있어요. 아침저녁에 입거나 얇은 소재를 골라 보세요.`
+      : item.cat === 'outer'
+        ? `지금 ${state.temp}°C에는 ${item.name}만으로는 추워요. 안에 두꺼운 니트를 겹치거나 더 따뜻한 아우터를 고르세요.`
+        : `지금 ${state.temp}°C에는 ${item.name}만으로는 추워요. 겉옷을 함께 입으세요.`;
+  }
+  const partnerLabel = item.cat === 'bottom' ? '상의' : '하의';
+
+  out.innerHTML = `
+    <div class="card">
+      <div class="board-head">
+        <div class="big-sw" style="background:${c.hex}"></div>
+        <div style="flex:1;min-width:220px">
+          <div class="eyebrow">MY ITEM</div>
+          <h2>${c.name} ${esc(baseName)}</h2>
+          <div class="row" style="margin:8px 0 2px">${[
+            `<span class="chip static">${sw(color)}${c.name}</span>`,
+            `<span class="chip static">종류 · ${item.name}</span>`,
+            ...Object.entries(shapes).map(([g, sh]) => `<span class="chip static">${SHAPE_GROUPS[g]} · ${sh.name}</span>`),
+          ].join('')}</div>
+          <div class="muted">소재 ${item.material} · 잘 맞는 기온 ${item.temp[0]}~${item.temp[1]}°C · ${item.style.map(styleName).join(' · ')}</div>
+        </div>
+      </div>
+      ${warn ? `<div class="warn">${warn}</div>` : ''}
+      ${ignored.length ? `<p class="muted">'${ignored.join("', '")}' 조건은 ${item.name}에 맞지 않아서 뺐어요.</p>` : ''}
+      <div class="ext">
+        <span class="muted">실제 코디 사진</span>
+        <a class="chip" href="${pinterestUrl(englishName(base) + ' outfit')}" target="_blank" rel="noopener">핀터레스트 <span class="muted">"${englishName(base)} outfit"</span> ↗</a>
+        <a class="chip" href="${instagramUrl(q.trim() + '코디')}" target="_blank" rel="noopener">인스타그램 #${esc(q.replace(/\s+/g, ''))}코디 ↗</a>
+      </div>
+    </div>
+    <div class="section-title">
+      <h2>오늘의 코디 보드</h2>
+      <span class="muted">${state.temp}°C · 어울리는 ${partnerLabel} · 가방 · 모자 · 액세서리</span>
+    </div>
+    ${combos.length ? `<div class="combos">${combos.map((cb, i) => comboCard(cb, base, i)).join('')}</div>`
+      : `<p class="muted">지금 기온(${state.temp}°C)에 맞는 ${partnerLabel}를 찾지 못했어요. 기온을 조정해 보세요.</p>`}`;
+}
+
+function styleName(s) {
+  return { minimal: '미니멀', casual: '캐주얼', office: '오피스', street: '스트릿', romantic: '로맨틱' }[s];
+}
+
+const METAL_HEX = { '골드': '#c9a227', '실버': '#b8bcc2' };
+
+function comboCard(cb, base, i) {
+  const p = cb.partner;
+  const pc = COLORS[p.colorId];
+  const reasons = [colorReason(base.colorId, p.colorId)];
+  if (cb.silReason) reasons.push(`실루엣: ${cb.silReason}`);
+  const pName = [p.fitLabel, p.item.name].filter(Boolean).join(' ');
+  reasons.push(`${p.item.name}(${p.item.material}): ${tempFit(p.item, state.temp) === 3 ? `${state.temp}°C에 딱 맞는 두께` : '지금 기온에 무난한 두께'}`);
+  if (cb.bonus.colorHits) reasons.push(`예시 코디 ${cb.bonus.colorHits}개에서 같은 컬러 조합 확인`);
+  if (cb.bag.bag) reasons.push(`가방: ${cb.bag.reason}`);
+  if (cb.hat) reasons.push(`모자: ${cb.hat.reason}`);
+  for (const a of cb.accessories) reasons.push(`${a.name}: ${a.reason}`);
+  const comboQuery = `${englishName(cb.top)} ${englishName(cb.bottom)} outfit`;
+
+  // 핀 배경과 아래 팔레트 띠는 이 코디의 색으로 만든다
+  const topHex = COLORS[cb.top.colorId].hex, bottomHex = COLORS[cb.bottom.colorId].hex;
+  const palette = [cb.top.colorId, cb.bottom.colorId, cb.outer && cb.outer.colorId, cb.bag.bag && cb.bag.colorId, cb.hat && cb.hat.colorId]
+    .filter(Boolean).filter((c, k, arr) => arr.indexOf(c) === k);
+  const accSw = (a) => (a.colorId ? sw(a.colorId) + COLORS[a.colorId].name + ' '
+    : `<span class="sw" style="background:${METAL_HEX[a.name.split(' ')[0]] || '#ccc'}"></span>`);
+  return `
+    <article class="pin">
+      <div class="pin-visual" style="background:linear-gradient(160deg, ${topHex}38, ${bottomHex}5c)">
+        <span class="pin-no">No.${i + 1}</span>
+        <a class="pin-save" href="${pinterestUrl(comboQuery)}" target="_blank" rel="noopener" title="핀터레스트 검색: ${esc(comboQuery)}">핀터레스트 ↗</a>
+        ${figure(cb)}
+      </div>
+      <div class="palette">${palette.map((c) => `<span style="background:${COLORS[c].hex}" title="${COLORS[c].name}"></span>`).join('')}</div>
+      <div class="pin-body">
+        <div class="piece">${sw(p.colorId)}${pc.name} ${pName} <small>${p.item.cat === 'bottom' ? '하의' : '상의'}</small></div>
+        ${cb.outer ? `<div class="piece">${sw(cb.outer.colorId)}${COLORS[cb.outer.colorId].name} ${cb.outer.item.name} <small>겉옷</small></div>` : ''}
+        ${cb.bag.bag ? `<div class="piece">${sw(cb.bag.colorId)}${COLORS[cb.bag.colorId].name} ${cb.bag.bag.name} <small>가방</small></div>` : ''}
+        ${cb.hat ? `<div class="piece minor">${sw(cb.hat.colorId)}${COLORS[cb.hat.colorId].name} ${cb.hat.item.name} <small>모자</small></div>` : ''}
+        ${cb.accessories.map((a) => `<div class="piece minor">${accSw(a)}${a.name} <small>액세서리</small></div>`).join('')}
+        <details>
+          <summary>왜 어울릴까?</summary>
+          <ul>${reasons.map((r) => `<li>${r}</li>`).join('')}</ul>
+        </details>
+      </div>
+    </article>`;
+}
+
+// ───────── 화면: 분석 ─────────
+function countBy(list, keyFn) {
+  const m = new Map();
+  for (const x of list) { const k = keyFn(x); m.set(k, (m.get(k) || 0) + 1); }
+  return [...m.entries()].sort((a, b) => b[1] - a[1]);
+}
+
+function bars(entries, labelFn, max) {
+  return entries.map(([k, n]) => `
+    <div class="bar-row"><span>${labelFn(k)}</span>
+      <div class="bar-track"><div class="bar" style="width:${(n / max) * 100}%"></div></div><span>${n}</span></div>`).join('');
+}
+
+function renderStats() {
+  const season = state.statSeason || state.season;
+  $('#seasonTabs').innerHTML = Object.entries(SEASONS)
+    .map(([k, v]) => `<button class="chip ${k === season ? 'on' : ''}" type="button" data-season="${k}">${v}</button>`).join('');
+
+  const looks = allLooks().filter((l) => l.season === season);
+  $('#dataNote').textContent =
+    `예시 코디 ${SAMPLE_LOOKS.length}개 + 직접 추가한 코디 ${userLooks.length}개 · ${SEASONS[season]} ${looks.length}개 분석`;
+  if (!looks.length) { $('#stats').innerHTML = '<p class="muted">이 계절의 코디가 아직 없어요.</p>'; return; }
+
+  const topColors = countBy(looks, (l) => l.topColor).slice(0, 5);
+  const bottomColors = countBy(looks, (l) => l.bottomColor).slice(0, 5);
+  const materials = countBy(looks, (l) => itemById(l.top).material).slice(0, 5);
+  const pairs = countBy(looks, (l) => `${l.topColor}|${l.bottomColor}`).slice(0, 5);
+  const bags = countBy(looks, (l) => `${l.bagColor}|${l.bag}`).slice(0, 4);
+  const colorLabel = (k) => `${sw(k)}${COLORS[k].name}`;
+
+  $('#stats').innerHTML = `
+    <div><h3>상의 컬러</h3>${bars(topColors, colorLabel, topColors[0][1])}</div>
+    <div><h3>하의 컬러</h3>${bars(bottomColors, colorLabel, bottomColors[0][1])}</div>
+    <div><h3>상의·아우터 소재</h3>${bars(materials, (k) => k, materials[0][1])}</div>
+    <div><h3>자주 보인 상하의 조합</h3>${pairs.map(([k, n]) => {
+      const [t, b] = k.split('|');
+      return `<div class="pair">${sw(t)}${COLORS[t].name} + ${sw(b)}${COLORS[b].name} <span class="muted">${n}회</span></div>`;
+    }).join('')}</div>
+    <div><h3>자주 쓴 가방</h3>${bags.map(([k, n]) => {
+      const [c, id] = k.split('|');
+      return `<div class="pair">${sw(c)}${COLORS[c].name} ${itemById(id).name} <span class="muted">${n}회</span></div>`;
+    }).join('')}</div>`;
+}
+
+// ───────── 직접 추가한 코디 ─────────
+function loadUserLooks() {
+  try { return JSON.parse(localStorage.getItem('userLooks') || '[]'); } catch (e) { return []; }
+}
+function saveUserLooks() {
+  try { localStorage.setItem('userLooks', JSON.stringify(userLooks)); return true; } catch (e) { return false; }
+}
+
+function buildAddForm() {
+  const colorOpts = Object.entries(COLORS).map(([id, c]) => `<option value="${id}">${c.name}</option>`).join('');
+  const opts = (list) => list.map((i) => `<option value="${i.id}">${i.name}</option>`).join('');
+  const field = (label, id, options, value) =>
+    `<label>${label}<select id="${id}">${options}</select></label>`;
+  $('#addForm').innerHTML =
+    field('계절', 'fSeason', Object.entries(SEASONS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')) +
+    field('상의 색', 'fTopColor', colorOpts) +
+    field('상의', 'fTop', opts(ITEMS.filter((i) => i.cat !== 'bottom'))) +
+    field('하의 색', 'fBottomColor', colorOpts) +
+    field('하의', 'fBottom', opts(ITEMS.filter((i) => i.cat === 'bottom'))) +
+    field('가방 색', 'fBagColor', colorOpts) +
+    field('가방', 'fBag', opts(BAGS));
+  $('#fSeason').value = state.season;
+}
+
+function addLook() {
+  const look = {
+    season: $('#fSeason').value,
+    topColor: $('#fTopColor').value, top: $('#fTop').value,
+    bottomColor: $('#fBottomColor').value, bottom: $('#fBottom').value,
+    bagColor: $('#fBagColor').value, bag: $('#fBag').value,
+  };
+  userLooks.push(look);
+  const saved = saveUserLooks();
+  $('#addMsg').textContent = saved ? '추가했어요.' : '추가했지만 이 브라우저에 저장은 안 돼요(새로고침하면 사라짐).';
+  state.statSeason = look.season;
+  renderStats();
+  if (state.lastQuery) search(state.lastQuery);
+}
+
+// ───────── 사진에서 색 읽기 (외부 API 없이 canvas로) ─────────
+const PICK_PARTS = [
+  { key: 'top', label: '상의', select: 'fTopColor' },
+  { key: 'bottom', label: '하의', select: 'fBottomColor' },
+  { key: 'bag', label: '가방', select: 'fBagColor' },
+];
+const photo = { src: null, mode: 0, marks: {} };
+
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [n >> 16, (n >> 8) & 255, n & 255];
+}
+
+// 사람 눈에 가까운 색 거리를 재려고 RGB를 Lab으로 바꾼다
+function rgbToLab([r, g, b]) {
+  const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  const R = lin(r), G = lin(g), B = lin(b);
+  const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const fx = f((R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047);
+  const fy = f(R * 0.2126 + G * 0.7152 + B * 0.0722);
+  const fz = f((R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883);
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+}
+
+// 데님 색은 하의에서만 고른다
+function nearestColor(rgb, part) {
+  const lab = rgbToLab(rgb);
+  let best = null, bestD = Infinity;
+  for (const [id, c] of Object.entries(COLORS)) {
+    if (part !== 'bottom' && isDenim(id)) continue;
+    const l2 = rgbToLab(hexToRgb(c.hex));
+    const d = (lab[0] - l2[0]) ** 2 + (lab[1] - l2[1]) ** 2 + (lab[2] - l2[2]) ** 2;
+    if (d < bestD) { bestD = d; best = id; }
+  }
+  return best;
+}
+
+function loadPhoto(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 600 / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+      const src = document.createElement('canvas');
+      src.width = w; src.height = h;
+      src.getContext('2d').drawImage(img, 0, 0, w, h);
+      photo.src = src; photo.marks = {}; photo.mode = 0;
+      const cv = $('#photoCanvas');
+      cv.width = w; cv.height = h;
+      $('#photoWrap').hidden = false;
+      $('#addMsg').textContent = '';
+      drawPhoto(); renderPickModes(); renderPicked();
+    };
+    img.onerror = () => { $('#addMsg').textContent = '이미지를 열 수 없어요.'; };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function drawPhoto() {
+  const ctx = $('#photoCanvas').getContext('2d');
+  ctx.drawImage(photo.src, 0, 0);
+  for (const p of PICK_PARTS) {
+    const m = photo.marks[p.key];
+    if (!m) continue;
+    ctx.beginPath();
+    ctx.arc(m.x, m.y, 9, 0, Math.PI * 2);
+    ctx.fillStyle = COLORS[m.colorId].hex;
+    ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
+    ctx.font = 'bold 14px sans-serif';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.75)';
+    ctx.strokeText(p.label, m.x + 14, m.y + 5);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(p.label, m.x + 14, m.y + 5);
+  }
+}
+
+// 클릭한 곳 주변 네모 칸의 중간값 색 (주름·그림자 노이즈를 줄임)
+function samplePhoto(x, y) {
+  const { width: W, height: H } = photo.src;
+  const r = Math.max(3, Math.round(Math.min(W, H) * 0.02));
+  const x0 = Math.max(0, x - r), y0 = Math.max(0, y - r);
+  const w = Math.min(W - x0, r * 2 + 1), h = Math.min(H - y0, r * 2 + 1);
+  const data = photo.src.getContext('2d').getImageData(x0, y0, w, h).data;
+  const ch = [[], [], []];
+  for (let i = 0; i < data.length; i += 4) { ch[0].push(data[i]); ch[1].push(data[i + 1]); ch[2].push(data[i + 2]); }
+  return ch.map((a) => a.sort((p, q) => p - q)[a.length >> 1]);
+}
+
+function onPhotoClick(e) {
+  const cv = e.currentTarget, rect = cv.getBoundingClientRect();
+  const x = Math.round((e.clientX - rect.left) * cv.width / rect.width);
+  const y = Math.round((e.clientY - rect.top) * cv.height / rect.height);
+  const part = PICK_PARTS[photo.mode];
+  const rgb = samplePhoto(x, y);
+  const colorId = nearestColor(rgb, part.key);
+  photo.marks[part.key] = { x, y, rgb, colorId };
+  $('#' + part.select).value = colorId;
+  // 하의가 데님 색이면 하의 종류를 청바지로 맞춘다
+  if (part.key === 'bottom' && isDenim(colorId) && !allowsColor(itemById($('#fBottom').value), colorId)) {
+    $('#fBottom').value = 'jeans';
+  }
+  const next = PICK_PARTS.findIndex((p) => !photo.marks[p.key]);
+  if (next !== -1) photo.mode = next;
+  drawPhoto(); renderPickModes(); renderPicked();
+}
+
+function renderPickModes() {
+  if (!photo.src) { $('#pickModes').innerHTML = ''; return; }
+  $('#pickModes').innerHTML = PICK_PARTS.map((p, i) =>
+    `<button class="chip ${i === photo.mode ? 'on' : ''}" type="button" data-pick="${i}">${p.label} 찍기</button>`).join('');
+}
+
+function renderPicked() {
+  $('#picked').innerHTML = '<strong>사진에서 읽은 색</strong>' + PICK_PARTS.map((p) => {
+    const m = photo.marks[p.key];
+    if (!m) return `<div class="pick-row muted">${p.label}: 아직 안 찍음</div>`;
+    return `<div class="pick-row">${p.label}: <span class="raw" style="background:rgb(${m.rgb.join(',')})"></span>
+      → ${sw(m.colorId)}${COLORS[m.colorId].name}</div>`;
+  }).join('') +
+  '<p class="muted">그림자나 조명 때문에 색이 다르게 잡히면 다시 클릭하거나 아래 칸에서 바꿔 주세요.</p>';
+}
+
+// ───────── 시작 ─────────
+function init() {
+  $('#city').innerHTML = CITIES.map(([n], i) => `<option value="${i}">${n}</option>`).join('');
+  $('#city').addEventListener('change', (e) => loadWeather(Number(e.target.value)));
+  $('#geoBtn').addEventListener('click', () => {
+    if (!navigator.geolocation) { $('#weatherText').textContent = '이 브라우저는 위치 기능을 지원하지 않아요.'; return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { const i = nearestCity(pos.coords.latitude, pos.coords.longitude); loadWeather(i, `내 위치 근처 (${CITIES[i][0]})`); },
+      () => { $('#weatherText').textContent = '위치 권한이 없어서 지역 목록에서 골라 주세요.'; },
+      { timeout: 8000 });
+  });
+  $('#tempSlider').addEventListener('input', (e) => setTemp(Number(e.target.value)));
+
+  const examples = ['남색 브이넥 니트', '화이트 오버핏 반팔 티', '블랙 크롭 가디건', '연청 와이드 청바지', '베이지 하이웨이스트 슬랙스', '그레이 반폴라 니트', '카멜 코트'];
+  $('#wordHelp').innerHTML =
+    `<p><strong>색</strong> ${Object.values(COLORS).map((c) => c.name).join(', ')}</p>` +
+    `<p><strong>옷 종류</strong> ${ITEMS.map((i) => i.name).join(', ')}</p>` +
+    Object.entries(SHAPE_GROUPS).map(([g, label]) =>
+      `<p><strong>${label}</strong> ${SHAPES.filter((sh) => sh.group === g).map((sh) => sh.name).join(', ')}</p>`).join('');
+  $('#examples').innerHTML = examples.map((q) => `<button class="chip" type="button" data-q="${q}">${q}</button>`).join('');
+
+  $('#searchForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = $('#query').value.trim();
+    if (q) search(q);
+  });
+  document.addEventListener('click', (e) => {
+    const qBtn = e.target.closest('[data-q]');
+    if (qBtn) { $('#query').value = qBtn.dataset.q; search(qBtn.dataset.q); return; }
+    const sBtn = e.target.closest('[data-season]');
+    if (sBtn) { state.statSeason = sBtn.dataset.season; renderStats(); return; }
+    const pBtn = e.target.closest('[data-pick]');
+    if (pBtn) { photo.mode = Number(pBtn.dataset.pick); renderPickModes(); }
+  });
+  $('#photoInput').addEventListener('change', (e) => {
+    if (e.target.files[0]) loadPhoto(e.target.files[0]);
+    e.target.value = '';
+  });
+  $('#photoCanvas').addEventListener('click', onPhotoClick);
+  $('#skirtToggle').addEventListener('change', () => { if (state.lastQuery) search(state.lastQuery); });
+
+  buildAddForm();
+  $('#addBtn').addEventListener('click', addLook);
+  $('#clearBtn').addEventListener('click', () => {
+    userLooks = [];
+    saveUserLooks();
+    $('#addMsg').textContent = '직접 추가한 코디를 지웠어요.';
+    renderStats();
+  });
+
+  renderGuide();
+  renderStats();
+  loadWeather(0);
+}
+
+init();
+</script>
+</body>
+</html>

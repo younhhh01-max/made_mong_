@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>진짜? 가짜? 동굴 탈출</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.39.3/dist/galmuri.css">
+<style>
+  :root {
+    --paper: #d9c393;
+    --paper-dark: #b89c66;
+    --ink: #3a2812;
+    --wood: #8a5a2c;
+    --wood-light: #a8743e;
+    --wood-dark: #4a2c12;
+    --wood-text: #f6e2b8;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: #050407; color: var(--ink);
+    font-family: "Galmuri11", "Galmuri9", monospace;
+    -webkit-font-smoothing: none;
+    user-select: none; touch-action: none;
+    cursor: crosshair;
+  }
+  canvas {
+    position: fixed; inset: 0; width: 100vw; height: 100vh;
+    image-rendering: pixelated; image-rendering: crisp-edges;
+  }
+  #fx { pointer-events: none; z-index: 2; }
+  #bg { z-index: 0; }
+
+  #center {
+    position: fixed; left: 50%; top: 44%; z-index: 1;
+    transform: translate(-50%, -50%);
+    width: min(560px, 90vw);
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    transition: opacity .35s, transform .35s;
+  }
+  #center.away { opacity: 0; transform: translate(-50%, -30%) scale(.8); pointer-events: none; }
+
+  /* 낡은 종이 */
+  .paper {
+    position: relative; width: 100%;
+    padding: 26px 30px 24px;
+    background:
+      radial-gradient(circle at 18% 22%, rgba(120,80,30,.25) 0 6px, transparent 7px),
+      radial-gradient(circle at 82% 70%, rgba(120,80,30,.2) 0 10px, transparent 11px),
+      radial-gradient(circle at 60% 12%, rgba(90,60,20,.18) 0 4px, transparent 5px),
+      repeating-linear-gradient(0deg, transparent 0 6px, rgba(0,0,0,.035) 6px 8px),
+      var(--paper);
+    clip-path: polygon(0 4%, 3% 0, 22% 2%, 40% 0, 63% 3%, 81% 0, 97% 2%, 100% 8%,
+      98% 30%, 100% 55%, 98% 78%, 100% 96%, 85% 100%, 62% 97%, 44% 100%, 20% 98%, 4% 100%, 0 93%, 2% 70%, 0 45%, 2% 22%);
+    box-shadow: inset 0 0 0 6px var(--paper-dark);
+    text-align: center;
+    animation: drop .45s steps(6) both;
+  }
+  @keyframes drop {
+    from { transform: translateY(-30px) rotate(-3deg); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+  }
+  .paper .tag { font-size: 13px; letter-spacing: 1px; opacity: .75; margin-bottom: 10px; }
+  .paper h1 { font-size: 32px; margin: 4px 0 6px; letter-spacing: 2px; }
+  .paper h2 { font-size: 24px; margin: 0 0 10px; }
+  .paper .q { font-size: 21px; line-height: 1.6; word-break: keep-all; }
+  .paper .ex { font-size: 16px; line-height: 1.6; word-break: keep-all; margin-top: 8px; }
+  .paper p { font-size: 15px; line-height: 1.6; word-break: keep-all; margin: 6px 0; }
+  .ok { color: #2d5a1a; }
+  .ng { color: #8a1c10; }
+
+  /* 나무 버튼 */
+  #btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .wood {
+    font: inherit; font-size: 20px; color: var(--wood-text);
+    min-width: 132px; padding: 12px 18px 14px;
+    border: 4px solid var(--wood-dark);
+    background:
+      repeating-linear-gradient(90deg, transparent 0 14px, rgba(0,0,0,.12) 14px 16px),
+      linear-gradient(var(--wood-light) 0 4px, var(--wood) 4px calc(100% - 6px), #6b4220 calc(100% - 6px));
+    box-shadow: 0 6px 0 var(--wood-dark);
+    text-shadow: 2px 2px 0 var(--wood-dark);
+    cursor: pointer; position: relative; top: 0;
+  }
+  .wood:hover { filter: brightness(1.12); }
+  .wood:active { top: 6px; box-shadow: 0 0 0 var(--wood-dark); }
+  .wood small { display: block; font-size: 11px; opacity: .85; margin-top: 4px; text-shadow: none; }
+  .wood.lv { min-width: 96px; padding: 10px 10px 12px; }
+  .wood.ox { font-size: 38px; min-width: 130px; padding: 6px 18px 10px; }
+  #center.quake { animation: quake .11s steps(2) infinite; }
+  @keyframes quake {
+    0%   { transform: translate(-52%, -50%) rotate(-1.2deg); }
+    50%  { transform: translate(-48%, -51%) rotate(1.2deg); }
+    100% { transform: translate(-51%, -49%) rotate(-.6deg); }
+  }
+  #bubble {
+    position: fixed; z-index: 3; transform: translate(-50%, -100%);
+    background: #fff4dc; color: #2a1a10; font-size: 18px; white-space: nowrap;
+    padding: 8px 14px 10px; border: 3px solid #2a1a10;
+    box-shadow: 4px 4px 0 rgba(0,0,0,.35);
+    animation: pop .3s steps(4) both;
+  }
+  #bubble[hidden] { display: none; }
+  #bubble::after {
+    content: ""; position: absolute; left: 50%; bottom: -12px; margin-left: -6px;
+    border: 6px solid transparent; border-top-color: #2a1a10;
+  }
+  @keyframes pop { from { transform: translate(-50%, -80%) scale(.6); opacity: 0; } }
+  #panel.top { align-items: flex-start; padding-top: 24px; }
+  #panel.top .paper { padding: 16px 22px 14px; }
+  .wood:focus-visible { outline: 3px solid #ffd27a; outline-offset: 3px; }
+
+  #hud {
+    position: fixed; top: 14px; left: 16px; z-index: 3;
+    color: #c9a96a; font-size: 14px; text-shadow: 2px 2px 0 #000;
+    display: flex; gap: 6px; align-items: center;
+  }
+  #hud[hidden] { display: none; }
+  #hud .dot { width: 10px; height: 10px; background: #2a2018; box-shadow: 0 0 0 2px #000; }
+  #hud .dot.on { background: #ffcf5a; }
+  #hud .lab { margin-right: 8px; }
+
+  /* 결과 화면 (어둠 위에 표시) */
+  #panel {
+    position: fixed; inset: 0; z-index: 4;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  #panel[hidden] { display: none; }
+  #panel .box { width: min(560px, 100%); display: flex; flex-direction: column; align-items: center; gap: 18px; }
+
+  @media (max-width: 520px) {
+    .paper { padding: 22px 18px 20px; }
+    .paper h1 { font-size: 26px; }
+    .paper .q { font-size: 18px; }
+    .wood { font-size: 17px; min-width: 110px; }
+    .wood.lv { min-width: 0; flex: 1 1 28%; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="hud" hidden></div>
+<div id="center">
+  <div id="card" class="paper"></div>
+  <div id="btns"></div>
+</div>
+<canvas id="fx"></canvas>
+<div id="bubble" hidden>휴… 탈출 성공!</div>
+<div id="panel" hidden><div class="box"><div id="pcard" class="paper"></div><div id="pbtns" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center"></div></div></div>
+
+<script src="questions.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

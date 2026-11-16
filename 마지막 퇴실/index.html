@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<title>마지막 퇴실 기록</title>
+<style>
+:root{
+  --bg:#0b0c0d; --panel:#131517; --panel2:#1a1c1e; --line:#2b3033; --line2:#3a4246;
+  --text:#cfe3d0; --dim:#8e9b93; --faint:#5d6862; --warn:#b33a3a; --crt:#7fd18a;
+  --amber:#d6b26a; --paper:#d9d0b4; --ink:#2b2720; --vig:.6;
+  --sans:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:"D2Coding","Consolas","Menlo","Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6}
+button{font:inherit;color:inherit;cursor:pointer}
+#bgRain{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:.28;pointer-events:none}
+#vignette{position:fixed;inset:0;z-index:5;pointer-events:none;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,var(--vig)) 100%);transition:background 2s}
+#flash{position:fixed;inset:0;z-index:6;pointer-events:none;background:#c9d6e6;opacity:0}
+#app{position:relative;z-index:2;max-width:1200px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding:10px 12px 12px;gap:10px}
+#app.flick{animation:flick .9s steps(1) 1}
+@keyframes flick{0%{filter:brightness(1)}10%{filter:brightness(.45)}18%{filter:brightness(1.05)}30%{filter:brightness(.6)}38%{filter:brightness(1)}62%{filter:brightness(.75)}70%{filter:brightness(1)}}
+#app.flick-soft{animation:flicks .5s steps(1) 1}
+@keyframes flicks{0%{filter:brightness(1)}30%{filter:brightness(.82)}50%{filter:brightness(1)}}
+
+/* top bar */
+#top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  background:rgba(19,21,23,.92);border:1px solid var(--line);border-radius:6px;padding:8px 12px}
+#chapTitle{font-weight:700;letter-spacing:.02em}
+#clock{font-family:var(--mono);color:var(--dim);font-size:.9rem}
+#timeLabel{color:var(--crt);margin-left:6px}
+.tb-right{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{font-family:var(--mono);font-size:.85rem;color:var(--amber);border:1px solid #4a4130;border-radius:99px;padding:3px 10px;background:#1b1912}
+.tbtn{min-height:40px;min-width:44px;padding:6px 12px;background:var(--panel2);border:1px solid var(--line2);border-radius:5px;font-size:.92rem}
+.tbtn:hover,.tbtn:focus-visible{border-color:var(--text);outline:none;background:#22262a}
+.tbtn.danger{border-color:#5a2a2a;color:#e3b0b0}
+.tbtn.danger:hover{border-color:var(--warn)}
+
+/* main */
+#main{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;overflow:auto}
+#main.locked-ui #objects button,#main.locked-ui #locBar button,#main.locked-ui #proceed{pointer-events:none;opacity:.5}
+#viewWrap{position:relative;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px;
+  background:rgba(19,21,23,.94);border:1px solid var(--line);border-radius:6px;padding:12px}
+#locHead{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+#locFloor{font-family:var(--mono);font-size:.8rem;color:#0b0c0d;background:var(--dim);padding:0 6px;border-radius:3px}
+#locName{margin:0;font-size:1.15rem}
+#artBox{position:relative;width:100%;aspect-ratio:16/9;max-width:calc(48vh * 16 / 9);margin:0 auto;align-self:start;border-radius:4px;overflow:hidden;border:1px solid #23282b;background:#0a0c0d}
+#art{position:absolute;inset:0}
+.photo{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat}
+.rainwin{position:absolute;overflow:hidden;pointer-events:none}
+.rainwin canvas{position:absolute;inset:0;width:100%;height:100%}
+.cover{position:absolute;pointer-events:none}
+.overlay-canvas{position:absolute;inset:0;width:100%;height:100%}
+.tubelight{position:absolute;pointer-events:none;background:radial-gradient(ellipse at top, rgba(200,225,235,.10), rgba(200,225,235,0) 70%);animation:tube 9s infinite}
+@keyframes tube{0%,100%{opacity:1}47%{opacity:1}48%{opacity:.2}49%{opacity:1}50%{opacity:.4}51%{opacity:1}}
+.screenglow{position:absolute;pointer-events:none;background:radial-gradient(ellipse, rgba(127,209,138,.14), rgba(127,209,138,0) 70%);animation:pulse 4s infinite}
+#side{display:flex;flex-direction:column;gap:10px;min-width:0}
+#locDesc{margin:0;color:var(--dim);font-size:.95rem}
+#objects{display:flex;flex-direction:column;gap:6px}
+.obj{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:46px;text-align:left;
+  background:#16191b;border:1px solid var(--line2);border-radius:5px;padding:8px 12px}
+.obj:hover,.obj:focus-visible{border-color:var(--text);background:#1d2124;outline:none}
+.obj .nm{flex:1}
+.obj .bd{font-family:var(--mono);font-size:.75rem;padding:2px 7px;border-radius:3px;white-space:nowrap;border:1px solid}
+.obj.todo .bd{color:var(--text);border-color:var(--line2)}
+.obj.new{border-color:#7a6a3e}
+.obj.new .bd{color:#111;background:var(--amber);border-color:var(--amber);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.obj.done{opacity:.62;background:#121416}
+.obj.done .bd{color:var(--faint);border-color:#2b3033}
+.obj.flavor .bd{color:var(--dim);border-style:dashed}
+#proceedWrap{margin-top:auto;border-top:1px dashed var(--line);padding-top:10px}
+#proceed{width:100%;min-height:48px;background:#1d2a20;border:1px solid #3d6447;border-radius:5px;color:var(--crt);font-weight:700}
+#proceed:hover:not(:disabled){background:#24382a;border-color:var(--crt)}
+#proceed:disabled{background:#16191b;border-color:var(--line);color:var(--faint);cursor:not-allowed}
+#proceedNote{margin:6px 0 0;font-size:.85rem;color:var(--faint)}
+#locBar{display:flex;gap:6px;flex-wrap:wrap}
+.loc{flex:1;min-width:120px;min-height:46px;background:rgba(22,25,27,.95);border:1px solid var(--line2);border-radius:5px;padding:6px 10px}
+.loc small{display:block;font-family:var(--mono);font-size:.7rem;color:var(--faint)}
+.loc:hover,.loc:focus-visible{border-color:var(--text);outline:none}
+.loc.here{border-color:var(--crt);box-shadow:inset 0 -3px 0 var(--crt)}
+.loc.lockd{color:var(--faint);border-style:dashed}
+
+/* dialog */
+#dialog{position:relative;min-height:150px;background:rgba(14,16,17,.97);border:1px solid var(--line2);border-radius:6px;padding:14px 18px 16px;cursor:pointer;outline:none}
+#dialog.explore{cursor:default}
+#dlgName{display:inline-block;min-height:1.4em;font-weight:700;font-size:.9rem;padding:0 8px;border-radius:3px;margin-bottom:4px}
+#dlgName:empty{padding:0}
+.sp-me{background:#2a3330;color:#d9efe0}
+.sp-kang{background:#3a2422;color:#f0c7bf}
+.sp-sys{background:#13261a;color:var(--crt);font-family:var(--mono)}
+.sp-det{background:#1f2836;color:#c8d6ee}
+#dlgText{white-space:pre-wrap;font-size:1.05rem;min-height:3.2em}
+#dlgText.t-n{color:#b9c7be}
+#dlgText.t-sys{font-family:var(--mono);color:var(--crt);text-shadow:0 0 6px rgba(127,209,138,.35)}
+#dlgText.t-kang{color:#ecd9d4}
+#dlgText.glitch{color:#e07a7a;text-shadow:2px 0 #b33a3a,-2px 0 #3a7ab3}
+#dlgText.hint{color:var(--dim);font-size:.95rem}
+#dlgNext{position:absolute;right:16px;bottom:8px;font-size:.8rem;color:var(--faint);animation:pulse 1.4s infinite}
+#dlgChoices{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.choice{text-align:left;min-height:44px;background:#181c1e;border:1px solid var(--line2);border-radius:5px;padding:8px 12px}
+.choice:hover,.choice:focus-visible{border-color:var(--text);background:#20262a;outline:none}
+.choice.asked{color:var(--dim)}
+.choice.asked::after{content:"  · 이미 물어봄";font-size:.8rem;color:var(--faint)}
+.choice.key{border-color:#6b5a32;color:var(--amber)}
+
+/* art: shared */
+.win{position:absolute;overflow:hidden;background:#06090b;border:6px solid #2a2e30;box-shadow:inset 0 0 30px #000,0 0 0 1px #000}
+.win canvas{position:absolute;inset:0;width:100%;height:100%}
+.mull{position:absolute;background:#2a2e30;box-shadow:0 0 4px #000}
+.glare{position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,0) 35%,rgba(255,255,255,.03) 60%,rgba(255,255,255,0) 70%)}
+.wall{position:absolute;inset:0;background:linear-gradient(#1b1f1f,#121515 60%,#0c0e0e)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:22%;background:linear-gradient(#161818,#0b0c0c);border-top:1px solid #222}
+.lampcone{position:absolute;pointer-events:none;background:radial-gradient(ellipse at top, rgba(205,228,210,.16), rgba(205,228,210,0) 70%)}
+/* security */
+.art-security .win{left:7%;top:10%;width:46%;height:52%}
+.art-security .desk{position:absolute;left:0;right:0;bottom:12%;height:16%;background:linear-gradient(#262a2a,#171919);border-top:2px solid #333}
+.art-security .monitor{position:absolute;left:60%;bottom:28%;width:18%;height:24%;background:#0d1410;border:5px solid #222;border-radius:3px;box-shadow:0 0 30px rgba(127,209,138,.18)}
+.art-security .monitor::after{content:"";position:absolute;inset:6px;background:repeating-linear-gradient(#123018 0 2px,#0d1a10 2px 4px);opacity:.8}
+.art-security .printer{position:absolute;right:4%;bottom:28%;width:15%;height:15%;background:linear-gradient(#3a3d3c,#262827);border-radius:3px 3px 1px 1px}
+.art-security .printer::before{content:"";position:absolute;left:12%;right:12%;top:-6px;height:6px;background:#e8e2d0;opacity:.8}
+.led{position:absolute;right:8px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--crt);box-shadow:0 0 6px var(--crt);animation:pulse 2.4s infinite}
+.art-security .keybox{position:absolute;right:6%;top:12%;width:12%;height:26%;background:#2b2f2e;border:2px solid #3a3f3e}
+.art-security .keybox::after{content:"";position:absolute;left:44%;top:40%;width:8px;height:18px;background:var(--warn);opacity:.85}
+/* office */
+.art-office .win{left:3%;right:3%;top:8%;height:46%;border-width:5px}
+.art-office .desks{position:absolute;left:0;right:0;bottom:0;height:40%}
+.art-office .dk{position:absolute;bottom:14%;height:26%;background:linear-gradient(#202424,#121414);border-top:2px solid #2d3232}
+.art-office .dk.cov{background:linear-gradient(rgba(170,185,190,.16),rgba(120,130,135,.08));border-top:2px solid rgba(190,200,205,.2)}
+/* cctv */
+.art-cctv canvas{position:absolute;inset:0;width:100%;height:100%}
+/* basement */
+.art-basement{background:linear-gradient(#0b0d0c,#070808)}
+.art-basement .pipe{position:absolute;left:0;right:0;height:14px;background:linear-gradient(#3a3b36,#1c1d1a);box-shadow:0 2px 6px #000}
+.art-basement .vpipe{position:absolute;top:0;bottom:0;width:16px;background:linear-gradient(90deg,#33342f,#191a17)}
+.art-basement .door{position:absolute;right:8%;bottom:16%;width:22%;height:58%;background:repeating-linear-gradient(90deg,#3b3125 0 22px,#33291f 22px 24px);border:4px solid #4a4a46;box-shadow:inset 0 0 25px #000}
+.art-basement .door::after{content:"출입금지";position:absolute;left:10%;right:10%;top:38%;text-align:center;font-size:.7rem;font-weight:700;color:#f2d8a0;background:#5b2020;padding:2px 0}
+.art-basement .gap{position:absolute;right:8%;bottom:16%;width:22%;height:4px;background:#000;box-shadow:0 0 10px #000}
+.drip{position:absolute;width:3px;height:7px;border-radius:50% 50% 60% 60%;background:rgba(170,200,205,.7);animation:drip 2.8s infinite ease-in}
+@keyframes drip{0%{transform:translateY(0);opacity:0}10%{opacity:1}80%{opacity:1}100%{transform:translateY(160px);opacity:0}}
+.puddle{position:absolute;bottom:8%;height:6px;border-radius:50%;background:rgba(160,190,200,.12);animation:pulse 2.8s infinite}
+.art-basement .term{position:absolute;left:30%;top:30%;width:7%;height:16%;background:#151a16;border:3px solid #333;box-shadow:0 0 14px rgba(127,209,138,.25)}
+.art-basement .term::after{content:"";position:absolute;inset:3px;background:#173a1f;opacity:.9}
+/* outside */
+.art-outside .win{inset:0;border:0}
+/* static overlay */
+#artBox.static::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.08) 0 1px,rgba(0,0,0,.2) 1px 3px);animation:stat .12s steps(2) infinite;mix-blend-mode:screen}
+@keyframes stat{50%{transform:translateY(2px)}}
+
+
+/* overlays & modals */
+.overlay{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:16px}
+.overlay.show{display:flex}
+#title{background:rgba(5,6,7,.82);z-index:30}
+.tbox{max-width:560px;text-align:center}
+.tbox h1{font-size:clamp(2rem,6vw,3.2rem);margin:0 0 6px;letter-spacing:.08em;text-shadow:0 0 18px rgba(207,227,208,.25)}
+.tbox .sub{color:var(--dim);margin:0 0 6px}
+.tbox .print{font-family:var(--mono);color:var(--crt);margin:16px 0 22px;font-size:.95rem}
+.tbox .btns{display:flex;flex-direction:column;gap:8px;align-items:stretch;max-width:340px;margin:0 auto}
+.bigbtn{min-height:50px;background:#171b1d;border:1px solid var(--line2);border-radius:6px;font-size:1rem}
+.bigbtn:hover,.bigbtn:focus-visible{border-color:var(--text);outline:none;background:#1f2427}
+.bigbtn.primary{border-color:#3d6447;color:var(--crt);background:#18241b}
+.tbox .warn{font-size:.82rem;color:var(--faint);margin-top:18px}
+#card{background:#050606;z-index:25;flex-direction:column;opacity:0;transition:opacity .6s}
+#card.vis{opacity:1}
+#card .cnum{font-family:var(--mono);color:var(--faint);letter-spacing:.3em}
+#card .ctitle{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:700;margin-top:6px}
+#stamp{z-index:24;pointer-events:none}
+/* 하루가 바뀔 때: 암전 → DAY N → 다음 날 밤 */
+#dayCard{background:#000;z-index:26;flex-direction:column;opacity:0;transition:opacity .9s ease}
+#dayCard.vis{opacity:1}
+#dayCard .dnum{font-family:var(--mono);font-size:clamp(2.4rem,8vw,4.6rem);font-weight:700;letter-spacing:.38em;padding-left:.38em;color:#cfe3d0;
+  opacity:0;transform:translateY(6px);transition:opacity 1s ease .55s,transform 1s ease .55s;text-shadow:0 0 22px rgba(207,227,208,.18)}
+#dayCard .dline{width:0;height:1px;background:#4a524d;margin:16px 0 12px;transition:width 1.1s ease .9s}
+#dayCard .dsub{font-family:var(--mono);color:#8e9b93;letter-spacing:.18em;opacity:0;transition:opacity 1s ease 1.1s}
+#dayCard.vis .dnum{opacity:1;transform:none}
+#dayCard.vis .dline{width:140px}
+#dayCard.vis .dsub{opacity:1}
+#stamp .st{font-family:var(--mono);font-size:clamp(1.5rem,5vw,2.6rem);font-weight:700;color:#e2706a;border:4px solid #c2453f;padding:10px 26px;transform:rotate(-6deg) scale(1.6);opacity:0;transition:all .5s cubic-bezier(.2,1.6,.4,1);background:rgba(10,10,10,.75)}
+#stamp.show .st{transform:rotate(-6deg) scale(1);opacity:1}
+#modal{background:rgba(0,0,0,.72)}
+.mbox{width:min(920px,100%);max-height:88vh;display:flex;flex-direction:column;background:#121416;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.mhead{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.mhead h3{margin:0;font-size:1.05rem}
+.mbody{padding:14px;overflow:auto}
+.cluegrid{display:grid;grid-template-columns:minmax(200px,1fr) 2fr;gap:12px}
+.clist{display:flex;flex-direction:column;gap:5px}
+.ci{text-align:left;min-height:44px;background:#181b1d;border:1px solid var(--line2);border-radius:4px;padding:6px 10px}
+.ci small{font-family:var(--mono);color:var(--amber);margin-right:6px}
+.ci:hover,.ci:focus-visible{border-color:var(--text);outline:none}
+.ci.sel{border-color:var(--amber);background:#211f17}
+.ci.unk{color:var(--faint);border-style:dashed;cursor:default}
+.paperbox{background:var(--paper);color:var(--ink);border-radius:2px;padding:16px 18px;box-shadow:0 4px 14px rgba(0,0,0,.5);
+  background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px);background-size:100% 22px}
+.paperbox h4{margin:0 0 2px;font-size:1.05rem}
+.paperbox .where{font-size:.8rem;color:#6b6352;margin-bottom:8px}
+.paperbox pre{font-family:var(--mono);white-space:pre-wrap;margin:0 0 10px;font-size:.88rem;line-height:1.55}
+.paperbox .mean{border-top:1px dashed #8b8370;padding-top:8px;font-size:.92rem}
+/* 단서 사진: 발견 순간 크게, 단서 목록에서는 본문 위에 */
+.clueimg{display:block;max-width:100%;max-height:34vh;margin:0 auto 10px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.6))}
+.cluereveal{text-align:center}
+.cluereveal .clueimg{max-height:62vh;margin-bottom:12px;animation:cluein .5s ease-out}
+.cluereveal p{margin:0;color:var(--faint);font-size:.9rem}
+@keyframes cluein{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.presentbtn{margin-top:12px;width:100%;min-height:48px;background:#3a1f1d;border:1px solid var(--warn);color:#f3d1cc;border-radius:5px;font-weight:700}
+.presentbtn:hover{background:#4a2522}
+.loglist p{margin:0 0 8px}
+.loglist .ln{font-weight:700;margin-right:6px}
+.loglist .n{color:#a9b6ad}
+.loglist .sys{font-family:var(--mono);color:var(--crt)}
+.qset{border:1px solid var(--line2);border-radius:6px;padding:10px 12px;margin:0 0 12px}
+.qset legend{padding:0 6px;font-weight:700}
+.qset label{display:flex;gap:8px;align-items:flex-start;padding:7px 6px;border-radius:4px;cursor:pointer}
+.qset label:hover{background:#1b1f21}
+.qset input{margin-top:5px;accent-color:var(--amber)}
+.qset.bad{border-color:var(--warn)}
+.qset.good{border-color:#3d6447}
+.qres{font-size:.9rem;margin-top:4px}
+.qres.bad{color:#e3a19b}.qres.good{color:var(--crt)}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line)}
+#summary{background:rgba(4,5,6,.9);z-index:26}
+.report{width:min(760px,100%);max-height:90vh;overflow:auto;background:var(--paper);color:var(--ink);padding:24px 26px;border-radius:2px;box-shadow:0 10px 40px #000}
+.report h2{margin:0 0 4px;font-family:var(--mono)}
+.report .stamp2{display:inline-block;border:3px solid #a33;color:#a33;font-family:var(--mono);font-weight:700;padding:2px 10px;transform:rotate(-3deg);margin:6px 0 12px}
+.report dt{font-weight:700;margin-top:10px}
+.report dd{margin:2px 0 0}
+.report ol{margin:4px 0 0;padding-left:20px;font-family:var(--mono);font-size:.9rem}
+.report .last{font-style:italic;margin-top:16px;border-top:1px dashed #8b8370;padding-top:10px}
+.report .bigbtn{color:var(--text);margin-top:16px;width:100%}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%) translateY(-10px);z-index:22;background:#1c1a12;border:1px solid #6b5a32;color:var(--amber);
+  padding:8px 16px;border-radius:5px;opacity:0;transition:all .35s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---- 딱딱하고 어두운 톤 (덮어쓰기) ---- */
+#top,#viewWrap,#dialog,#artBox,.mbox,.report,.paperbox,.qset,button,.pill,.obj .bd,#toast{border-radius:0 !important}
+#top,#viewWrap{background:rgba(8,9,10,.96);border-color:#1f2224}
+#dialog{background:rgba(6,7,8,.98);border-color:#24282a;border-left:3px solid #3a3f3c}
+.tbtn{background:#0c0d0e;border:1px solid #26292b;color:#a9b5ad;letter-spacing:.03em}
+.tbtn:hover,.tbtn:focus-visible{background:#121415;border-color:#6d7570;color:#dfe9e1}
+.tbtn.danger{background:#0c0d0e;border-color:#3d1c1c;color:#b88a8a}
+.tbtn.danger:hover{border-color:#7a2a2a;color:#e0b0b0}
+.pill{background:#0c0d0e;border-color:#3a3224;color:#b89a5c}
+.obj{background:#0b0c0d;border:1px solid #1f2224;border-left:3px solid #33383a;color:#c3d0c6}
+.obj:hover,.obj:focus-visible{background:#111314;border-color:#3a3f3c;border-left-color:#9aa59e}
+.obj.new{border-left-color:#8a6b2c}
+.obj.new .bd{background:#2a2112;color:#d6b26a;border-color:#5a4520;animation:pulse 1.6s infinite}
+.obj.todo .bd,.obj.flavor .bd{background:transparent;border-color:#2c3032;color:#7f8a83;border-style:solid}
+.obj.repeat{border-left-color:#3d5a45}
+.obj.repeat .bd{color:#8fb79a;border-color:#2c4233}
+#proceed{background:#0b0d0c;border:1px solid #2c3a30;color:#8fbf98;letter-spacing:.04em}
+#proceed:hover:not(:disabled){background:#0f1511;border-color:#5f8f69}
+#proceed:disabled{background:#0a0b0c;border-color:#1c1f20;color:#4a524d}
+.loc{background:rgba(8,9,10,.96);border:1px solid #1f2224;color:#b7c3ba}
+.loc:hover,.loc:focus-visible{border-color:#5c635f}
+.loc.here{border-color:#2f4a36;box-shadow:inset 0 -2px 0 #6faa7a;color:#dfe9e1}
+.choice{background:#0b0c0d;border:1px solid #23272a;border-left:3px solid #3a3f3c}
+.choice::before{content:"▸ ";color:#5d6862}
+.choice:hover,.choice:focus-visible{background:#111314;border-left-color:#c7d3ca}
+.choice.key{border-left-color:#8a6b2c;color:#d6b26a}
+.bigbtn{background:#0b0c0d;border:1px solid #2a2e30}
+.bigbtn.primary{background:#0b100c;border-color:#2f4a36;color:#8fbf98}
+.ci{background:#0c0d0e;border-color:#23272a}
+.mbox{background:#090a0b;border-color:#24282a}
+
+/* 강태식 초상 */
+#portrait{position:absolute;right:0;top:0;bottom:0;width:44%;z-index:7;pointer-events:none;opacity:0;transform:translateX(14px);
+  transition:opacity .45s ease, transform .45s ease}
+#portrait img{width:100%;height:100%;object-fit:contain;object-position:50% 100%;display:block;
+  filter:brightness(.92) contrast(1.06) drop-shadow(0 0 18px rgba(0,0,0,.7));transition:filter .45s}
+#portrait.on{opacity:1;transform:none}
+#portrait.on.dim{opacity:.38}
+#portrait.phone img{filter:grayscale(.65) brightness(.72) contrast(1.2) drop-shadow(0 0 18px rgba(0,0,0,.7))}
+#portrait.phone::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px);
+  -webkit-mask:url('assets/kang.webp') 50% 100%/contain no-repeat;mask:url('assets/kang.webp') 50% 100%/contain no-repeat}
+#portrait .ptag{position:absolute;right:8px;top:8px;z-index:1;display:none;font-family:var(--mono);font-size:.72rem;color:#8fbf98;background:rgba(0,0,0,.75);border:1px solid #2c4233;padding:1px 7px}
+#portrait.phone .ptag{display:block}
+
+/* 프린터: 클릭 영역 + 상태 램프 (관리실.png의 프린터 위치에 맞춤) */
+.printer-hot{position:absolute;left:79.6%;top:58.2%;width:15.6%;height:15.8%;z-index:5;cursor:pointer;outline:1px solid transparent;transition:outline-color .2s,background .2s}
+.printer-hot:hover{outline-color:rgba(200,210,205,.35);background:rgba(200,210,205,.04)}
+.printer-led{position:absolute;left:94.22%;top:63%;width:.75%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50% !important;z-index:5;pointer-events:none;opacity:0}
+.printer-led.alert{animation:ledred 1.1s steps(1) infinite}
+@keyframes ledred{0%{opacity:1;background:radial-gradient(circle,#ffd2c8 0,#ff2a14 45%,#b30d00 100%);box-shadow:0 0 6px 2px rgba(255,40,20,.85),0 0 22px 6px rgba(255,40,20,.35)}55%{opacity:0}}
+body.locked-ui .printer-hot{pointer-events:none}
+
+/* 출력된 종이 */
+.printout{position:relative;width:min(560px,100%);margin:6px auto 4px;padding:30px 34px 22px;background:#ecebe3;color:#1e1c18;
+  font-family:var(--mono);transform:rotate(-.8deg);box-shadow:0 14px 34px rgba(0,0,0,.75),0 0 0 1px rgba(0,0,0,.25);
+  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.018) 0 1px,transparent 1px 4px),radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.5),rgba(0,0,0,.05))}
+.printout::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(rgba(0,0,0,.12),transparent)}
+.pt-head{display:flex;flex-direction:column;gap:2px;border-bottom:2px solid #1e1c18;padding-bottom:8px;margin-bottom:18px;font-size:.82rem}
+.pt-head b{font-size:.95rem;letter-spacing:.02em}
+.pt-main{font-size:clamp(1.05rem,2.6vw,1.35rem);font-weight:700;padding:14px 0;border-top:1px dashed #6d685c;border-bottom:1px dashed #6d685c;margin-bottom:16px;letter-spacing:.02em}
+.pt-table{border-collapse:collapse;font-size:.85rem;width:100%}
+.pt-table th{text-align:left;font-weight:400;color:#57524a;width:7.5em;padding:3px 0;vertical-align:top}
+.pt-table td{padding:3px 0}
+.pt-foot{text-align:center;font-size:.75rem;color:#6d685c;margin-top:22px}
+
+/* =========================================================
+   풀스크린 레이아웃 (스크롤 없음)
+   ========================================================= */
+html,body{overflow:hidden}
+#app{position:fixed;inset:0;max-width:none;margin:0;padding:0;display:block;height:auto}
+#stage{position:absolute;inset:0;overflow:hidden;background:#050606;z-index:0}
+/* 16:9 장면을 화면에 꽉 채운다 (넘치는 가장자리는 잘림) — 내부 좌표(%)가 사진과 맞도록 비율 고정 */
+#artBox{position:absolute;left:50%;top:50%;width:max(100vw, 177.78vh);height:max(56.25vw, 100vh);max-width:none;aspect-ratio:auto;
+  transform:translate(-50%,-50%);margin:0;border:0}
+#vignette{position:absolute;z-index:1}
+#flash{position:absolute;z-index:2}
+#portrait{position:absolute;right:2vw;left:auto;top:auto;bottom:0;height:min(88vh,1000px);width:auto;aspect-ratio:1216/1282;z-index:3}
+#portrait .ptag{top:auto;bottom:calc(100% - 40px);right:14px}
+
+#top{position:absolute;left:0;right:0;top:0;z-index:6;border:0 !important;padding:10px 18px 26px;
+  background:linear-gradient(rgba(0,0,0,.82),rgba(0,0,0,.55) 55%,rgba(0,0,0,0)) !important}
+#locLabel{position:absolute;left:18px;top:66px;z-index:5;display:flex;align-items:center;gap:8px;pointer-events:none;
+  text-shadow:0 2px 10px #000,0 0 2px #000}
+#locLabel #locFloor{font-family:var(--mono);font-size:.75rem;color:#0b0c0d;background:#9aa59e;padding:0 6px}
+#locLabel #locName{font-size:1.15rem;font-weight:700;letter-spacing:.06em;color:#dfe9e1}
+
+#dialog{position:absolute;z-index:7;left:50%;transform:translateX(-50%);bottom:14px;width:min(1100px,calc(100vw - 24px));
+  min-height:132px;max-height:46vh;overflow:auto;
+  background:linear-gradient(rgba(4,5,6,.80),rgba(4,5,6,.93)) !important;backdrop-filter:blur(2px)}
+#exploreBar{display:none;margin-top:10px;gap:6px;align-items:stretch;flex-wrap:wrap}
+#dialog.explore #exploreBar{display:flex}
+#exploreBar #locBar{display:flex;gap:6px;flex:1;flex-wrap:wrap}
+#exploreBar .loc{flex:1;min-width:96px;min-height:42px;padding:4px 8px;font-size:.9rem}
+#exploreBar .loc small{font-size:.65rem}
+#btnDrawer{min-width:150px;font-weight:700;color:#dfe9e1;border-left:3px solid #6f7a73}
+#btnDrawer.has-new{border-left-color:#d6b26a;color:#d6b26a;animation:pulse 1.6s infinite}
+#barProceed{min-width:170px;font-weight:700;color:#8fbf98;border-color:#2f4a36;border-left:3px solid #6faa7a}
+body.locked-ui #exploreBar{display:none !important}
+
+#drawer{position:absolute;z-index:8;right:12px;top:62px;width:min(380px,calc(100vw - 24px));
+  max-height:calc(100vh - 62px - 200px);overflow:auto;display:flex;flex-direction:column;gap:10px;
+  background:rgba(5,6,7,.95);border:1px solid #24282a;border-left:3px solid #3a3f3c;padding:12px 14px;
+  transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none;transition:transform .3s ease,opacity .3s ease}
+#drawer.open{transform:none;opacity:1;pointer-events:auto}
+#drawer .dhead{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1f2224;padding-bottom:6px}
+#drawer .dhead .tbtn{min-height:34px;padding:2px 10px}
+body.locked-ui #drawer{transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none}
+
+/* 타이틀 화면에서만 화면 전체에 비 */
+#bgRain{z-index:31;display:none;opacity:.55}
+body.at-title #bgRain{display:block}
+#title .tbox{position:relative;z-index:32}
+
+/* 시작 화면: 건물 외관 + 1인칭으로 입구에 들어가기 */
+#title{background:#030404;overflow:hidden;justify-content:center;padding:16px}
+.title-cam{position:absolute;inset:0;z-index:30}
+/* 처음엔 거의 보이지 않을 만큼 어둡다 */
+.title-bg{position:absolute;inset:-2%;background-size:cover;background-position:62% 60%;
+  filter:brightness(.2) contrast(1.1) saturate(.7);transform-origin:64.5% 74%;will-change:transform,filter;
+  transition:filter 1.1s ease}
+.title-shade{position:absolute;inset:0;z-index:30;pointer-events:none;transition:opacity 1s;
+  background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.55) 0,rgba(0,0,0,.25) 45%,rgba(0,0,0,.75) 100%)}
+#title .tbox{text-align:center;max-width:460px;width:100%;transition:opacity .7s}
+#title .tbox .btns{margin:0 auto;max-width:300px}
+#title .tbox .bigbtn{min-height:54px;font-size:1.05rem;letter-spacing:.12em;background:rgba(8,9,10,.7);border-color:#3a3f3c}
+#title .tbox .bigbtn:hover,#title .tbox .bigbtn:focus-visible{background:rgba(20,22,23,.85);border-color:#c7d3ca}
+#title .tbox .bigbtn.primary{border-color:#4d6b55;color:#cfe3d0}
+/* 클릭 → 살짝 밝아진다 */
+#title.lit .tbox{opacity:0;pointer-events:none}
+#title.lit .title-shade{opacity:.35}
+#title.lit .title-bg{filter:brightness(.62) contrast(1.08) saturate(.85)}
+#title .tbox h1{text-shadow:0 2px 18px #000,0 0 18px rgba(207,227,208,.2)}
+#title .tbox .sub,#title .tbox .warn{text-shadow:0 1px 6px #000}
+/* 걸어 들어가기 */
+#title.walking .title-shade{opacity:0}
+#title.walking .title-cam{animation:bob .62s ease-in-out infinite}
+#title.walking .title-bg{animation:walkin 4.6s cubic-bezier(.45,.05,.75,.6) forwards}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-.7%) rotate(-.25deg)}50%{transform:translateY(.25%) rotate(0)}75%{transform:translateY(-.7%) rotate(.25deg)}}
+@keyframes walkin{
+  0%{transform:scale(1);filter:brightness(.62) contrast(1.08) saturate(.85) blur(0)}
+  70%{transform:scale(2.6);filter:brightness(.5) contrast(1.1) saturate(.8) blur(0)}
+  88%{transform:scale(4.4);filter:brightness(.25) contrast(1.15) saturate(.7) blur(1px)}
+  100%{transform:scale(6.5);filter:brightness(0) blur(3px)}}
+@media (prefers-reduced-motion:reduce){
+  #title.walking .title-cam{animation:none}
+  #title.walking .title-bg{animation:none;transition:filter 1.2s;filter:brightness(0)}
+}
+
+/* =========================================================
+   모바일
+   ========================================================= */
+body{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#dialog,#top,#exploreBar,#drawer{-webkit-user-select:none;user-select:none}
+/* 장면 사진을 흐리게 깔아 빈 공간을 채운다 (세로 화면에서 보임) */
+#stage::before{content:"";position:absolute;inset:-8%;background:var(--scene,none) center/cover no-repeat;
+  filter:blur(22px) brightness(.32) saturate(.7);transform:scale(1.05)}
+
+@media (max-width:820px){
+  .cluegrid{grid-template-columns:1fr}
+  #top{padding:8px 10px 18px;gap:6px}
+  #chapTitle{font-size:.86rem}
+  #clock{font-size:.72rem}
+  .tb-right{gap:4px}
+  .tbtn{min-height:38px;min-width:40px;padding:4px 9px;font-size:.8rem}
+  .pill{font-size:.72rem;padding:2px 7px}
+  .mbox{max-height:92dvh}
+  .mhead{padding:8px 10px}
+  .mbody{padding:10px}
+  .mfoot{padding:8px 10px}
+  .printout{padding:20px 18px 16px;transform:rotate(-.5deg)}
+  .report{padding:18px 16px}
+  #toast{top:auto;bottom:calc(52vh + 12px);font-size:.85rem}
+}
+
+#dialog.explore #dlgName{display:none}
+
+/* 세로 화면 휴대폰: 상단 바 → 16:9 장면(장소별 확대) → 대사창 */
+@media (orientation:portrait) and (max-width:900px){
+  #top{flex-direction:column;align-items:stretch;gap:6px;padding:8px 10px 14px}
+  .tb-right{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .tb-right::-webkit-scrollbar{display:none}
+  .tb-right .tbtn,.tb-right .pill{flex:0 0 auto}
+  .tb-right .tbtn{min-height:36px;padding:4px 8px;font-size:.78rem}
+  /* 장면 높이: 장소별 배율만큼 키우되, 대사창(약 290px)을 넘지 않게 제한 */
+  #artBox{--sh:min(calc(56.25vw * var(--zs,1)), calc(100dvh - var(--topH,64px) - 320px));
+    transform:none;
+    width:calc(var(--sh) * 16 / 9);height:var(--sh);
+    left:calc((100vw - var(--sh) * 16 / 9) * var(--fx,.5));
+    /* 상단 바와 대사창 사이 가운데 — 대사 길이에 따라 움직이지 않도록 고정값 */
+    top:max(calc(var(--topH,64px) + 30px), calc(var(--topH,64px) + (100dvh - var(--topH,64px) - 290px - var(--sh)) / 2));
+    box-shadow:0 10px 40px rgba(0,0,0,.8),0 -10px 40px rgba(0,0,0,.8)}
+  #locLabel{top:calc(var(--topH,64px) + 4px);left:12px}
+  #locLabel #locName{font-size:1rem}
+  #vignette{background:radial-gradient(ellipse at 50% 30%,rgba(0,0,0,0) 40%,rgba(0,0,0,var(--vig)) 100%)}
+  #dialog{left:8px;right:8px;width:auto;transform:none;bottom:8px;min-height:150px;max-height:54dvh;padding:12px 14px 14px}
+  #dlgText{font-size:1rem;line-height:1.65}
+  #dlgNext{bottom:6px;right:12px}
+  .choice{min-height:40px;padding:7px 10px;font-size:.92rem;line-height:1.45}
+  #dlgChoices{gap:5px}
+  #artBox{transition:height .3s ease,width .3s ease,left .3s ease,top .3s ease}
+  /* 선택지가 뜨면 장면을 줄여 대사창(--dlgH) 위로 올린다 */
+  #app:has(#dlgChoices:not(:empty)) #artBox{
+    --sh:max(100px, min(calc(56.25vw * var(--zs,1)), calc(100dvh - var(--topH,64px) - var(--dlgH,290px) - 24px)));
+    top:calc(var(--topH,64px) + 8px)}
+  #app:has(#dlgChoices:not(:empty)) #dialog{max-height:calc(100dvh - var(--topH,64px) - 124px)}
+  #exploreBar{flex-direction:column;gap:6px}
+  #btnDrawer,#barProceed{width:100%;min-height:46px}
+  #exploreBar #locBar{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  #exploreBar .loc{min-width:0;min-height:44px}
+  /* 조사할 곳: 아래에서 올라오는 시트 */
+  #drawer{left:8px;right:8px;width:auto;top:auto;bottom:8px;max-height:72dvh;z-index:9;
+    transform:translateY(calc(100% + 24px));border-left:1px solid #24282a;border-top:3px solid #3a3f3c}
+  #drawer.open{transform:none}
+  body.locked-ui #drawer{transform:translateY(calc(100% + 24px))}
+  .obj{min-height:50px}
+  #portrait{right:-4vw;bottom:auto;top:calc(var(--topH,64px) + 8px);height:min(50dvh,118vw)}
+  #portrait .ptag{bottom:auto;top:8px;right:8vw}
+  #title .tbox h1{font-size:2.1rem}
+}
+
+/* 가로 화면 휴대폰: 화면 높이가 낮다 */
+@media (max-height:500px) and (orientation:landscape){
+  /* 장면 전체가 화면 높이에 들어오게 (양옆은 흐린 배경) */
+  #artBox{width:177.78vh;height:100vh;left:50%;top:0;transform:translateX(-50%)}
+  /* 조사 중에는 대사창을 버튼 한 줄로 줄여 장면을 가리지 않는다 (힌트는 수첩) */
+  #dialog.explore{min-height:0;padding:6px 8px}
+  #dialog.explore #dlgText{display:none}
+  #dialog.explore #exploreBar{margin-top:0;flex-wrap:nowrap}
+  #top{padding:5px 12px 12px}
+  #chapTitle{font-size:.8rem} #clock{font-size:.7rem}
+  .tbtn{min-height:32px;padding:2px 8px;font-size:.76rem}
+  #locLabel{top:44px}
+  #locLabel #locName{font-size:.95rem}
+  #dialog{min-height:92px;max-height:56vh;padding:8px 12px 10px;bottom:6px}
+  #dlgText{font-size:.95rem;min-height:2.3em}
+  #exploreBar{margin-top:6px}
+  #exploreBar .loc{min-height:36px;padding:2px 6px}
+  #btnDrawer,#barProceed{min-height:36px}
+  #drawer{top:42px;max-height:calc(100vh - 42px - 110px)}
+  #portrait{height:96vh}
+  #dayCard .dnum{font-size:2.2rem}
+  #title .tbox h1{font-size:1.8rem}
+  #title .tbox .print,#title .tbox .sub{margin:4px 0}
+  #title .tbox .bigbtn{min-height:44px}
+}
+@media (prefers-reduced-motion:reduce){
+  #app.flick,#app.flick-soft{animation:none}
+  .drip,.obj.new .bd,#dlgNext,.led,.puddle,.tubelight,.screenglow{animation:none}
+  .printer-led.alert{animation:none;opacity:1;background:#ff2a14;box-shadow:0 0 6px 2px rgba(255,40,20,.85)}
+}
+</style>
+</head>
+<body class="at-title">
+<canvas id="bgRain" aria-hidden="true"></canvas>
+
+<div id="app">
+  <!-- 풀스크린 장면 -->
+  <div id="stage"><div id="artBox"><div id="art"></div></div></div>
+  <div id="vignette"></div>
+  <div id="flash"></div>
+  <div id="portrait" aria-hidden="true"><img alt=""><span class="ptag">☎ 통화 중 · 강태식</span></div>
+
+  <header id="top">
+    <div>
+      <div id="chapTitle">마지막 퇴실 기록</div>
+      <div id="clock"><span id="dayLabel"></span><span id="timeLabel"></span></div>
+    </div>
+    <div class="tb-right">
+      <span id="clueCount" class="pill">단서 0/11</span>
+      <button class="tbtn" id="btnHint">수첩</button>
+      <button class="tbtn" id="btnClues">단서</button>
+      <button class="tbtn" id="btnLog">로그</button>
+      <button class="tbtn" id="btnSound">소리: 끔</button>
+      <button class="tbtn danger" id="btnReset">처음부터</button>
+    </div>
+  </header>
+
+  <div id="locLabel"><span id="locFloor">1F</span><span id="locName">관리실</span></div>
+
+  <!-- 조사할 곳: 필요할 때만 열린다 -->
+  <aside id="drawer" aria-label="조사할 곳">
+    <div class="dhead"><b>조사할 곳</b><button class="tbtn" id="drawerClose">닫기</button></div>
+    <p id="locDesc"></p>
+    <div id="objects"></div>
+    <div id="proceedWrap"><button id="proceed"></button><p id="proceedNote"></p></div>
+  </aside>
+
+  <section id="dialog" tabindex="0" aria-live="polite">
+    <div id="dlgName"></div>
+    <div id="dlgText"></div>
+    <div id="dlgChoices"></div>
+    <div id="exploreBar">
+      <button class="tbtn" id="btnDrawer"></button>
+      <nav id="locBar" aria-label="장소 이동"></nav>
+      <button class="tbtn" id="barProceed" hidden></button>
+    </div>
+    <div id="dlgNext" hidden>▼ 클릭하여 계속</div>
+  </section>
+</div>
+
+<div id="title" class="overlay show">
+  <div class="title-cam"><div class="title-bg"></div></div>
+  <div class="title-shade"></div>
+  <div class="tbox">
+    <h1>마지막 퇴실 기록</h1>
+    <p class="sub">철거를 앞둔 청운빌딩. 야간 경비 일주일.</p>
+    <p class="print">퇴실 완료 — 직원: 서하린 — 02:17</p>
+    <div class="btns">
+      <button class="bigbtn primary" id="btnStart">시작하기</button>
+      <button class="bigbtn" id="btnContinue" hidden>이어하기</button>
+    </div>
+    <p class="warn">소리가 나옵니다. 헤드폰을 권장합니다. 화면 깜빡임이 있습니다.</p>
+  </div>
+</div>
+<div id="dayCard" class="overlay" aria-live="polite"><div class="dnum" id="dayNum"></div><div class="dline"></div><div class="dsub" id="daySub"></div></div>
+<div id="card" class="overlay"><div class="cnum" id="cardNum"></div><div class="ctitle" id="cardTitle"></div></div>
+<div id="stamp" class="overlay"><div class="st">사건 상태: 해결</div></div>
+<div id="modal" class="overlay" role="dialog" aria-modal="true">
+  <div class="mbox">
+    <div class="mhead"><h3 id="modalTitle"></h3><button class="tbtn" id="modalClose">닫기</button></div>
+    <div class="mbody" id="modalBody"></div>
+    <div class="mfoot" id="modalFoot"></div>
+  </div>
+</div>
+<div id="summary" class="overlay"><div class="report" id="report"></div></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   데이터: 단서
+   ========================================================= */
+const CLUES = {
+  A1:{title:'02:17 퇴실 출력지', where:'1층 관리실 프린터',
+    body:'청운빌딩 출입관리시스템 v2.3\n────────────────\n퇴실 완료 — 직원: 서하린 — 02:17\n소속: 시설안전팀 / 카드번호 0417\n────────────────\n출력 대기열: ‘용지 없음’ 오류가 길게 쌓여 있었음',
+    mean:'근무 첫날 밤, 용지를 채운 프린터에서 3년 전 실종된 직원의 퇴실 기록이 출력됐다. 다음 날 밤에도 같은 시각에 다시 출력됐다.'},
+  A2:{title:'오늘 밤의 CCTV', where:'1층 CCTV실 실시간 모니터',
+    body:'CAM-01 정문 / CAM-02 후문 / CAM-04 주차장\n재생 구간 02:10 ~ 02:25\n→ 출입자 없음',
+    mean:'기록상 02:17에 누군가 퇴실했지만, 실제로 건물을 나간 사람은 없다. 출력지는 실제 퇴실을 뜻하지 않는다.'},
+  A3:{title:'사라진 15분', where:'CCTV실 백업 서버 · 2023-11-17 영상',
+    body:'CAM-01 정문 / CAM-02 후문 / CAM-03 B1 복도\nCAM-05 화물E/V 앞 / CAM-06 주차장\n\n02:09:59 → (노이즈) → 02:25:00\n다섯 대 모두 정확히 같은 구간이 비어 있음',
+    mean:'고장이라면 카메라마다 다르게 끊겼을 것이다. 누군가 실종 시각 전후 15분만 골라서 지웠다.'},
+  A4:{title:'CCTV 삭제 로그', where:'CCTV실 백업 서버 시스템 로그',
+    body:'2023-11-17 03:06:11  로그인   kang.ts (관리자)\n2023-11-17 03:09:40  녹화 구간 삭제\n    CAM-01·02·03·05·06 / 02:10:00~02:25:00\n2023-11-17 03:11:02  로그아웃 kang.ts',
+    mean:'영상을 지운 것은 관리소장 강태식의 계정이다. 서하린이 ‘퇴실’했다는 시각에서 한 시간도 지나지 않은 새벽 3시였다.'},
+  A5:{title:'맞지 않는 출입 기록', where:'2층 사무실 출입기록 보관 바인더',
+    body:'카드 0417 서하린\n11/17 01:41  후문 게이트 IN\n11/17 01:58  B1 설비실 IN\n11/17 02:17  퇴실 처리 (정문)\n────────────────\n정문 스피드게이트 통과 카운터\n11/17 01:00~06:00 : 0건',
+    mean:'‘퇴실’ 기록은 있지만 정문 게이트를 지나간 사람은 없다. 서하린의 마지막 실제 행적은 B1 설비실이다.'},
+  K1:{title:'서하린의 메모', where:'B1 설비실 공구함 아래 틈',
+    body:'11/16.\n점검 보고서 원본은 캐비닛\n‘소방도면 2019’ 철 안에.\n사본은 내가 가지고 다님.\n\n소장님이 원본을 가져가려 한다.\n내일 아침 9시 구청 건축안전과에 제출.\n혹시 무슨 일이 생기면—',
+    mean:'서하린은 소장을 경계하고 있었다. 그리고 그가 감추고 싶어 한 ‘원본’ 자료를 가지고 있었다.'},
+  K2:{title:'두 장의 안전점검 결과서', where:'B1 설비실 문서 캐비닛',
+    body:'[원본 · 점검업체 직인]\n화물용 엘리베이터 승강로 — 부적합\n(추락 방호 난간 파손, 안전 차단기 작동 불량.\n 즉시 사용 중지 및 보수 요망)\n\n[제출본 · 확인자 강태식]\n화물용 엘리베이터 승강로 — 적합 (이상 없음)',
+    mean:'강태식은 위험 판정을 ‘적합’으로 고쳐 제출했다. 서하린이 원본을 구청에 내면 그는 책임을 피할 수 없었다. 이것이 동기다.'},
+  K3:{title:'그날 밤 설비실 출입 기록', where:'B1 설비실 전용 출입 단말기',
+    body:'2023-11-17\n01:58:12  IN    카드 0417 서하린\n02:03:47  IN    카드 0001 강태식\n02:17:42  경보  화물E/V 승강로 차단기 개방\n02:18:05  경보 해제 — 관리자 kang.ts\n02:31:20  OUT   카드 0001 강태식\n(카드 0417의 OUT 기록 없음)',
+    mean:'강태식은 그날 밤 서하린과 함께 설비실에 있었다. 02:17 승강로 경보가 울리자 그는 경보를 끄고, 혼자 나갔다.'},
+  K4:{title:'퇴실 기록 수정 이력', where:'관리실 출입 관리 PC',
+    body:'카드 0417 서하린\n퇴실 02:17:00 (정문)\n\n입력 방식: 수동 입력\n입력 시각: 2023-11-17 02:48:33\n입력자: kang.ts',
+    mean:'02:17 퇴실은 카드를 찍어 생긴 기록이 아니다. 31분 뒤 강태식의 계정으로 직접 입력한 가짜 기록이다.'},
+  K5:{title:'예약 작업 exit_check_0417', where:'관리실 출입 관리 PC',
+    body:'작업명: exit_check_0417\n생성자: kang.ts\n생성일: 2023-11-17 03:14\n실행: 매일 02:17\n동작: 카드 0417 퇴실 기록 조회\n      → 관리실 프린터 출력\n메모: 퇴실 반영 확인용. 확인 후 삭제할 것',
+    mean:'매일 밤 기록이 출력된 이유다. 강태식이 조작한 기록이 제대로 남는지 확인하려고 만든 자동 작업이 3년 동안 지워지지 않았다. 야간 근무가 없었고 프린터 용지도 비어 있어서 아무도 몰랐을 뿐이다.'},
+  K6:{title:'승강로 긴급 봉쇄 지시서', where:'B1 화물용 엘리베이터 문',
+    body:'긴급 봉쇄 작업 지시서\n일자: 2023-11-19\n대상: 화물용 엘리베이터 승강로 (B1)\n사유: 안전점검 부적합에 따른 긴급 폐쇄\n조치: 합판 덧댐 및 테두리 용접\n지시자: 관리소장 강태식\n비고: 내부 확인 불요, 즉시 시행',
+    mean:'실종 이틀 뒤, 강태식은 자신이 ‘적합’이라고 써냈던 승강로를 ‘부적합’을 이유로 막아 버렸다. 아무도 안을 들여다보지 못하게. 그는 그 아래에 무엇이 있는지 알고 있었다.'}
+};
+const CLUE_ORDER = ['A1','A2','A3','A4','A5','K1','K2','K3','K4','K5','K6'];
+// 사진이 있는 단서 — 발견할 때 크게 보여 주고, 단서 목록에도 함께 싣는다
+const CLUE_IMG = {A4:'assets/clue_A4.webp', A5:'assets/clue_A5.webp', K1:'assets/clue_K1.webp', K2:'assets/clue_K2.webp', K6:'assets/clue_K6.webp'};
+const clueImg = id=>CLUE_IMG[id] ? `<img class="clueimg" src="${encodeURI(CLUE_IMG[id])}" alt="${esc(CLUES[id].title)}">` : '';
+
+/* =========================================================
+   데이터: 장소와 조사 대상
+   ========================================================= */
+const LOCS = {
+  security:{name:'관리실', floor:'1F'},
+  cctv:{name:'CCTV실', floor:'1F'},
+  office:{name:'2층 사무실', floor:'2F'},
+  basement:{name:'지하 설비실', floor:'B1'},
+  outside:{name:'건물 밖', floor:'—', hidden:true},
+  shaft:{name:'화물용 엘리베이터 승강로', floor:'B1', hidden:true}
+};
+const LOC_ORDER = ['security','cctv','office','basement'];
+
+function locOpen(id){
+  if (id==='office') return state.chapter>=2;
+  if (id==='basement') return !!state.flags.key;
+  return true;
+}
+function locLockMsg(id){
+  if (id==='office') return '지금은 2층에 올라갈 이유가 없다. 오늘 밤은 관리실 주변부터 살피자.';
+  if (id==='basement') return state.chapter<3
+    ? '철문이 잠겨 있다. 열쇠는 관리실 열쇠함에 있지만, 소장이 출입을 금지했다.'
+    : '철문이 잠겨 있다. 관리실 열쇠함에서 B1 열쇠를 가져와야 한다.';
+  return '';
+}
+function locDesc(id){
+  const ch = state.chapter;
+  if (id==='security') return ch===1
+    ? '1층 관리실. 모니터 두 대와 낡은 레이저 프린터, 벽에 붙은 철제 열쇠함. 창밖으로 비가 그치지 않는다.'
+    : ch===2 ? '관리실. 어젯밤 출력지는 서랍에 넣어 두었다. 프린터의 대기 램프가 녹색으로 깜빡인다.'
+    : '관리실. 소장은 아직 오지 않았다. 열쇠함에 걸린 빨간 꼬리표가 자꾸 눈에 들어온다.';
+  if (id==='cctv') return ch===1
+    ? '창문 없는 두 평짜리 방. 16분할 모니터 중 네 칸은 꺼져 있고, 나머지가 벽을 푸르게 물들인다.'
+    : '모니터 아래 랙에 철거 전 이관용 백업 서버가 쌓여 있다. 팬 소리가 빗소리를 덮는다.';
+  if (id==='office') return '2층 사무실. 비닐 덮인 책상 사이로 빗물 얼룩진 창문이 길게 이어진다. 형광등 절반은 나가 있다.';
+  if (id==='basement') return '지하 설비실. 배관에서 물이 떨어지고, 형광등 셋 중 하나만 버티고 있다. 안쪽 끝에 합판으로 덧댄 철문이 보인다.';
+  if (id==='outside') return '청운빌딩 앞 보도. 젖은 아스팔트에 가로등 불빛이 번진다.';
+  if (id==='shaft') return '용접을 끊어 낸 화물용 엘리베이터 승강로. 3년 동안 아무도 들여다보지 않은 어둠이다.';
+  return '';
+}
+
+const OBJECTS = [
+  {id:'printer',  loc:'security', ch:[1],   name:'램프가 깜빡이는 프린터', scene:'ch1_printer', clue:'A1'},
+  {id:'phone1',   loc:'security', ch:[1],   name:'관리실 전화 — 강태식 소장', scene:'ch1_phone', repeat:true},
+  {id:'phone2',   loc:'security', ch:[2],   name:'관리실 전화 — 강태식 소장', scene:'ch2_phone', repeat:true},
+  {id:'keybox3',  loc:'security', ch:[3],   name:'열쇠함 — B1 설비실 열쇠', scene:'ch3_key', again:'ch3_key_again'},
+  {id:'pc',       loc:'security', ch:[3],   req:['K3'], name:'출입 관리 PC — 퇴실 기록 원장', scene:'ch3_pc', clue:'K4'},
+  {id:'tasks',    loc:'security', ch:[3],   req:['K4'], name:'출입 관리 PC — 예약 작업 목록', scene:'ch3_tasks', clue:'K5'},
+  {id:'keybox',   loc:'security', ch:[1,2], name:'벽의 철제 열쇠함', scene:'look_keybox', flavor:true},
+  {id:'window',   loc:'security', ch:[1,2,3], name:'비 내리는 창문', scene:'look_window', flavor:true},
+  {id:'cctv_live',loc:'cctv',     ch:[1],   name:'실시간 CCTV 모니터 — 02:17 전후', scene:'ch1_cctv', clue:'A2'},
+  {id:'archive',  loc:'cctv',     ch:[2,3], name:'백업 서버 — 2023년 11월 17일 영상', scene:'ch2_archive', clue:'A3'},
+  {id:'syslog',   loc:'cctv',     ch:[2,3], req:['A3'], name:'백업 서버 — 시스템 로그', scene:'ch2_syslog', clue:'A4'},
+  {id:'ledger',   loc:'office',   ch:[2,3], name:'‘출입기록 보관 2021–2023’ 바인더', scene:'ch2_ledger', clue:'A5'},
+  {id:'board',    loc:'office',   ch:[2,3], name:'게시판의 빛바랜 전단', scene:'look_board', flavor:true},
+  {id:'desk',     loc:'office',   ch:[2,3], name:'창가 끝 빈 책상', scene:'look_desk', flavor:true},
+  {id:'toolbox',  loc:'basement', ch:[3],   name:'벽 쪽 철제 공구함', scene:'ch3_toolbox', clue:'K1'},
+  {id:'cabinet',  loc:'basement', ch:[3],   req:['K1'], name:'녹슨 문서 캐비닛', scene:'ch3_cabinet', clue:'K2'},
+  {id:'terminal', loc:'basement', ch:[3],   req:['K2'], name:'설비실 출입 단말기', scene:'ch3_terminal', clue:'K3'},
+  {id:'elevator', loc:'basement', ch:[3],   req:['K3'], name:'봉쇄된 화물용 엘리베이터 문', scene:'ch3_elevator', clue:'K6'},
+  {id:'pipes',    loc:'basement', ch:[3],   name:'물이 떨어지는 배관', scene:'look_pipes', flavor:true}
+];
+
+const CHAPTERS = {
+  1:{num:'CHAPTER 1', title:'새벽 2시 17분', vig:.55},
+  2:{num:'CHAPTER 2', title:'사라진 15분', vig:.66},
+  3:{num:'CHAPTER 3', title:'지하 설비실', vig:.8},
+  4:{num:'CHAPTER 4', title:'마지막 퇴실 기록', vig:.72},
+  5:{num:'EPILOGUE', title:'퇴실 기록', vig:.4}
+};
+
+/* 다음 단계 조건 */
+const GOALS = {
+  1:{label:'근무를 마친다 — 다음 날 밤으로', need:()=>has('A1','A2') && state.flags.called, scene:'ch1_end'},
+  2:{label:'근무를 마친다 — 셋째 날 밤으로', need:()=>has('A3','A4','A5') && state.flags.warned, scene:'ch2_end'},
+  3:{label:'관리실에서 사건을 정리한다 (추리)', need:()=>has('K1','K2','K3','K4','K5','K6'), action:()=>openDeduction()}
+};
+
+function hintText(){
+  const ch = state.chapter, f = state.flags;
+  if (ch===1){
+    if (!has('A1')) return '빨갛게 깜빡이는 관리실 프린터를 클릭해 출력된 종이를 살펴보자.';
+    if (!has('A2')) return 'CCTV실에서 02:17 전후의 영상을 확인하자.';
+    if (!f.called) return '관리실 전화로 강태식 소장에게 연락하자.';
+    return '오늘 밤은 할 만큼 했다. 근무를 마치고 다음 날 밤으로 넘어가자.';
+  }
+  if (ch===2){
+    if (!has('A3')) return 'CCTV실의 백업 서버에서 3년 전 그날의 영상을 확인하자.';
+    if (!has('A4')) return '영상이 지워졌다면, 서버의 시스템 로그에 누가 지웠는지 남아 있을 것이다.';
+    if (!has('A5')) return '2층 사무실의 출입기록 바인더에서 서하린의 기록을 찾아보자.';
+    if (!f.warned) return '강태식 소장에게 전화해 영상을 지운 계정에 대해 물어보자.';
+    return '근무를 마치고 셋째 날 밤으로 넘어가자.';
+  }
+  if (ch===3){
+    if (!f.key) return '관리실 열쇠함에서 B1 설비실 열쇠를 가져가자.';
+    if (!has('K1')) return '지하 설비실을 살펴보자. 공구함 근처가 눈에 걸린다.';
+    if (!has('K2')) return '메모에 적힌 캐비닛에서 ‘원본’을 찾아보자.';
+    if (!has('K3')) return '그날 밤 설비실에 누가 있었는지, 출입 단말기를 확인하자.';
+    if (!has('K4')) return '관리실 출입 관리 PC에서 서하린의 퇴실 기록이 어떻게 만들어졌는지 확인하자.';
+    if (!has('K6')) return '설비실 안쪽의 봉쇄된 엘리베이터 문을 살펴보자.';
+    if (!has('K5')) return '출입 관리 PC의 예약 작업 목록을 확인하자.';
+    return '단서가 모두 모였다. 관리실에서 사건을 정리하자.';
+  }
+  if (ch===4) return '강태식의 주장을 무너뜨릴 증거를 제시하자. 단서의 해석을 다시 읽어 보면 도움이 된다.';
+  return '';
+}
+
+/* 챕터 4 대면 */
+const ROUNDS = [
+  {claim:'그건 낡은 시스템 오류라고 했잖아. 퇴사한 사람 데이터가 가끔 튀어나오는 거라고.',
+   accept:['K5'], ok:'ch4_r1', hint:'오류가 아니라면, 무엇이 매일 같은 시각에 출력을 실행했을까.'},
+  {claim:'그리고 나는 그날 밤 지하에 내려간 적도 없어. 집에서 자고 있었다고.',
+   accept:['K3'], ok:'ch4_r2', hint:'그날 밤 설비실에 누가 들어가고 나왔는지 따로 기록하는 장치가 있었다.'},
+  {claim:'하린이는 스스로 나간 거야. 정문 퇴실 기록이 그 증거고.',
+   accept:['K4','A5'], ok:'ch4_r3', hint:'그 퇴실 기록이 언제, 누구에 의해 만들어졌는지 확인했다.'},
+  {claim:'나는 그 애랑 다툰 적도 없어. 내가 왜 그 애를 해치겠나.',
+   accept:['K1','K2'], ok:'ch4_r4', hint:'서하린이 남긴 말, 그리고 그녀가 지키려던 서류.'},
+  {claim:'……사고였어. 서류를 안 주려고 버티다가 뒤로 넘어간 거야. 나는 잡으려고 했어. 그게 다야.',
+   accept:['A4','K6','K4'], ok:'ch4_r5', hint:'사고였다면 하지 않았을 일. 무언가를 지우고, 막아 버린 흔적.'}
+];
+const REBUTTALS = [
+  '그게 뭐 어쨌다는 거지? 그런 건 아무것도 증명하지 못해.',
+  '엉뚱한 소리 하지 마. 그게 지금 얘기랑 무슨 상관이야.',
+  '하, 고작 그거야? 경비 주제에 탐정 놀이는 그만둬.'
+];
+
+/* =========================================================
+   데이터: 장면 (대사 / 명령)
+   [화자, 문장, 옵션] — 화자: n 내레이션, me 나, kang 강태식, sys 기록, det 형사
+   '@명령 인자' — clue, flag, time, day, goto, fx, silence, wait, ring, hangup, print, chapter, status, rain, summary, reclaim, save
+   ========================================================= */
+const SCENES = {
+ch1_intro:{lines:[
+  '@dayfade DAY 1|11월 23일 (월) · 야간 근무',
+  '@day 1일차 · 11월 23일 (월)','@time 22:50','@goto security',
+  '@wait 1700','@dayclear',
+  ['n','밤 10시 50분. 비는 그칠 기미 없이 내리고 있었다.'],
+  ['n','철거를 한 달 앞둔 청운빌딩. 입주사가 거의 다 빠져나간 7층짜리 건물에는 불 꺼진 창문뿐이었다.'],
+  ['kang','자네가 이번 주 야간 맡을 친구로군. 관리소장 강태식이야.'],
+  ['kang','야간 경비는 3년 만에 다시 뽑는 거라 이것저것 낡았어. 순찰 돌고, 관리실 지키고, 아침 7시에 퇴근하면 돼.'],
+  ['kang','아, 프린터 용지가 떨어졌을 거야. 아침에 출입 보고서 뽑아야 하니까 채워 두고.'],
+  ['kang','그리고 지하 설비실은 출입 금지야. 철거 업체 말고는 아무도 못 들어가. 열쇠함에 걸려 있어도 손대지 마.'],
+  ['n','소장은 젖은 우산을 털며 주차장 쪽 어둠으로 사라졌다.'],
+  '@portrait off',
+  '@fx flicker',
+  ['n','프린터 용지함에 A4 한 묶음을 밀어 넣었다. 오래 잠들어 있던 기계가 웅웅거리며 깨어났다.'],
+  '@time 01:52',
+  ['n','새벽 1시 52분. 첫 순찰을 마치고 관리실로 돌아왔다.'],
+  ['n','형광등 하나가 일정하지 않은 박자로 깜빡인다. 건물 어딘가에서 보일러인지 펌프인지 모를 기계음이 낮게 울린다.'],
+  '@time 02:16',
+  ['n','2시 16분. 유리창을 두드리는 빗소리 말고는 아무것도 들리지 않았다.'],
+  '@silence 2800',
+  '@time 02:17',
+  '@print 퇴실 완료 — 직원: 서하린 — 02:17',
+  ['sys','퇴실 완료 — 직원: 서하린 — 02:17'],
+  ['me','……퇴실? 이 시간에?'],
+  ['n','출입 기록상 지금 건물 안에 남아 있는 사람은 나 하나뿐이었다.'],
+  ['n','프린터의 초록 램프가 빨갛게 깜빡이고 있다. 무언가 출력됐다. 확인해 봐야 한다.']
+]},
+ch1_printer:{lines:[
+  ['n','출력지는 아직 따뜻했다. 맨 위에 ‘청운빌딩 출입관리시스템 v2.3’이라고 찍혀 있다.'],
+  ['sys','퇴실 완료 — 직원: 서하린 — 02:17\n소속: 시설안전팀 / 카드번호 0417'],
+  ['me','서하린. 입주사 명단에서 본 적 없는 이름이다.'],
+  ['n','프린터 화면의 출력 대기열에는 ‘용지 없음’ 오류가 길게 쌓여 있었다. 오래된 항목은 지워져 날짜를 알 수 없었다.'],
+  ['me','용지가 없어서 그동안 출력이 안 됐던 건가. 그럼 누가, 언제부터 이걸 보내고 있었던 거지?'],
+  '@clue A1',
+  ['n','정말 누군가 방금 나갔다면 정문 카메라에 찍혔을 것이다. CCTV실을 확인해 보자.']
+]},
+ch1_cctv:{lines:[
+  '@goto cctv','@fx noise',
+  ['n','16분할 모니터의 푸른 빛. 정문 카메라를 02:10부터 돌려 본다.'],
+  ['n','빗줄기 너머로 셔터가 반쯤 내려진 로비. 비어 있는 스피드게이트.'],
+  ['n','02:17. 아무도 없다. 화면 위로 잠깐 노이즈가 일었다가 사라졌다. 그것뿐이었다.'],
+  ['n','후문 카메라도, 주차장 카메라도 마찬가지였다.'],
+  ['me','퇴실 기록은 있는데, 나간 사람은 없다.'],
+  '@clue A2',
+  ['n','소장에게 알려야 할까. 관리실 전화로 걸 수 있다.']
+]},
+ch1_phone:{lines:[
+  '@goto security',
+  '@ring 3',
+  ['n','신호가 여섯 번 간 뒤에야 잠긴 목소리가 받았다.'],
+  ['kang','……여보세요. 이 시간에 무슨 일인가.']
+ ],
+ choices:[
+  {t:'“프린터에서 서하린이라는 사람의 퇴실 기록이 나왔습니다.”', go:'ch1_phone_print'},
+  {t:'“CCTV를 봤는데, 02:17에 나간 사람이 아무도 없습니다.”', go:'ch1_phone_cctv', req:['A2']},
+  {t:'“알겠습니다. 이만 끊겠습니다.”', go:'ch1_phone_end', key:true}
+ ]},
+ch1_phone_print:{ret:'ch1_phone', lines:[
+  ['kang','……서하린?'],
+  ['n','수화기 너머로 짧은 침묵이 흘렀다.'],
+  ['kang','그 시스템 오래된 거야. 퇴사한 직원 데이터가 가끔 튀어나와. 오류야, 오류.'],
+  ['me','서하린 씨는 어떤 분이었는데요?'],
+  ['kang','3년 전에 있던 시설안전팀 직원이야. ……어느 날 연락이 끊겼지. 경찰도 왔다 갔고.'],
+  ['kang','자네가 신경 쓸 일 아니야.']
+]},
+ch1_phone_cctv:{ret:'ch1_phone', lines:[
+  ['me','정문도 후문도 확인했는데, 02:17에 나간 사람이 없습니다.'],
+  ['kang','그러니까 오류라는 거야. 사람이 안 나갔는데 기록이 나왔으면 기계가 잘못된 거지.'],
+  ['kang','……뽑힌 종이는 그냥 버려.']
+]},
+ch1_phone_end:{lines:[
+  ['me','알겠습니다. 수고하세요.'],
+  ['kang','그래. 지하엔 내려가지 말고.'],
+  '@flag called',
+  '@hangup',
+  ['n','전화가 끊겼다. 빗소리가 다시 크게 들렸다.']
+]},
+look_window:{lines:()=>[
+  ['n','창밖으로 빗줄기가 가로등 불빛을 비스듬히 긋고 지나간다. 맞은편 건물도 불이 다 꺼져 있다.'],
+  state.chapter===1
+    ? ['n','유리에 비친 관리실은 실제보다 조금 더 어두워 보였다. 그 안에 앉아 있는 내 모습도.']
+    : state.chapter===2
+      ? ['n','유리창 아래쪽에 빗물이 고여 천천히 흘러내린다. 어제와 똑같은 비, 똑같은 밤이다.']
+      : ['n','빗소리가 조금 굵어졌다. 지하로 내려가면 이 소리도 들리지 않을 것이다.']
+]},
+look_keybox:{lines:[
+  ['n','벽에 붙은 철제 열쇠함. 층별 열쇠 사이에 빨간 꼬리표가 달린 열쇠 하나가 따로 걸려 있다.'],
+  ['sys','B1 설비실 — 소장 허가 없이 출입 금지'],
+  ['me','소장이 말한 그 열쇠다. 지금은 그대로 두자.']
+]},
+ch1_end:{next:'ch2_intro', lines:[
+  '@time 07:00',
+  ['n','아침 7시. 비는 그치지 않았다. 출력지를 접어 주머니에 넣고 퇴근했다.'],
+  '@dayfade DAY 2|11월 24일 (화) · 야간 근무',
+  '@day 2일차 · 11월 24일 (화)','@time 01:40','@goto security',
+  '@wait 1700','@dayclear',
+  ['n','다음 날 밤. 소장 말대로 오류라면, 오늘은 아무 일도 없어야 한다.'],
+  ['n','나는 프린터 앞에 의자를 끌어다 놓고 앉았다.'],
+  '@time 02:16',
+  '@silence 2400',
+  '@time 02:17',
+  '@print 퇴실 완료 — 직원: 서하린 — 02:17',
+  ['sys','퇴실 완료 — 직원: 서하린 — 02:17'],
+  ['n','똑같은 시각. 똑같은 이름.'],
+  ['me','오류가 이렇게 정확할 리 없어.'],
+  '@chapter 2'
+]},
+ch2_intro:{lines:[
+  ['n','휴대전화로 ‘청운빌딩 서하린’을 검색했다. 기사 몇 개가 나왔다.'],
+  ['sys','[2023.11.21 지역신문] 청운빌딩 직원 서하린(29) 실종 나흘째… 경찰 “스스로 건물 떠났을 가능성도 조사”'],
+  ['sys','[기사 중] 출입 기록상 17일 새벽 2시 17분 퇴실 처리됐으나, CCTV에서 건물을 나서는 모습은 확인되지 않아…'],
+  ['me','02:17. 3년 전 그날 밤의 퇴실 시각과 똑같다.'],
+  ['n','CCTV실에는 철거 전 이관을 위해 모아 둔 백업 서버가 있다. 2층 사무실에는 옛 직원들의 서류가 그대로 남아 있다고 했다.'],
+  '@save'
+]},
+ch2_archive:{lines:[
+  '@goto cctv',
+  ['n','백업 서버 랙의 먼지를 손으로 훔쳤다. 2023년 폴더는 아직 남아 있었다.'],
+  ['n','2023-11-17. 정문, 후문, B1 복도, 화물 엘리베이터 앞, 주차장. 영상을 차례로 연다.'],
+  '@fx static',
+  ['n','02:09:59에서 화면이 깨졌다. 회색 노이즈가 이어지다가, 02:25:00에 갑자기 빈 복도가 나타난다.'],
+  ['n','정문도, B1 복도도, 화물 엘리베이터 앞도. 다섯 대 모두 정확히 같은 15분이 사라져 있었다.'],
+  ['me','고장이라면 이렇게 깔끔하게 15분만 빠질 리 없다. 누가 이 구간만 지운 거다.'],
+  '@clue A3',
+  ['n','영상이 지워졌다면, 서버의 시스템 로그에 누가 지웠는지 남아 있을지 모른다.']
+]},
+ch2_syslog:{lines:[
+  '@goto cctv',
+  ['n','관리 프로그램의 ‘시스템 로그’ 메뉴. 3년 치 기록이 날짜순으로 쌓여 있다. 2023-11-17로 내려간다.'],
+  ['sys','03:06:11  로그인 — 계정 kang.ts (관리자)'],
+  ['sys','03:09:40  녹화 구간 삭제 — CAM-01·02·03·05·06 / 02:10~02:25'],
+  ['sys','03:11:02  로그아웃 — 계정 kang.ts'],
+  ['me','kang.ts. 강태식.'],
+  ['n','서하린이 ‘퇴실’했다는 시각에서 한 시간도 지나지 않아, 소장의 계정이 바로 그 시간대의 영상을 지웠다.'],
+  '@clue A4',
+  ['n','소장에게 직접 물어볼 수 있다. 관리실 전화를 쓰자.']
+]},
+ch2_ledger:{lines:[
+  '@goto office',
+  ['n','캐비닛에 ‘출입기록 보관 2021–2023’ 바인더가 꽂혀 있다. 습기를 먹어 종이가 물결쳐 있었다.'],
+  ['n','2023년 11월. 카드번호 0417, 서하린.'],
+  ['sys','11/17 01:41  후문 게이트 IN\n11/17 01:58  B1 설비실 IN'],
+  ['sys','11/17 02:17  퇴실 완료 (정문)',{glitch:'11/17 02:17  퇴실 미완료'}],
+  ['me','……방금, 글자가.'],
+  ['n','다시 보니 ‘퇴실 완료’였다. 형광등이 깜빡였을 뿐이다. 그렇게 생각하기로 했다.'],
+  ['n','바인더 뒤쪽에 정문 스피드게이트 통과 카운터 출력본이 붙어 있다. 11/17 01:00~06:00 통과 인원: 0건.'],
+  ['me','퇴실 처리는 됐는데, 게이트를 지나간 사람은 없다. 사람이 아니라 기록만 퇴실한 거야.'],
+  ['me','그리고 그녀의 마지막 실제 기록은 B1 설비실이다.'],
+  '@clue A5'
+]},
+look_board:{lines:[
+  '@goto office',
+  ['n','게시판에 빛바랜 전단 한 장이 남아 있다.'],
+  ['sys','사람을 찾습니다 — 서하린(29) / 2023년 11월 17일 새벽, 청운빌딩에서 마지막으로 확인'],
+  ['n','연락처 칸 아래에 누군가 볼펜으로 눌러 쓴 글씨가 있었다. ‘언니 꼭 돌아와.’']
+]},
+look_desk:{lines:[
+  '@goto office',
+  ['n','창가 끝 책상에 ‘시설안전팀 서하린’ 명패가 그대로 남아 있다.'],
+  ['n','서랍은 비어 있다. 모니터 테두리에 포스트잇을 떼어 낸 자국만 네모나게 남아 있다.'],
+  ['me','누군가 이 자리를 급하게 치운 것 같다.']
+]},
+ch2_phone:{lines:[
+  '@goto security',
+  '@ring 1',
+  ['n','이번에는 신호가 두 번 만에 끊기고 목소리가 들렸다.'],
+  ['kang','또 무슨 일인가.']
+ ],
+ choices:[
+  {t:'“서하린 씨 일, 좀 더 자세히 알고 싶습니다.”', go:'ch2_q_case'},
+  {t:'“3년 전 그날 CCTV가 15분만 비어 있습니다.”', go:'ch2_q_cctv', req:['A3']},
+  {t:'“퇴실 기록은 있는데 게이트 통과 기록이 없습니다.”', go:'ch2_q_ledger', req:['A5']},
+  {t:'“영상을 지운 계정이 소장님 계정이던데요.”', go:'ch2_q_kang', req:['A4'], key:true},
+  {t:'“……아닙니다. 끊겠습니다.”', go:'ch2_phone_end'}
+ ]},
+ch2_q_case:{ret:'ch2_phone', lines:[
+  ['kang','말했잖아. 3년 전에 사라졌어. 퇴실 기록 남기고. 경찰은 스스로 떠났다고 봤고.'],
+  ['kang','사람 속사정은 모르는 거야. 회사 일로 스트레스도 많았고.']
+]},
+ch2_q_cctv:{ret:'ch2_phone', lines:[
+  ['kang','그 서버 오래됐어. 그때도 툭하면 먹통이었고. 시스템 오류야.'],
+  ['me','카메라 다섯 대가 똑같이 15분만요?'],
+  ['kang','……기계 일은 나도 몰라.']
+]},
+ch2_q_ledger:{ret:'ch2_phone', lines:[
+  ['kang','그 게이트 카운터는 원래 잘 안 맞아. 우산 들고 옆문으로 나갔겠지.'],
+  ['me','옆문 카메라에도 없었습니다.'],
+  ['kang','……그러니까 오류라고 몇 번을 말해.']
+]},
+ch2_q_kang:{lines:[
+  ['me','시스템 로그에 kang.ts 계정이 02:10부터 02:25까지 영상을 지웠다고 나옵니다. 새벽 3시 9분에요.'],
+  ['n','수화기 너머가 조용해졌다. 빗소리만 들렸다.'],
+  ['kang','……그 계정은 관리실 사람들이 다 같이 썼어. 내 이름이라고 내가 쓴 게 아니야.'],
+  ['me','그 시간에 관리실에 누가 있었는데요?'],
+  ['kang','3년 전 일을 내가 어떻게 기억하나.'],
+  ['kang','이봐. 자넨 경비야. 형사가 아니라.'],
+  ['kang','그리고 분명히 말하는데, 지하에는 내려가지 마. 거긴 위험해.'],
+  '@flag warned',
+  '@hangup',
+  ['n','전화가 끊겼다. 나는 지하 이야기를 꺼낸 적이 없었다.']
+]},
+ch2_phone_end:{lines:[
+  ['me','아닙니다. 들어가세요.'],
+  ['kang','쓸데없는 데 신경 쓰지 말고 순찰이나 돌아.'],
+  '@hangup'
+]},
+ch2_end:{next:'ch3_intro', lines:[
+  '@time 07:00',
+  ['n','퇴근길, 젖은 보도에서 건물을 올려다봤다. 지하 환기구에서 하얀 김이 새어 나오고 있었다.'],
+  '@dayfade DAY 3|11월 25일 (수) · 야간 근무',
+  '@day 3일차 · 11월 25일 (수)','@time 23:30','@goto security',
+  '@wait 1700','@dayclear',
+  ['n','셋째 날 밤. 소장은 문자 한 통만 남겼다.'],
+  ['sys','[문자 · 강태식] 오늘 본사 회의로 늦음. 새벽 4시쯤 들름. 지하 절대 출입 금지.'],
+  ['me','절대 출입 금지.'],
+  ['n','3년 전 그날 밤, 서하린의 마지막 기록은 B1 설비실이었다. 그리고 소장은 묻지도 않은 지하 이야기를 먼저 꺼냈다.'],
+  '@chapter 3'
+]},
+ch3_intro:{lines:[
+  ['n','관리실 열쇠함에는 빨간 꼬리표가 달린 B1 설비실 열쇠가 걸려 있다.'],
+  ['n','소장이 오기까지 네 시간 남짓. 확인만 하고 돌려놓으면 된다.'],
+  '@save'
+]},
+ch3_key:{lines:[
+  ['n','꼬리표를 손에 쥐자 철제 열쇠가 차가웠다.'],
+  ['me','확인만 하고 나오면 돼.'],
+  '@flag key',
+  ['n','이제 지하 설비실로 내려갈 수 있다.']
+]},
+ch3_key_again:{lines:[
+  ['n','열쇠는 이미 주머니에 있다. 빈 고리만 흔들리고 있었다.']
+]},
+b1_enter:{lines:[
+  '@goto basement',
+  ['n','계단을 내려갈수록 빗소리가 멀어졌다. 철문을 열자 기름 냄새와 눅눅한 냉기가 한꺼번에 밀려 나왔다.'],
+  '@silence 2600',
+  ['n','그 순간, 사흘 내내 들리던 낮은 기계음이 뚝 끊겼다. 펌프가 멈춘 것뿐이다. 그런데도 숨이 막혔다.'],
+  ['n','형광등 셋 중 하나만 들어온다. 배관을 따라 물방울이 떨어진다. 똑. 똑.'],
+  ['n','안쪽 끝, 합판으로 덧댄 철문 하나. 화물용 엘리베이터다.'],
+  '@flag b1seen'
+]},
+look_pipes:{lines:[
+  ['n','천장을 지나는 굵은 배관에서 물방울이 일정한 간격으로 떨어진다. 바닥 웅덩이에 형광등 불빛이 흔들린다.'],
+  ['n','물이 떨어질 때마다, 안쪽 철문 너머에서 아주 늦게 메아리가 돌아오는 것 같았다.']
+]},
+ch3_toolbox:{lines:[
+  ['n','벽 쪽 철제 공구함. 들어 올리자 바닥과의 틈에 접힌 종이가 끼어 있었다. 습기에 번진 볼펜 글씨.'],
+  ['sys','11/16.\n점검 보고서 원본은 캐비닛 ‘소방도면 2019’ 철 안에. 사본은 내가 가지고 다님.'],
+  ['sys','소장님이 원본을 가져가려 한다.\n내일 아침 9시 구청 건축안전과에 제출. 혹시 무슨 일이 생기면—'],
+  ['n','문장은 거기서 끊겨 있었다.'],
+  ['me','서하린은 소장을 두려워하고 있었다. 그리고 ‘원본’이 있었다.'],
+  '@clue K1',
+  ['n','메모에 적힌 캐비닛을 찾아보자.']
+]},
+ch3_cabinet:{lines:[
+  ['n','녹슨 문서 캐비닛 맨 아래 칸. ‘소방도면 2019’ 철 사이에 클리어 파일 하나가 끼어 있었다.'],
+  ['n','2023년 10월 정기 안전점검 결과서. 같은 양식의 문서가 두 장이다.'],
+  ['sys','[원본 · 점검업체 직인]\n화물용 엘리베이터 승강로 — 부적합\n추락 방호 난간 파손, 안전 차단기 작동 불량. 즉시 사용 중지 요망.'],
+  ['sys','[제출본 · 확인자 강태식]\n화물용 엘리베이터 승강로 — 적합 (이상 없음)'],
+  ['me','같은 점검, 같은 항목. 소장이 ‘부적합’을 ‘적합’으로 고쳐서 냈다.'],
+  ['n','철거를 앞둔 건물의 보수비를 아끼려던 걸까. 어느 쪽이든, 서하린은 이걸 알았다.'],
+  '@clue K2',
+  ['n','그날 밤 이 방에 누가 있었는지 알아야 한다. 입구 옆에 설비실 전용 출입 단말기가 있었다.']
+]},
+ch3_terminal:{lines:[
+  ['n','문 옆 벽의 출입 단말기. 버튼을 누르자 화면이 녹색으로 깨어났다. 이 단말기는 본관 시스템과 따로 기록을 저장한다.'],
+  ['n','2023-11-17을 조회한다.'],
+  ['sys','01:58:12  IN    카드 0417 서하린\n02:03:47  IN    카드 0001 강태식'],
+  ['sys','02:17:42  경보  화물E/V 승강로 차단기 개방\n02:18:05  경보 해제 — 관리자 kang.ts'],
+  ['sys','02:31:20  OUT   카드 0001 강태식'],
+  ['n','서하린의 OUT 기록은 없었다.'],
+  '@fx flicker',
+  ['me','소장은 그날 밤 이 방에 있었다. 그리고 혼자 나갔다.'],
+  ['me','02:17. 승강로 차단기가 열린 시각이다.'],
+  '@clue K3',
+  ['n','그렇다면 02:17 ‘정문 퇴실’ 기록은 어떻게 만들어진 걸까. 관리실 출입 관리 PC에서 원장을 확인할 수 있다. 그리고 안쪽의 봉쇄된 문도.']
+]},
+ch3_elevator:{lines:[
+  ['n','합판과 각목을 덧대고 테두리를 용접한 철문. 아래쪽 틈으로 차가운 바람이 새어 나온다.'],
+  ['n','그 아래 어둠에서 물 떨어지는 소리가 아득하게 울린다. 바닥까지 몇 층인지 짐작이 가지 않았다.'],
+  ['n','문에 비닐로 싼 작업 지시서가 붙어 있다.'],
+  ['sys','긴급 봉쇄 작업 지시서 — 2023-11-19\n대상: 화물용 엘리베이터 승강로(B1)\n사유: 안전점검 부적합에 따른 긴급 폐쇄'],
+  ['sys','조치: 합판 덧댐 및 테두리 용접\n지시자: 관리소장 강태식\n비고: 내부 확인 불요, 즉시 시행'],
+  ['me','실종 이틀 뒤. 내부 확인 불요.'],
+  ['me','한 달 전엔 ‘적합’이라고 써냈으면서, 실종 이틀 뒤엔 ‘부적합’을 핑계로 아무도 안을 못 보게 막았다.'],
+  ['n','바람이 다시 문틈을 훑고 지나갔다. 나는 그 아래가 얼마나 깊은지 생각하지 않으려고 애썼다.'],
+  '@clue K6'
+]},
+ch3_pc:{lines:[
+  '@goto security',
+  ['n','관리실 구석의 출입 관리 PC. 소장이 ‘건드릴 일 없다’던 컴퓨터다. 관리자 비밀번호는 모니터 아래에 테이프로 붙어 있었다.'],
+  ['n','서하린의 2023-11-17 퇴실 기록을 열고 ‘수정 이력’을 누른다.'],
+  ['sys','기록: 퇴실 02:17:00 (정문)\n입력 방식: 수동 입력'],
+  ['sys','입력 시각: 2023-11-17 02:48:33\n입력자: kang.ts'],
+  ['me','02:17 퇴실은 카드를 찍어서 생긴 기록이 아니다. 31분 뒤에 소장 계정으로 직접 써 넣은 거다.'],
+  ['n','설비실에서 소장이 나간 시각은 02:31. 관리실까지 올라와 기록을 만들기에 충분한 시간이다.'],
+  '@clue K4',
+  ['n','그런데 이 기록이 왜 매일 밤 출력되는 걸까. 같은 PC의 ‘예약 작업’ 메뉴가 눈에 들어왔다.']
+]},
+ch3_tasks:{lines:[
+  '@goto security','@time 02:14',
+  ['n','예약 작업 목록. 대부분 ‘백업’, ‘로그 정리’ 같은 시스템 작업이다. 그중 하나만 이름이 달랐다.'],
+  ['sys','작업명: exit_check_0417\n생성자: kang.ts / 생성일: 2023-11-17 03:14'],
+  ['sys','실행: 매일 02:17\n동작: 카드 0417 퇴실 기록 조회 → 관리실 프린터 출력'],
+  ['sys','메모: 퇴실 반영 확인용. 확인 후 삭제할 것'],
+  ['me','예약 작업은 정해진 시각마다 컴퓨터가 알아서 실행하는 명령이다.'],
+  ['me','소장은 조작한 퇴실 기록이 시스템에 제대로 남는지 확인하려고 이걸 만들었다. 그리고 지우는 걸 잊었다.'],
+  ['n','지난 3년 동안 야간 근무는 없었고, 프린터에는 용지가 없었다. 출력 명령은 매일 밤 대기열에 쌓였다가 오류로 사라졌다.'],
+  ['n','내가 용지를 채운 그 밤부터, 기록이 다시 종이 위로 나오기 시작한 것이다.'],
+  '@time 02:16',
+  ['n','화면 구석의 시계가 02:16을 가리켰다.'],
+  '@silence 2000',
+  '@time 02:17',
+  '@print 퇴실 완료 — 직원: 서하린 — 02:17',
+  ['n','등 뒤에서 프린터가 돌아갔다. 이제 그 소리는 누군가의 목소리처럼 들리지 않았다. 지워지지 않은 명령이 내는 소리일 뿐이었다.'],
+  '@clue K5'
+]},
+ch4_intro:{next:'ch4_c0', lines:[
+  '@chapter 4','@day 3일차 · 11월 26일 (목) 새벽','@time 03:58','@goto security',
+  ['n','새벽 3시 58분. 주차장 쪽에서 헤드라이트가 빗줄기를 갈랐다.'],
+  ['n','관리실 문이 열리고, 젖은 코트 차림의 강태식이 들어왔다. 그의 시선이 책상 위 빨간 꼬리표에 멈췄다.'],
+  ['kang','……내려갔었군.'],
+  ['kang','내가 분명히 말했을 텐데.'],
+  ['me','소장님. 서하린 씨는 퇴실한 적이 없습니다.'],
+  ['kang','무슨 소릴 하는 거야. 기록이 있잖나. 매일 밤 자네 눈으로 봤잖아.']
+]},
+ch4_r1:{next:'ch4_c1', lines:[
+  ['me','오류가 아닙니다. 관리실 PC에 예약 작업이 있었어요. 생성자 kang.ts, 생성일 2023년 11월 17일 새벽 3시 14분.'],
+  ['me','매일 02:17에 서하린 씨의 퇴실 기록을 뽑게 돼 있었습니다. 메모도 남아 있더군요. ‘퇴실 반영 확인용. 확인 후 삭제할 것.’'],
+  '@fx flicker',
+  ['n','그의 턱이 굳었다. 형광등이 한 번 크게 깜빡였다.']
+]},
+ch4_r2:{next:'ch4_c2', lines:[
+  ['me','설비실 단말기는 본관과 따로 기록을 남깁니다. 01:58 서하린 씨 입실, 02:03 소장님 카드 입실.'],
+  ['me','02:17에 승강로 차단기 경보가 울렸고, 02:18에 kang.ts 계정이 경보를 껐습니다. 02:31에 소장님 혼자 나왔고요.'],
+  ['kang','카드는… 누가 빌려 갔을 수도—'],
+  ['me','그 카드를 빌려 간 사람이 소장님 계정 비밀번호까지 알고 있었다는 겁니까?']
+]},
+ch4_r3:{next:'ch4_c3', lines:[
+  ['me','그 퇴실 기록은 02:48에 kang.ts 계정으로 수동 입력된 겁니다. 그날 새벽 정문 게이트를 지나간 사람은 한 명도 없었어요.'],
+  ['me','서하린 씨가 퇴실한 게 아니라, 소장님 손이 퇴실 기록을 만든 겁니다.']
+]},
+ch4_r4:{next:'ch4_c4', lines:[
+  ['me','서하린 씨는 메모를 남겼습니다. ‘소장님이 원본을 가져가려 한다.’'],
+  ['me','원본은 설비실 캐비닛에 있었습니다. 승강로 ‘부적합’ 판정을 ‘적합’으로 고친 제출본과 함께요. 이유는 충분했죠.'],
+  ['n','강태식이 의자에 털썩 주저앉았다. 코트에서 빗물이 바닥으로 뚝뚝 떨어졌다.'],
+  ['kang','……그 애가 그걸 들고 구청에 간다고 했어. 그럼 다 끝나는 거였어. 건물도, 나도.'],
+  ['kang','그래서 내려갔어. 서류만 받으려고. 정말 그것뿐이었어.']
+]},
+ch4_r5:{next:'ch4_police', lines:[
+  ['me','사고였다면, 왜 신고하지 않으셨습니까.'],
+  ['me','02:18에 경보를 껐고, 02:48에 퇴실 기록을 만들었고, 03:09에 CCTV 15분을 지웠습니다. 03:14에는 그 기록이 잘 남는지 확인하는 작업까지 걸었죠.'],
+  ['me','그리고 이틀 뒤에는 ‘내부 확인 불요’라며 승강로를 용접해 막았습니다. 소장님이 ‘적합’이라고 써냈던 바로 그 승강로를요.'],
+  ['me','실수로 사람을 밀친 사람이 하는 일이 아닙니다. 그 사람이 거기 있었다는 사실을 지우려는 사람이 하는 일이죠.'],
+  '@silence 2600',
+  ['n','오래도록 아무도 말하지 않았다. 빗소리만이 관리실을 채웠다.'],
+  ['kang','……밀었어.'],
+  ['kang','서류를 뺏으려고 잡아당겼는데, 그 애가 끝까지 안 놓더라고. 그래서 밀었어. 뒤에 난간이 부서져 있는 걸 알면서.'],
+  ['kang','떨어지는 소리를 들었어. 내려가 보지도 않았어. 그게… 2시 17분이었어.'],
+  ['n','나는 관리실 전화를 들어 112를 눌렀다.']
+]},
+ch4_police:{next:'ending', lines:[
+  '@time 04:21',
+  ['n','4시 21분. 파란 경광등 불빛이 젖은 유리창 위에서 번졌다.'],
+  ['det','신고하신 분이죠. 확보하신 자료는 손대지 말고 그대로 두세요.'],
+  ['n','출력지, 메모, 두 장의 점검 결과서, 설비실 단말기, 그리고 PC 화면을 차례로 가리켰다. 형사는 하나하나 사진을 찍었다.'],
+  ['det','PC는 포렌식팀이 이미지 뜨기 전까지 전원 그대로 둡니다. 아무것도 끄지 마세요.'],
+  ['n','강태식은 저항하지 않았다. 수갑이 채워질 때 그는 한 번도 지하 쪽을 보지 않았다.'],
+  '@dayfade 이틀 뒤|11월 28일 (금)',
+  '@day 11월 28일 (금)','@time 14:00','@goto shaft',
+  '@wait 1700','@dayclear',
+  ['n','이틀 뒤. 소방대가 B1 화물용 엘리베이터 승강로의 용접을 끊었다.'],
+  ['n','승강로 바닥에서 서하린 씨의 유해와 사원증이 발견됐다. 곁에는 끝내 손에서 놓지 않았던 서류 봉투 하나가 있었다.'],
+  ['n','봉투 안에는 안전점검 결과서 사본이 들어 있었다. 강태식이 빼앗으려 했던 바로 그 서류였다.'],
+  ['sys','[속보] 3년 전 실종 청운빌딩 직원, 건물 승강로에서 발견… 관리소장 체포'],
+  ['n','강태식은 서하린 씨를 숨지게 한 혐의와 시신 은닉, 기록 조작과 증거 인멸 혐의로 구속됐다.']
+]},
+ending:{lines:[
+  '@chapter 5','@day 마지막 밤 · 11월 28일 (금)','@time 02:10','@goto security',
+  ['n','건물에서의 마지막 밤. 포렌식팀은 아침에 출입 관리 PC를 가져가기로 했다.'],
+  ['n','나는 관리실에 앉아 프린터를 바라봤다.'],
+  '@time 02:16',
+  '@silence 2400',
+  '@time 02:17',
+  '@print 퇴실 기록 — 서하린 — 02:17',
+  ['sys','퇴실 기록 — 서하린 — 02:17'],
+  ['n','이번에는 무섭지 않았다. 3년 동안 아무도 받아 주지 않던 기록이, 이제야 제자리를 찾은 것 같았다.'],
+  '@time 07:00',
+  ['n','아침 7시. 마지막으로 관리실 불을 끄고 건물을 나섰다.'],
+  '@goto outside','@rain light',
+  ['n','비는 가늘어져 있었다. 젖은 거리 위로 희미하게 날이 밝아 오고 있었다.'],
+  ['n','오늘은 아무도 기록에서 사라지지 않았다.'],
+  '@summary'
+]},
+ch4_wrong:{lines:()=>[
+  ['kang', REBUTTALS[Math.floor(Math.random()*REBUTTALS.length)]],
+  ['n', '(' + ROUNDS[state.confront].hint + ')'],
+  '@reclaim'
+]}
+};
+/* 대면 라운드 장면 생성 */
+ROUNDS.forEach((r,i)=>{ SCENES['ch4_c'+i] = {present:i, lines:[['kang', r.claim]]}; });
+
+/* =========================================================
+   상태
+   ========================================================= */
+const SAVE_KEY = 'lastExitRecord.save.v1';
+function createInitialState(){
+  return {chapter:1, day:'', time:'', loc:'security', clues:[], inspected:[], flags:{}, asked:[], log:[], mode:'title', confront:0, receipt:null, receiptUnread:false};
+}
+let state = createInitialState();
+const has = (...ids)=>ids.every(id=>state.clues.includes(id));
+
+function save(){
+  try{
+    const s = {chapter:state.chapter, day:state.day, time:state.time, loc:state.loc, clues:state.clues,
+      inspected:state.inspected, flags:state.flags, asked:state.asked, log:state.log.slice(-300), receipt:state.receipt, receiptUnread:state.receiptUnread};
+    localStorage.setItem(SAVE_KEY, JSON.stringify(s));
+  }catch(e){}
+}
+function loadSave(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY); if(!raw) return null;
+    const s = JSON.parse(raw);
+    if (!s || typeof s.chapter!=='number' || s.chapter<1 || s.chapter>4 || !Array.isArray(s.clues)) return null;
+    return s;
+  }catch(e){ return null; }
+}
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+
+/* =========================================================
+   유틸
+   ========================================================= */
+const $ = s=>document.querySelector(s);
+let timers = [];
+function later(fn, ms){ const t = setTimeout(()=>{ timers = timers.filter(x=>x!==t); fn(); }, ms); timers.push(t); return t; }
+function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+/* =========================================================
+   사운드 (Web Audio, 파일 없음)
+   ========================================================= */
+const Snd = {
+  ctx:null, on:false, vol:0.85, loc:'security', rainAmt:1,
+  init(){
+    if (this.ctx) return true;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    try{
+      const c = this.ctx = new AC();
+      this.master = c.createGain(); this.master.gain.value = 0; this.master.connect(c.destination);
+      this.white = this.noise('white'); this.pink = this.noise('pink'); this.brown = this.noise('brown');
+      // 빗소리 버스
+      this.rainBus = c.createGain(); this.rainBus.gain.value = 0.9;
+      this.rainLP = c.createBiquadFilter(); this.rainLP.type='lowpass'; this.rainLP.frequency.value = 2400;
+      this.rainBus.connect(this.rainLP); this.rainLP.connect(this.master);
+      const loop = (buf, filt, f, g, q)=>{
+        const s = c.createBufferSource(); s.buffer = buf; s.loop = true;
+        const fl = c.createBiquadFilter(); fl.type = filt; fl.frequency.value = f; if(q) fl.Q.value = q;
+        const gn = c.createGain(); gn.gain.value = g;
+        s.connect(fl); fl.connect(gn); gn.connect(this.rainBus); s.start(0, Math.random()*3);
+        return gn;
+      };
+      this.rainBody = loop(this.pink,'bandpass',900,0.55,0.5);   // 쏟아지는 빗줄기
+      this.rainHiss = loop(this.white,'highpass',5200,0.05);     // 유리창 치는 고음
+      this.rainRoof = loop(this.brown,'lowpass',260,0.5);         // 건물 전체의 낮은 울림
+      // 형광등 험
+      const o = c.createOscillator(); o.type='sawtooth'; o.frequency.value = 120;
+      const hl = c.createBiquadFilter(); hl.type='lowpass'; hl.frequency.value = 240;
+      this.hum = c.createGain(); this.hum.gain.value = 0.014;
+      o.connect(hl); hl.connect(this.hum); this.hum.connect(this.master); o.start();
+      // 지하 기계음
+      const m = c.createOscillator(); m.type='triangle'; m.frequency.value = 48;
+      this.machine = c.createGain(); this.machine.gain.value = 0;
+      m.connect(this.machine); this.machine.connect(this.master); m.start();
+      this.tick = setInterval(()=>this.ambientTick(), 40);
+      return true;
+    }catch(e){ this.ctx = null; return false; }
+  },
+  noise(type){
+    const c = this.ctx, len = c.sampleRate*4, buf = c.createBuffer(1,len,c.sampleRate), d = buf.getChannelData(0);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0,last=0;
+    for (let i=0;i<len;i++){
+      const w = Math.random()*2-1;
+      if (type==='white') d[i]=w*0.5;
+      else if (type==='pink'){
+        b0=.99886*b0+w*.0555179; b1=.99332*b1+w*.0750759; b2=.969*b2+w*.153852; b3=.8665*b3+w*.3104856;
+        b4=.55*b4+w*.5329522; b5=-.7616*b5-w*.016898; d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11; b6=w*.115926;
+      } else { last=(last+.02*w)/1.02; d[i]=last*3.2; }
+    }
+    return buf;
+  },
+  ambientTick(){
+    if (!this.ctx || !this.on) return;
+    const c = this.ctx, t = c.currentTime;
+    // 빗방울 하나하나
+    const p = this.loc==='basement' ? 0 : (this.loc==='cctv' ? .18 : .5) * this.rainAmt;
+    if (Math.random() < p){
+      const s = c.createBufferSource(); s.buffer = this.white;
+      const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = 1500+Math.random()*5000; bp.Q.value = 4+Math.random()*10;
+      const g = c.createGain(); const pk = .015+Math.random()*.06;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(pk,t+.002); g.gain.exponentialRampToValueAtTime(.0001,t+.03+Math.random()*.06);
+      s.connect(bp); bp.connect(g); g.connect(this.rainBus); s.start(t, Math.random()*3, .12);
+    }
+  },
+  setLoc(loc){
+    this.loc = loc;
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const P = {
+      security:{bus:.9, lp:2600, hum:.014},
+      cctv:{bus:.4, lp:900, hum:.02},
+      office:{bus:1.0, lp:3200, hum:.01},
+      basement:{bus:.16, lp:260, hum:0},
+      outside:{bus:1.15, lp:5200, hum:0},
+      shaft:{bus:.12, lp:220, hum:0}
+    }[loc] || {bus:.9, lp:2600, hum:.014};
+    this.rainBus.gain.setTargetAtTime(P.bus*this.rainAmt, t, .5);
+    this.rainLP.frequency.setTargetAtTime(P.lp, t, .4);
+    this.humLevel = P.hum;
+    this.hum.gain.setTargetAtTime(P.hum, t, .3);
+  },
+  setRainAmt(a){ this.rainAmt = a; this.setLoc(this.loc); },
+  enable(){
+    if (!this.init()) return false;
+    this.on = true; if (this.ctx.state==='suspended') this.ctx.resume();
+    this.master.gain.setTargetAtTime(this.vol, this.ctx.currentTime, .4);
+    this.setLoc(this.loc); return true;
+  },
+  disable(){ this.on = false; if (this.ctx) this.master.gain.setTargetAtTime(0, this.ctx.currentTime, .1); },
+  // 정적: 빗소리는 그대로 두고 형광등 험·기계음만 끊는다
+  silence(ms){
+    if (!this.ctx || !this.on) return;
+    const t = this.ctx.currentTime;
+    [[this.hum, this.humLevel || 0], [this.machine, this.machine.gain.value]].forEach(([n, back])=>{
+      n.gain.cancelScheduledValues(t);
+      n.gain.setTargetAtTime(0, t, .04);
+      n.gain.setTargetAtTime(back, t+ms/1000, .5);
+    });
+  },
+  // 대사 타자 소리: 짧은 노이즈 클릭
+  key(){
+    if (!this.ctx || !this.on) return;
+    const c = this.ctx, t = c.currentTime;
+    const s = c.createBufferSource(); s.buffer = this.white;
+    const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = 2600 + Math.random()*1800; bp.Q.value = 2.5;
+    const g = c.createGain(); this.env(g, t, .001, .05 + Math.random()*.03, .035);
+    s.connect(bp); bp.connect(g); g.connect(this.master); s.start(t, Math.random()*3, .06);
+    const k = c.createBufferSource(); k.buffer = this.brown;
+    const kl = c.createBiquadFilter(); kl.type='lowpass'; kl.frequency.value = 420;
+    const kg = c.createGain(); this.env(kg, t, .001, .09, .03);
+    k.connect(kl); kl.connect(kg); kg.connect(this.master); k.start(t, Math.random()*3, .05);
+  },
+  env(node, t, a, peak, d){ node.gain.setValueAtTime(0,t); node.gain.linearRampToValueAtTime(peak,t+a); node.gain.exponentialRampToValueAtTime(.0001,t+a+d); },
+  printer(){
+    if (!this.ctx || !this.on) return;
+    const c0 = this.ctx, b0 = c0.currentTime + .02;
+    // 출력 알림음: 삐-삐-삐
+    [0,.22,.44].forEach(dt=>{
+      const o = c0.createOscillator(); o.type='square'; o.frequency.value = 2050;
+      const lp = c0.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 3200;
+      const g = c0.createGain(); g.gain.setValueAtTime(0,b0+dt); g.gain.linearRampToValueAtTime(.05,b0+dt+.005);
+      g.gain.setValueAtTime(.05,b0+dt+.12); g.gain.linearRampToValueAtTime(0,b0+dt+.135);
+      o.connect(lp); lp.connect(g); g.connect(this.master); o.start(b0+dt); o.stop(b0+dt+.15);
+    });
+    // 이어서 종이가 밀려 나오는 기계음
+    const c = this.ctx, t = c.currentTime + .75;
+    const o = c.createOscillator(); o.type='square'; o.frequency.value = 74;
+    const lp = c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 700;
+    const g = c.createGain(); g.gain.setValueAtTime(0,t);
+    for (let i=0;i<12;i++){ g.gain.linearRampToValueAtTime(.06,t+i*.19+.02); g.gain.linearRampToValueAtTime(.018,t+i*.19+.15); }
+    g.gain.linearRampToValueAtTime(0,t+2.4);
+    o.connect(lp); lp.connect(g); g.connect(this.master); o.start(t); o.stop(t+2.5);
+    const s = c.createBufferSource(); s.buffer = this.white;
+    const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = 2800; bp.Q.value = .8;
+    const g2 = c.createGain(); g2.gain.setValueAtTime(0,t); g2.gain.linearRampToValueAtTime(.035,t+.3); g2.gain.setValueAtTime(.035,t+2.1); g2.gain.linearRampToValueAtTime(0,t+2.4);
+    s.connect(bp); bp.connect(g2); g2.connect(this.master); s.start(t,0,2.5);
+    const k = c.createBufferSource(); k.buffer = this.brown;
+    const kg = c.createGain(); this.env(kg, t, .005, .5, .18);
+    k.connect(kg); kg.connect(this.master); k.start(t,0,.3);
+  },
+  staticBurst(){
+    if (!this.ctx || !this.on) return;
+    const c = this.ctx, t = c.currentTime;
+    const s = c.createBufferSource(); s.buffer = this.white;
+    const hp = c.createBiquadFilter(); hp.type='highpass'; hp.frequency.value = 900;
+    const g = c.createGain(); this.env(g, t, .01, .16, .8);
+    s.connect(hp); hp.connect(g); g.connect(this.master); s.start(t,0,1);
+  },
+  clue(){
+    if (!this.ctx || !this.on) return;
+    const c = this.ctx, t = c.currentTime;
+    [[392,0],[587,.12]].forEach(([f,dt])=>{
+      const o = c.createOscillator(); o.type='sine'; o.frequency.value = f;
+      const g = c.createGain(); this.env(g, t+dt, .01, .07, .9);
+      o.connect(g); g.connect(this.master); o.start(t+dt); o.stop(t+dt+1);
+    });
+  },
+  thunder(){
+    if (!this.ctx || !this.on || this.loc==='basement') return;
+    const c = this.ctx, t = c.currentTime;
+    const s = c.createBufferSource(); s.buffer = this.brown;
+    const lp = c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(320,t); lp.frequency.exponentialRampToValueAtTime(70,t+4);
+    const g = c.createGain(); const vol = this.loc==='cctv' ? .25 : .65;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.25); g.gain.linearRampToValueAtTime(vol*.5,t+1.1); g.gain.linearRampToValueAtTime(vol*.7,t+1.6); g.gain.exponentialRampToValueAtTime(.0001,t+5);
+    s.connect(lp); lp.connect(g); g.connect(this.master); s.start(t,0,5.2);
+  },
+  step(alt){
+    if (!this.ctx || !this.on) return;
+    const c = this.ctx, t = c.currentTime;
+    // 젖은 아스팔트를 밟는 둔탁한 발소리 + 물 튀는 소리
+    const s = c.createBufferSource(); s.buffer = this.brown;
+    const lp = c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = alt ? 170 : 210;
+    const g = c.createGain(); this.env(g, t, .006, .55, .16);
+    s.connect(lp); lp.connect(g); g.connect(this.master); s.start(t, Math.random()*2, .3);
+    const w = c.createBufferSource(); w.buffer = this.white;
+    const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = 2400 + Math.random()*900; bp.Q.value = 1.4;
+    const g2 = c.createGain(); this.env(g2, t+.015, .01, .07, .14);
+    w.connect(bp); bp.connect(g2); g2.connect(this.master); w.start(t+.015, Math.random()*2, .2);
+  },
+  door(){
+    if (!this.ctx || !this.on) return;
+    const c = this.ctx, t = c.currentTime;
+    // 무거운 유리문이 밀리는 소리 (삐걱임 + 닫히는 쿵)
+    const o = c.createOscillator(); o.type='sawtooth';
+    o.frequency.setValueAtTime(310,t); o.frequency.linearRampToValueAtTime(230,t+.5); o.frequency.linearRampToValueAtTime(280,t+.8);
+    const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = 900; bp.Q.value = 9;
+    const g = c.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.035,t+.12); g.gain.linearRampToValueAtTime(.02,t+.6); g.gain.linearRampToValueAtTime(0,t+.85);
+    o.connect(bp); bp.connect(g); g.connect(this.master); o.start(t); o.stop(t+.9);
+    const k = c.createBufferSource(); k.buffer = this.brown;
+    const kl = c.createBiquadFilter(); kl.type='lowpass'; kl.frequency.value = 140;
+    const kg = c.createGain(); this.env(kg, t+.75, .005, .8, .5);
+    k.connect(kl); kl.connect(kg); kg.connect(this.master); k.start(t+.75, 0, .6);
+  },
+  flick(){
+    if (!this.ctx || !this.on) return;
+    const t = this.ctx.currentTime, h = this.hum.gain, base = h.value;
+    h.cancelScheduledValues(t);
+    h.setValueAtTime(base*2.4,t); h.setValueAtTime(0,t+.09); h.setValueAtTime(base*2,t+.17); h.setValueAtTime(0,t+.3); h.setValueAtTime(base,t+.4);
+  },
+  // 수화기 대역(300~3400Hz)으로 걸러 master에 연결한다
+  phoneOut(){
+    const c = this.ctx;
+    const hp = c.createBiquadFilter(); hp.type='highpass'; hp.frequency.value = 320;
+    const lp = c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 3200;
+    hp.connect(lp); lp.connect(this.master); return hp;
+  },
+  tone(out, fs, t, dur, vol){
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.01); g.gain.setValueAtTime(vol,t+dur-.01); g.gain.linearRampToValueAtTime(0,t+dur);
+    g.connect(out);
+    fs.forEach(f=>{ const o = this.ctx.createOscillator(); o.frequency.value = f; o.connect(g); o.start(t); o.stop(t+dur+.02); });
+  },
+  // 번호 누르는 소리 → 연결음 n번 → 수화기 드는 딸깍. 걸리는 시간(ms)을 돌려준다
+  ring(n){
+    const DTMF = [[941,1336],[697,1209],[697,1336],[770,1477],[852,1209],[770,1336],[697,1477],[852,1336]];
+    const total = 900 + n*2000 + 300;
+    if (!this.ctx || !this.on) return total;
+    const out = this.phoneOut(), t0 = this.ctx.currentTime + .05;
+    DTMF.forEach((fs,i)=>this.tone(out, fs, t0 + i*.1, .07, .05));
+    for (let i=0;i<n;i++) this.tone(out, [440,480], t0 + .9 + i*2, 1, .05);   // 뚜-르르
+    this.clickAt(t0 + .9 + n*2 + .1, .35);
+    return total;
+  },
+  // 상대가 끊은 뒤의 뚜뚜뚜
+  hangup(){
+    this.voiceStop();
+    if (!this.ctx || !this.on) return;
+    const out = this.phoneOut(), t0 = this.ctx.currentTime + .05;
+    this.clickAt(t0, .3);
+    for (let i=0;i<3;i++) this.tone(out, [480,620], t0 + .3 + i*.5, .25, .045);
+  },
+  clickAt(t, vol){
+    const k = this.ctx.createBufferSource(); k.buffer = this.brown;
+    const kl = this.ctx.createBiquadFilter(); kl.type='lowpass'; kl.frequency.value = 900;
+    const kg = this.ctx.createGain(); this.env(kg, t, .002, vol, .06);
+    k.connect(kl); kl.connect(kg); kg.connect(this.master); k.start(t, 0, .1);
+  },
+  // 전화 속 낮은 남자 목소리: 글자마다 음절 하나씩 웅얼거린다
+  voice(text){
+    this.voiceStop();
+    if (!this.ctx || !this.on) return;
+    const c = this.ctx, t0 = c.currentTime + .03;
+    const o = c.createOscillator(); o.type='sawtooth';
+    const f1 = c.createBiquadFilter(); f1.type='bandpass'; f1.Q.value = 5;
+    const f2 = c.createBiquadFilter(); f2.type='bandpass'; f2.Q.value = 7;
+    const g = c.createGain(); g.gain.value = 0;
+    const sat = c.createWaveShaper(); const cv = new Float32Array(256);
+    for (let i=0;i<256;i++){ const x = i/128-1; cv[i] = Math.tanh(x*2.2); } sat.curve = cv;
+    o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g); g.connect(sat);
+    const vol = c.createGain(); vol.gain.value = .14; sat.connect(vol); vol.connect(this.phoneOut());
+    let t = t0, base = 96;
+    for (const ch of text){
+      if (/\s/.test(ch)){ t += .07; continue; }
+      if (/[.,…?!—]/.test(ch)){ t += .22; base = 90 + Math.random()*14; continue; }
+      if (/[“”‘’'"·\-]/.test(ch)) continue;
+      const d = .1 + Math.random()*.06, pk = .5 + Math.random()*.35;
+      o.frequency.setTargetAtTime(base * (.9 + Math.random()*.2), t, .03);
+      f1.frequency.setTargetAtTime(380 + Math.random()*420, t, .02);
+      f2.frequency.setTargetAtTime(950 + Math.random()*700, t, .02);
+      g.gain.setTargetAtTime(pk, t, .015); g.gain.setTargetAtTime(.04, t + d*.7, .025);
+      t += d; base *= .995;   // 말끝으로 갈수록 조금씩 처진다
+      if (t - t0 > 8) break;
+    }
+    g.gain.setTargetAtTime(0, t, .04);
+    o.start(t0); o.stop(t + .4);
+    this.vc = {o, g};
+  },
+  voiceStop(){
+    if (!this.vc) return;
+    const t = this.ctx.currentTime, {o, g} = this.vc; this.vc = null;
+    g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, .03);
+    try{ o.stop(t + .2); }catch(e){}
+  }
+};
+
+/* =========================================================
+   비 (Canvas)
+   ========================================================= */
+class Rain{
+  constructor(o){ this.o = o; this.c = null; this.ctx = null; this.drops = []; this.glass = []; this.flash = 0; this.amt = 1; }
+  attach(c){ this.c = c; this.ctx = c ? c.getContext('2d') : null; this.resize(); }
+  resize(){
+    if (!this.c) return;
+    const r = this.c.getBoundingClientRect(); if (!r.width || !r.height) return;
+    const dpr = this.o.bg ? 1 : Math.min(window.devicePixelRatio||1, 2);
+    this.dpr = dpr; this.w = this.c.width = Math.floor(r.width*dpr); this.h = this.c.height = Math.floor(r.height*dpr);
+    const n = Math.min(1400, Math.floor(this.w*this.h/this.o.density));
+    this.drops = Array.from({length:n}, ()=>this.newDrop(true));
+    this.glass = this.o.glass ? Array.from({length:Math.floor(this.w*this.h/9000)+12}, ()=>this.newGlass(true)) : [];
+    if (this.o.scenery) this.buildScenery();
+  }
+  newDrop(init){
+    // z: 깊이(0.25 먼 비 ~ 1 가까운 비) — 멀수록 짧고 느리고 흐리다
+    const d = this.dpr, z = .25 + Math.pow(Math.random(), 1.6)*.75;
+    return {x:Math.random()*this.w*1.25 - this.w*.15, y: init ? Math.random()*this.h : -Math.random()*60*d, z,
+      l:(6+z*26)*d*this.o.len, v:(9+z*22)*d*this.o.speed, a:.035+z*.15, lw:(.35+z*.75)*d};
+  }
+  newGlass(init){
+    const d = this.dpr;
+    return {x:Math.random()*this.w, y: init ? Math.random()*this.h : Math.random()*this.h*.3, r:(1+Math.random()*2.6)*d,
+      v:0, hold:200+Math.random()*900};
+  }
+  buildScenery(){
+    const w = this.w, h = this.h, d = this.dpr; this.bld = [];
+    let x = -10*d;
+    while (x < w){
+      const bw = (50+Math.random()*90)*d, bh = h*(.35+Math.random()*.45);
+      const wins = [];
+      for (let yy = h-bh+12*d; yy < h-10*d; yy += 16*d) for (let xx = x+8*d; xx < x+bw-10*d; xx += 14*d)
+        if (Math.random()<.035) wins.push([xx,yy, Math.random()<.5 ? 'rgba(214,178,106,.35)' : 'rgba(150,180,170,.22)']);
+      this.bld.push({x, w:bw, h:bh, wins}); x += bw + (4+Math.random()*16)*d;
+    }
+    this.lamp = {x:w*(.2+Math.random()*.6), y:h*.52};
+  }
+  draw(dt, frozen){
+    const ctx = this.ctx; if (!ctx || !this.w) return;
+    ctx.clearRect(0,0,this.w,this.h);
+    const d = this.dpr;
+    if (this.o.scenery){
+      const g = ctx.createLinearGradient(0,0,0,this.h); g.addColorStop(0,'#0b1114'); g.addColorStop(1,'#151d21');
+      ctx.fillStyle = g; ctx.fillRect(0,0,this.w,this.h);
+      const lg = ctx.createRadialGradient(this.lamp.x,this.lamp.y,0,this.lamp.x,this.lamp.y,this.h*.6);
+      lg.addColorStop(0,'rgba(214,170,100,.22)'); lg.addColorStop(1,'rgba(214,170,100,0)');
+      ctx.fillStyle = lg; ctx.fillRect(0,0,this.w,this.h);
+      for (const b of this.bld){
+        ctx.fillStyle = '#080b0c'; ctx.fillRect(b.x, this.h-b.h, b.w, b.h);
+        for (const [x,y,c] of b.wins){ ctx.fillStyle = c; ctx.fillRect(x,y,6*d,8*d); }
+      }
+      ctx.fillStyle = 'rgba(214,170,100,.8)'; ctx.beginPath(); ctx.arc(this.lamp.x,this.lamp.y,2.5*d,0,7); ctx.fill();
+    }
+    const wind = this.o.wind*d, n = Math.floor(this.drops.length*this.amt), al = this.o.alpha||1;
+    ctx.lineCap = 'round';
+    for (let i=0;i<n;i++){
+      const p = this.drops[i];
+      if (!frozen){ p.y += p.v*dt; p.x += wind*p.z*dt*.6; if (p.y - p.l > this.h) Object.assign(p, this.newDrop(false)); }
+      const dx = wind*p.z*p.l/p.v*.9;
+      ctx.strokeStyle = `rgba(196,212,222,${p.a*al})`; ctx.lineWidth = p.lw;
+      ctx.beginPath(); ctx.moveTo(p.x - dx, p.y - p.l); ctx.lineTo(p.x, p.y); ctx.stroke();
+    }
+    if (this.o.glass){
+      for (const q of this.glass){
+        if (!frozen){
+          if (q.hold > 0) q.hold -= dt*16;
+          else { q.v = Math.min(q.v + .08*dt, 2.4*d); q.y += q.v*dt; q.x += (Math.random()-.5)*.6*d; }
+          if (q.y > this.h + 10*d){ Object.assign(q, this.newGlass(false)); }
+        }
+        if (q.v > .3){ ctx.strokeStyle = 'rgba(160,185,195,.12)'; ctx.lineWidth = q.r*.8; ctx.beginPath(); ctx.moveTo(q.x,q.y-q.r*6); ctx.lineTo(q.x,q.y); ctx.stroke(); }
+        ctx.fillStyle = 'rgba(170,195,205,.22)'; ctx.beginPath(); ctx.arc(q.x,q.y,q.r,0,7); ctx.fill();
+        ctx.fillStyle = 'rgba(230,240,240,.28)'; ctx.beginPath(); ctx.arc(q.x-q.r*.3,q.y-q.r*.35,q.r*.35,0,7); ctx.fill();
+      }
+    }
+    if (this.flash > 0){ ctx.fillStyle = `rgba(200,214,232,${this.flash*.55})`; ctx.fillRect(0,0,this.w,this.h); this.flash = Math.max(0, this.flash - .045*dt); }
+  }
+}
+
+/* =========================================================
+   CCTV (Canvas)
+   ========================================================= */
+const Cctv = {
+  c:null, ctx:null, staticT:0, last:0,
+  attach(c){ this.c = c; this.ctx = c ? c.getContext('2d') : null; this.resize(); },
+  resize(){ if (!this.c) return; const r = this.c.getBoundingClientRect(); this.w = this.c.width = Math.max(1,Math.floor(r.width)); this.h = this.c.height = Math.max(1,Math.floor(r.height)); },
+  draw(now, frozen){
+    if (!this.ctx || !this.w) return;
+    if (now - this.last < 80) return; this.last = now;
+    // 사진(CCTV실.png) 위에 노이즈·스캔라인·REC·실시간 시각을 덧그린다
+    const ctx = this.ctx, W = this.w, H = this.h;
+    ctx.clearRect(0,0,W,H);
+    const feeds = [[.028,.088],[.508,.088],[.028,.532],[.508,.532]], fw = .467*W, fh = .422*H;
+    const sec = String(Math.floor(now/1000)%60).padStart(2,'0');
+    const date = state.chapter>=2 && state.loc==='cctv' && state.mode==='dialog' && state.lastScene && state.lastScene.indexOf('ch2_')===0 ? '2023-11-17' : '2026-11-2' + (state.chapter===1?'3':state.chapter===2?'4':'5');
+    const heavy = this.staticT > now, fs = Math.max(9, Math.round(H*.026));
+    feeds.forEach(([fx,fy],i)=>{
+      const x = fx*W, y = fy*H;
+      ctx.save(); ctx.beginPath(); ctx.rect(x,y,fw,fh); ctx.clip();
+      if (heavy){ ctx.fillStyle = 'rgba(110,120,115,.55)'; ctx.fillRect(x,y,fw,fh); }
+      const cnt = heavy ? 1600 : 140;
+      for (let k=0;k<cnt;k++){ ctx.fillStyle = `rgba(220,235,225,${Math.random()*(heavy?.6:.14)})`; ctx.fillRect(x+Math.random()*fw, y+Math.random()*fh, heavy?3:2, 1); }
+      ctx.fillStyle = 'rgba(0,0,0,.18)'; for (let yy=y; yy<y+fh; yy+=3) ctx.fillRect(x,yy,fw,1);
+      const band = (now/12 + i*60) % (fh+40) - 20; ctx.fillStyle = 'rgba(200,230,210,.05)'; ctx.fillRect(x,y+band,fw,fh*.05);
+      // 사진에 찍힌 시각을 가리고 현재 게임 시각 표시
+      const tx = x + .008*W, ty = y + fh - .062*H;
+      ctx.fillStyle = 'rgba(16,21,20,.96)'; ctx.fillRect(tx, ty, .148*W, .05*H);
+      ctx.font = `${fs}px Consolas, monospace`; ctx.fillStyle = 'rgba(225,238,228,.9)';
+      ctx.fillText(`${date} ${state.time||'00:00'}:${sec}`, tx + .004*W, ty + .036*H);
+      if (Math.floor(now/600)%2===0){
+        ctx.fillStyle = '#d33'; ctx.beginPath(); ctx.arc(x+fw-.055*W, y+.035*H, fs*.32, 0, 7); ctx.fill();
+        ctx.fillStyle = 'rgba(225,238,228,.9)'; ctx.fillText('REC', x+fw-.045*W, y+.035*H+fs*.35);
+      }
+      ctx.restore();
+    });
+  }
+};
+
+const bgRain = new Rain({bg:true, density:2400, len:1.2, speed:1.1, wind:1.6});
+const winRain = new Rain({density:700, len:1, speed:1, wind:2, scenery:true});
+const photoRain = new Rain({density:650, len:.85, speed:1, wind:1.2, alpha:.85});
+let frozen = false, lastFrame = performance.now(), nextLightning = performance.now() + 20000 + Math.random()*20000;
+
+function loop(now){
+  const dt = Math.min(3, (now - lastFrame)/16.67); lastFrame = now;
+  bgRain.draw(dt, frozen);
+  if (winRain.c && winRain.c.isConnected) winRain.draw(dt, frozen);
+  if (photoRain.c && photoRain.c.isConnected) photoRain.draw(dt, frozen);
+  if (Cctv.c && Cctv.c.isConnected) Cctv.draw(now, frozen);
+  if (now > nextLightning){
+    nextLightning = now + 25000 + Math.random()*30000;
+    if (!frozen && state.mode!=='title' && state.loc!=='basement' && state.chapter < 5) lightning();
+  }
+  requestAnimationFrame(loop);
+}
+function lightning(){
+  const f = $('#flash');
+  if (!reduceMotion){
+    f.style.transition = 'none'; f.style.opacity = state.loc==='cctv' ? '.04' : '.16';
+    setTimeout(()=>{ f.style.transition = 'opacity .9s'; f.style.opacity = '0'; }, 70);
+  }
+  winRain.flash = 1; photoRain.flash = .8; bgRain.flash = .6;
+  setTimeout(()=>Snd.thunder(), 900 + Math.random()*1600);
+}
+
+/* =========================================================
+   장면 아트
+   ========================================================= */
+/* 장소 사진 (index.html과 같은 폴더) */
+// 원본 사진(관리실.png 등)을 웹·모바일용으로 줄인 사본 — assets/ 폴더
+const PHOTOS = {security:'assets/security.jpg', office:'assets/office.jpg', cctv:'assets/cctv.jpg', basement:'assets/basement.jpg', outside:'assets/ending_city.jpg', shaft:'assets/shaft.jpg'};
+const photo = loc=>`<div class="photo" style="background-image:url('${encodeURI(PHOTOS[loc])}')"></div>`;
+const ARTS = {
+  security: photo('security') +
+    `<div class="rainwin" style="left:5.7%;top:16.4%;width:47.7%;height:44.2%"><canvas></canvas></div>
+     <div class="tubelight" style="left:30%;top:0;width:50%;height:70%"></div>
+     <div class="screenglow" style="left:57%;top:45%;width:24%;height:30%"></div>`,
+  office: photo('office') +
+    `<div class="rainwin" style="left:15.2%;top:26%;width:71.8%;height:39.6%"><canvas></canvas></div>
+     <div class="tubelight" style="left:30%;top:4%;width:44%;height:60%;animation-delay:3s"></div>`,
+  cctv: photo('cctv') +
+    `<div class="cover" style="left:0;top:0;width:30%;height:7.4%;background:linear-gradient(90deg,#0c1112 70%,rgba(12,17,18,0))"></div>
+     <canvas class="overlay-canvas"></canvas>`,
+  basement: photo('basement') +
+    `<div class="cover" style="left:0;top:0;width:24%;height:12%;background:radial-gradient(ellipse at 0 0,#080909 55%,rgba(8,9,9,0) 100%)"></div>
+     <div class="tubelight" style="left:32%;top:6%;width:36%;height:80%;animation-delay:5s"></div>
+     <div class="drip" style="left:41%;top:27%"></div><div class="drip" style="left:59%;top:27%;animation-delay:1.3s"></div><div class="drip" style="left:13.5%;top:20%;animation-delay:.6s"></div>
+     <div class="puddle" style="left:37%;width:12%"></div><div class="puddle" style="left:55%;width:9%;animation-delay:1.3s"></div>`,
+  outside: photo('outside') +
+    `<div class="rainwin" style="left:0;top:0;width:100%;height:100%"><canvas></canvas></div>`,
+  shaft: photo('shaft')
+};
+const PORTRAIT_KANG = 'assets/kang.webp', TITLE_BUILDING = 'assets/building.jpg';
+// 관리실은 프린터가 보이도록 오른쪽, CCTV실은 네 화면이 다 보이도록 확대하지 않는다
+const MOBILE_FOCUS = {security:[1.8, 1], office:[1.8, .5], basement:[1.8, .6], cctv:[1, .5], outside:[1.6, .5], shaft:[1.6, .5]};
+// 사진 미리 불러오기
+[...Object.values(PHOTOS), ...Object.values(CLUE_IMG), PORTRAIT_KANG, TITLE_BUILDING].forEach(src=>{ const im = new Image(); im.src = encodeURI(src); });
+document.querySelector('.title-bg').style.backgroundImage = `url('${encodeURI(TITLE_BUILDING)}')`;
+document.querySelector('#portrait img').src = encodeURI(PORTRAIT_KANG);
+let renderedArt = null;
+function renderArt(){
+  const loc = state.loc; if (renderedArt === loc) return;
+  renderedArt = loc;
+  const art = $('#art'); art.className = 'art-' + loc; art.innerHTML = ARTS[loc] || '';
+  $('#stage').style.setProperty('--scene', PHOTOS[loc] ? `url('${encodeURI(PHOTOS[loc])}')` : 'none');
+  // 세로 휴대폰 화면에서 장소별 확대 배율과 초점(0 왼쪽 ~ 1 오른쪽)
+  const [zs, fx] = MOBILE_FOCUS[loc] || [1, .5];
+  const ab = $('#artBox'); ab.style.setProperty('--zs', zs); ab.style.setProperty('--fx', fx);
+  mountReceipt();
+  winRain.attach(null); photoRain.attach(null); Cctv.attach(null);
+  requestAnimationFrame(()=>{
+    const wc = art.querySelector('.win canvas'); if (wc) winRain.attach(wc);
+    const pc = art.querySelector('.rainwin canvas'); if (pc) photoRain.attach(pc);
+    if (loc==='cctv') Cctv.attach(art.querySelector('canvas.overlay-canvas'));
+  });
+}
+
+/* =========================================================
+   렌더링
+   ========================================================= */
+function renderTop(){
+  const ch = CHAPTERS[state.chapter];
+  $('#chapTitle').textContent = state.mode==='title' ? '마지막 퇴실 기록' : (state.chapter===5 ? '에필로그' : `챕터 ${state.chapter}. ${ch.title}`);
+  $('#dayLabel').textContent = state.day || '';
+  $('#timeLabel').textContent = state.time || '';
+  $('#clueCount').textContent = `단서 ${state.clues.length}/${CLUE_ORDER.length}`;
+  $('#btnSound').textContent = Snd.on ? '소리: 켬' : '소리: 끔';
+  document.documentElement.style.setProperty('--vig', ch ? ch.vig : .6);
+}
+function availableObjects(loc){
+  return OBJECTS.filter(o=>o.loc===loc && o.ch.includes(state.chapter) && (!o.req || has(...o.req)));
+}
+function renderView(){
+  renderArt();
+  const L = LOCS[state.loc];
+  $('#locName').textContent = L.name; $('#locFloor').textContent = L.floor;
+  $('#locDesc').textContent = locDesc(state.loc);
+  const box = $('#objects'); box.innerHTML = '';
+  // 이미 조사한 곳은 목록에서 빠진다. 전화처럼 반복할 수 있는 행동만 남는다.
+  const objs = state.chapter>=4 ? [] : availableObjects(state.loc).filter(o=>o.repeat || !state.inspected.includes(o.id));
+  objs.forEach(o=>{
+    const done = state.inspected.includes(o.id);
+    const b = document.createElement('button');
+    let cls = 'obj ', badge = '';
+    if (o.repeat){ cls += 'repeat'; badge = done ? '다시 걸기' : '전화'; }
+    else if (o.flavor){ cls += 'todo flavor'; badge = '살펴보기'; }
+    else if (o.req){ cls += 'new'; badge = 'NEW'; }
+    else { cls += 'todo'; badge = '조사'; }
+    b.className = cls;
+    b.innerHTML = `<span class="nm">${esc(o.name)}</span><span class="bd">${badge}</span>`;
+    b.addEventListener('click', ()=>inspect(o.id));
+    box.appendChild(b);
+  });
+  if (!objs.length && state.chapter<4){ const p = document.createElement('p'); p.style.color='var(--faint)'; p.textContent = '지금 이곳에서 더 조사할 것은 없다.'; box.appendChild(p); }
+  // 다음 단계 버튼
+  const goal = GOALS[state.chapter], pb = $('#proceed'), pw = $('#proceedWrap');
+  if (goal && state.mode!=='title'){
+    pw.hidden = false; pb.textContent = goal.label;
+    const ok = !!goal.need(); pb.disabled = !ok;
+    $('#proceedNote').textContent = ok ? '' : '아직 확인하지 않은 것이 있다. 막히면 ‘수첩’을 열어 보자.';
+  } else pw.hidden = true;
+  // 장소 바
+  const bar = $('#locBar'); bar.innerHTML = '';
+  LOC_ORDER.forEach(id=>{
+    const L2 = LOCS[id], open = locOpen(id);
+    const b = document.createElement('button');
+    b.className = 'loc' + (state.loc===id ? ' here' : '') + (open ? '' : ' lockd');
+    b.innerHTML = `<small>${L2.floor}${open?'':' · 잠김'}</small>${open?'':'🔒 '}${esc(L2.name)}`;
+    b.addEventListener('click', ()=>gotoLocation(id));
+    bar.appendChild(b);
+  });
+  // 조사할 곳 버튼 (서랍 열기) — 새로 열린 곳이 있으면 금색으로 깜빡인다
+  const newCnt = objs.filter(o=>o.req).length, bd = $('#btnDrawer');
+  bd.textContent = objs.length ? `▤ 조사할 곳 ${objs.length}${newCnt ? ` · NEW ${newCnt}` : ''}` : '▤ 조사할 곳 없음';
+  bd.classList.toggle('has-new', newCnt>0);
+  // 다음 단계로 갈 수 있을 때만 대사창에 버튼이 나타난다
+  const bp = $('#barProceed'), ready = !!(goal && state.mode!=='title' && goal.need());
+  bp.hidden = !ready; if (ready) bp.textContent = '▶ ' + goal.label;
+  document.body.classList.toggle('locked-ui', state.mode!=='explore');
+  if (state.mode!=='explore') closeDrawer();
+  renderTop();
+}
+function openDrawer(){ if (state.mode==='explore') $('#drawer').classList.add('open'); }
+function closeDrawer(){ $('#drawer').classList.remove('open'); }
+function toggleDrawer(){ $('#drawer').classList.contains('open') ? closeDrawer() : openDrawer(); }
+
+/* =========================================================
+   대사 엔진
+   ========================================================= */
+let runner = null, typing = null, busy = false, choicesOpen = false;
+const SPK = {n:{name:'',cls:''}, me:{name:'나',cls:'sp-me'}, kang:{name:'강태식',cls:'sp-kang'}, sys:{name:'기록',cls:'sp-sys'}, det:{name:'형사',cls:'sp-det'}};
+
+function playScene(id){
+  const sc = SCENES[id];
+  if (!sc){ console.error('존재하지 않는 장면:', id); enterExplore(); return; }
+  stopTyping(); busy = false; choicesOpen = false;
+  state.mode = 'dialog'; state.lastScene = id;
+  $('#dlgChoices').innerHTML = '';
+  $('#dialog').classList.remove('explore');
+  const lines = typeof sc.lines === 'function' ? sc.lines() : sc.lines;
+  runner = {id, sc, lines, i:0};
+  // 강태식이 나오지 않는 장면이 시작되면 초상을 내린다
+  if (!lines.some(L=>Array.isArray(L) && L[0]==='kang')) hidePortrait();
+  document.body.classList.add('locked-ui'); closeDrawer();
+  next();
+}
+function next(){
+  if (!runner || busy) return;
+  while (runner.i < runner.lines.length){
+    const L = runner.lines[runner.i++];
+    if (typeof L === 'string' && L[0]==='@'){
+      const r = runCommand(L) || {};
+      if (r.stop) return;
+      if (r.wait){ busy = true; $('#dlgNext').hidden = true; later(()=>{ busy = false; next(); }, r.wait); return; }
+      continue;
+    }
+    showLine(L); return;
+  }
+  finishScene();
+}
+function showLine(L){
+  const [sp, text, opt] = L, S = SPK[sp] || SPK.n;
+  const nm = $('#dlgName'), tx = $('#dlgText');
+  nm.textContent = S.name; nm.className = S.cls;
+  tx.className = 't-' + sp;
+  updatePortrait(sp);
+  const onPhone = sp==='kang' && runner && PHONE_SCENE.test(runner.id);
+  if (onPhone) Snd.voice(text); else Snd.voiceStop();
+  state.log.push({sp, text});
+  if (state.log.length > 400) state.log.shift();
+  $('#dlgNext').hidden = true;
+  typeText(tx, text, onPhone, ()=>{
+    $('#dlgNext').hidden = false;
+    if (opt && opt.glitch){
+      busy = true;
+      later(()=>{ tx.textContent = opt.glitch; tx.classList.add('glitch'); Snd.staticBurst(); flick(true);
+        later(()=>{ tx.textContent = text; tx.classList.remove('glitch'); busy = false; }, 420); }, 650);
+    }
+  });
+}
+function typeText(el, text, quiet, done){   // quiet: 전화 목소리가 나오는 동안은 타자 소리를 내지 않는다
+  stopTyping(); el.textContent = ''; let i = 0;
+  const speed = 22;
+  typing = {el, text, done, timer:setInterval(()=>{
+    i += 1; el.textContent = text.slice(0, i);
+    if (!quiet && i % 2 && /[^\s.,…·“”‘’'"!?—-]/.test(text[i-1])) Snd.key();   // 글자 두 개마다 타자 소리
+    if (i >= text.length){ const d = typing.done; stopTyping(); d && d(); }
+  }, speed)};
+}
+function stopTyping(){ if (typing){ clearInterval(typing.timer); typing = null; } }
+function finishTyping(){ if (!typing) return; const t = typing; stopTyping(); t.el.textContent = t.text; t.done && t.done(); }
+
+function finishScene(){
+  const sc = runner.sc, id = runner.id;
+  if (sc.choices){ showChoices(id); return; }
+  if (sc.ret){ showChoices(sc.ret); return; }
+  if (sc.present !== undefined){ showPresent(sc.present); return; }
+  if (sc.next){ playScene(sc.next); return; }
+  if (id==='b1_enter'){ enterExplore(); return; }
+  enterExplore();
+}
+function showChoices(sceneId){
+  const sc = SCENES[sceneId];
+  choicesOpen = true; $('#dlgNext').hidden = true;
+  const box = $('#dlgChoices'); box.innerHTML = '';
+  sc.choices.filter(c=>!c.req || has(...c.req)).forEach(c=>{
+    const key = sceneId + '>' + c.go, asked = state.asked.includes(key);
+    const b = document.createElement('button');
+    b.className = 'choice' + (asked ? ' asked' : '') + (c.key && !asked ? ' key' : '');
+    b.textContent = c.t;
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      if (!asked) state.asked.push(key);
+      playScene(c.go);
+    });
+    box.appendChild(b);
+  });
+  const first = box.querySelector('button'); if (first) first.focus({preventScroll:true});
+  syncDlgH();
+}
+function showPresent(idx){
+  state.confront = idx; choicesOpen = true; $('#dlgNext').hidden = true;
+  const box = $('#dlgChoices'); box.innerHTML = '';
+  const b = document.createElement('button'); b.className = 'choice key'; b.textContent = '▶ 증거를 제시한다 (단서 목록 열기)';
+  b.addEventListener('click', e=>{ e.stopPropagation(); openClues(null, true); });
+  box.appendChild(b);
+  syncDlgH();
+}
+/* 강태식 초상: 말할 때 선명하게, '나'·내레이션 때 흐리게, 그 밖에는 내린다 */
+const PHONE_SCENE = /^(ch1_phone|ch2_phone|ch2_q_)/;
+function updatePortrait(sp){
+  const P = $('#portrait');
+  if (sp==='kang'){
+    P.classList.add('on'); P.classList.remove('dim');
+    P.classList.toggle('phone', !!(runner && PHONE_SCENE.test(runner.id)));
+  } else if (P.classList.contains('on')){
+    if (sp==='me' || sp==='n') P.classList.add('dim'); else hidePortrait();
+  }
+}
+function hidePortrait(){ $('#portrait').classList.remove('on','dim'); }
+
+function enterExplore(){
+  stopTyping(); Snd.voiceStop(); runner = null; busy = false; choicesOpen = false;
+  hidePortrait();
+  state.mode = 'explore';
+  $('#dlgChoices').innerHTML = ''; $('#dlgNext').hidden = true;
+  $('#dialog').classList.add('explore');
+  const nm = $('#dlgName'); nm.textContent = ''; nm.className = '';
+  const tx = $('#dlgText'); tx.className = 'hint';
+  tx.textContent = hintText();
+  renderView(); save();
+}
+function onAdvance(){
+  if ($('#modal').classList.contains('show') || state.mode!=='dialog' || choicesOpen) return;
+  if (typing){ finishTyping(); return; }
+  if (busy) return;
+  next();
+}
+
+/* 명령 */
+function runCommand(str){
+  const sp = str.indexOf(' ');
+  const cmd = sp<0 ? str.slice(1) : str.slice(1, sp), arg = sp<0 ? '' : str.slice(sp+1);
+  switch (cmd){
+    case 'clue': {   // 사진이 있는 단서는 창을 닫을 때까지 대사를 멈춘다
+      const isNew = !has(arg); addClue(arg);
+      if (!isNew || !CLUE_IMG[arg]) return;
+      busy = true; $('#dlgNext').hidden = true;
+      revealClue(arg, ()=>{ busy = false; next(); });
+      return {stop:true};
+    }
+    case 'flag': state.flags[arg] = true; return;
+    case 'time': state.time = arg; renderTop(); return;
+    case 'day': state.day = arg; renderTop(); return;
+    case 'goto': state.loc = arg; Snd.setLoc(arg); renderView(); document.body.classList.add('locked-ui'); return;
+    case 'fx': return fx(arg);
+    case 'silence': silence(+arg); return {wait:+arg};
+    case 'wait': return {wait:+arg};
+    case 'ring': return {wait:Snd.ring(+arg)};
+    case 'hangup': Snd.hangup(); return {wait:1600};
+    case 'print': printOut(arg); return {wait:3300};
+    case 'chapter': return setChapter(+arg);
+    case 'status': showStamp(); return {wait:3000};
+    case 'rain': setRain(arg); return;
+    case 'summary': showSummary(); return {stop:true};
+    case 'reclaim': playScene('ch4_c' + state.confront); return {stop:true};
+    case 'save': save(); return;
+    case 'portrait': if (arg==='off') hidePortrait(); return;
+    case 'dayfade': {   // '@dayfade DAY 2|11월 24일 (화)' — 암전이 끝날 때까지 기다린다
+      const [num, sub] = arg.split('|');
+      $('#dayNum').textContent = num || ''; $('#daySub').textContent = sub || '';
+      const d = $('#dayCard'); d.classList.add('show'); requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('vis')));
+      hidePortrait();
+      return {wait:1000};
+    }
+    case 'dayclear': {  // 카드를 걷어 내고 다음 날 장면을 보여 준다
+      const d = $('#dayCard'); d.classList.remove('vis');
+      later(()=>d.classList.remove('show'), 950);
+      return {wait:950};
+    }
+    default: console.error('알 수 없는 명령:', str); return;
+  }
+}
+function fx(name){
+  if (name==='flicker'){ flick(false); return {wait:700}; }
+  if (name==='noise'){ Cctv.staticT = performance.now() + 500; Snd.staticBurst(); return; }
+  if (name==='static'){
+    Cctv.staticT = performance.now() + 1200; Snd.staticBurst();
+    const ab = $('#artBox'); ab.classList.add('static'); later(()=>ab.classList.remove('static'), 1200);
+    return {wait:1100};
+  }
+  return;
+}
+function flick(soft){
+  const a = $('#app'); a.classList.remove('flick','flick-soft'); void a.offsetWidth;
+  a.classList.add(soft ? 'flick-soft' : 'flick'); Snd.flick();
+  later(()=>a.classList.remove('flick','flick-soft'), 1000);
+}
+function silence(ms){
+  Snd.silence(ms); frozen = true;
+  $('#dlgText').textContent = ''; $('#dlgName').textContent = ''; $('#dlgName').className = '';
+  later(()=>{ frozen = false; }, ms);
+}
+/* 프린터: 출력되면 사진 속 초록 불빛이 빨간색으로 깜빡인다. 프린터를 클릭하면 종이를 본다 */
+function mountReceipt(){
+  const art = $('#art');
+  art.querySelectorAll('.printer-hot,.printer-led').forEach(e=>e.remove());
+  if (state.loc!=='security') return;
+  art.insertAdjacentHTML('beforeend', '<div class="printer-hot" title="프린터"></div><div class="printer-led"></div>');
+  art.querySelector('.printer-hot').addEventListener('click', openReceipt);
+  updatePrinterLed();
+}
+function updatePrinterLed(){
+  const led = $('#art .printer-led'); if (led) led.classList.toggle('alert', !!state.receiptUnread);
+}
+function printOut(text){
+  state.receipt = {text, day:state.day, time:state.time};
+  state.receiptUnread = true;
+  updatePrinterLed();
+  Snd.printer();
+}
+function openReceipt(){
+  if (state.mode!=='explore') return;
+  if (!state.receipt){ toast('프린터 대기 램프만 초록색으로 켜져 있다. 출력된 종이는 없다.'); return; }
+  state.receiptUnread = false; updatePrinterLed();
+  // 언제나 종이를 먼저 보여 준다. 첫날 밤 처음 볼 때는 종이를 닫으면 조사 장면이 이어진다 (단서 A1)
+  const first = state.chapter===1 && !state.inspected.includes('printer');
+  const r = state.receipt;
+  const html = `<div class="printout">
+      <div class="pt-head"><b>청운빌딩 출입관리시스템 v2.3</b><span>출입 보고서 · 자동 출력</span></div>
+      <div class="pt-main">${esc(r.text)}</div>
+      <table class="pt-table">
+        <tr><th>소속</th><td>시설안전팀</td></tr>
+        <tr><th>카드번호</th><td>0417</td></tr>
+        <tr><th>출력 일시</th><td>${esc(r.day||'')} ${esc(r.time||'')}</td></tr>
+        <tr><th>출력 장치</th><td>관리실 LP-2</td></tr>
+        ${has('K5') ? '<tr><th>출력 명령</th><td>예약 작업 exit_check_0417 (kang.ts)</td></tr>' : ''}
+      </table>
+      <div class="pt-foot">— 1 / 1 —</div>
+    </div>`;
+  const foot = first ? [mkBtn('종이를 내려놓는다', 'tbtn', ()=>closeModal())]
+    : (has('A1') ? [mkBtn('단서 목록에서 보기', 'tbtn', ()=>{ closeModal(); openClues('A1'); })] : null);
+  openModal('관리실 프린터에서 출력된 종이', html, foot, first ? ()=>inspect('printer', true) : null);
+}
+function setChapter(n){
+  state.chapter = n; renderTop();
+  const c = CHAPTERS[n], card = $('#card');
+  $('#cardNum').textContent = c.num; $('#cardTitle').textContent = c.title;
+  card.classList.add('show'); requestAnimationFrame(()=>card.classList.add('vis'));
+  later(()=>{ card.classList.remove('vis'); later(()=>card.classList.remove('show'), 650); }, 2300);
+  if (n <= 4) later(save, 100);
+  return {wait:3000};
+}
+function showStamp(){
+  const s = $('#stamp'); s.classList.add('show');
+  Snd.clue();
+  later(()=>s.classList.remove('show'), 2700);
+}
+function setRain(kind){
+  const a = kind==='light' ? .3 : 1;
+  bgRain.amt = a; winRain.amt = a; photoRain.amt = a; Snd.setRainAmt(a);
+}
+
+/* =========================================================
+   조사 / 이동 / 단서
+   ========================================================= */
+function inspect(id, fromPaper){
+  if (state.mode!=='explore') return;
+  const o = OBJECTS.find(x=>x.id===id); if (!o) return;
+  const done = state.inspected.includes(id);
+  closeDrawer();
+  // 목록에서 프린터를 골라도 종이부터 보여 준다
+  if (id==='printer' && !done && !fromPaper && state.receipt){ openReceipt(); return; }
+  if (id==='printer'){ state.receiptUnread = false; updatePrinterLed(); }
+  if (done && o.clue && has(o.clue)){ openClues(o.clue); return; }
+  if (done && o.again){ playScene(o.again); return; }
+  if (!done) state.inspected.push(id);
+  playScene(o.scene);
+}
+function gotoLocation(id){
+  if (state.mode!=='explore') return;
+  if (!locOpen(id)){ toast(locLockMsg(id)); return; }
+  if (state.loc===id) return;
+  closeDrawer();
+  state.loc = id; Snd.setLoc(id);
+  if (id==='basement' && !state.flags.b1seen){ renderView(); playScene('b1_enter'); return; }
+  enterExplore();
+}
+function addClue(id){
+  if (!CLUES[id]){ console.error('존재하지 않는 단서:', id); return; }
+  if (has(id)) return;
+  const before = new Set(OBJECTS.filter(o=>o.ch.includes(state.chapter) && (!o.req || has(...o.req))).map(o=>o.id));
+  state.clues.push(id);
+  const opened = OBJECTS.filter(o=>o.ch.includes(state.chapter) && (!o.req || has(...o.req)) && !before.has(o.id));
+  Snd.clue(); renderTop();
+  toast(`단서 획득 — ${CLUES[id].title}` + (opened.length ? `  ·  새 조사: ${opened.map(o=>LOCS[o.loc].name).join(', ')}` : ''));
+}
+
+/* =========================================================
+   모달: 단서 / 로그 / 수첩 / 추리 / 재시작 확인
+   ========================================================= */
+let modalOnClose = null;
+function openModal(title, html, foot, onClose){
+  $('#modalTitle').textContent = title; $('#modalBody').innerHTML = html;
+  const f = $('#modalFoot'); f.innerHTML = ''; (foot||[]).forEach(b=>f.appendChild(b)); f.hidden = !(foot && foot.length);
+  modalOnClose = onClose || null;
+  $('#modal').classList.add('show'); $('#modalClose').focus({preventScroll:true});
+}
+function closeModal(){
+  $('#modal').classList.remove('show');
+  const cb = modalOnClose; modalOnClose = null; cb && cb();
+}
+function mkBtn(label, cls, fn){ const b = document.createElement('button'); b.className = cls; b.textContent = label; b.addEventListener('click', fn); return b; }
+
+function revealClue(id, then){
+  const c = CLUES[id];
+  openModal(`단서 발견 — ${id} · ${c.title}`,
+    `<div class="cluereveal">${clueImg(id)}<p>${esc(c.where)}</p></div>`,
+    [mkBtn('확인', 'tbtn', ()=>closeModal())], then);
+}
+function openClues(sel, presentMode){
+  const got = CLUE_ORDER.filter(id=>has(id));
+  let cur = sel || got[got.length-1] || null;
+  const draw = ()=>{
+    const list = CLUE_ORDER.map(id=>{
+      if (!has(id)) return `<div class="ci unk"><small>${id}</small>???</div>`;
+      return `<button class="ci${id===cur?' sel':''}" data-id="${id}"><small>${id}</small>${esc(CLUES[id].title)}</button>`;
+    }).join('');
+    let detail = '<p style="color:var(--faint)">아직 확보한 단서가 없다.</p>';
+    if (cur){
+      const c = CLUES[cur];
+      detail = `<div class="paperbox"><h4>${cur} · ${esc(c.title)}</h4><div class="where">발견 장소: ${esc(c.where)}</div>${clueImg(cur)}<pre>${esc(c.body)}</pre><div class="mean"><b>의미</b> — ${esc(c.mean)}</div></div>`
+        + (presentMode ? `<button class="presentbtn" id="presentBtn">이 증거를 제시한다</button>` : '');
+    }
+    const head = presentMode ? `<p style="margin:0 0 10px;color:#e3b0b0">강태식: “${esc(ROUNDS[state.confront].claim)}”</p>` : '';
+    $('#modalBody').innerHTML = head + `<div class="cluegrid"><div class="clist">${list}</div><div class="cdetail">${detail}</div></div>`;
+    $('#modalBody').querySelectorAll('.ci[data-id]').forEach(b=>b.addEventListener('click', ()=>{ cur = b.dataset.id; draw(); }));
+    const pb = $('#presentBtn'); if (pb) pb.addEventListener('click', ()=>{ const id = cur; closeModal(); present(id); });
+  };
+  openModal(presentMode ? '증거 제시 — 단서를 고르세요' : `단서 목록 (${got.length}/${CLUE_ORDER.length})`, '', null);
+  draw();
+}
+function present(id){
+  const r = ROUNDS[state.confront];
+  if (r.accept.includes(id)) playScene(r.ok);
+  else playScene('ch4_wrong');
+}
+function openLog(){
+  const html = state.log.length ? '<div class="loglist">' + state.log.map(l=>{
+    const S = SPK[l.sp] || SPK.n;
+    return `<p class="${l.sp==='n'?'n':l.sp==='sys'?'sys':''}">${S.name?`<span class="ln">${esc(S.name)}</span>`:''}${esc(l.text).replace(/\n/g,'<br>')}</p>`;
+  }).join('') + '</div>' : '<p style="color:var(--faint)">아직 기록이 없다.</p>';
+  openModal('대사 로그', html, null);
+  const mb = $('#modalBody'); mb.scrollTop = mb.scrollHeight;
+}
+function openHint(){
+  openModal('수첩', `<p style="font-family:var(--mono);color:var(--amber);margin:0 0 6px">${esc(state.day||'')} ${esc(state.time||'')}</p><p style="font-size:1.05rem">${esc(hintText() || '지금은 이야기를 따라가자.')}</p>`, null);
+}
+function confirmReset(){
+  openModal('처음부터 다시 시작할까요?', '<p>단서, 대사 로그, 조사 기록, 저장된 진행 상황이 모두 지워집니다.</p>', [
+    mkBtn('취소', 'tbtn', ()=>closeModal()),
+    mkBtn('처음부터 다시', 'tbtn danger', ()=>{ closeModal(); resetGame(); })
+  ]);
+}
+
+/* 추리 */
+const DEDUCTION = [
+  {q:'Q1. 서하린의 죽음에 책임이 있는 사람은?', opts:['강태식 — 건물 관리소장','서하린 본인 — 스스로 건물을 떠났다','알 수 없는 외부인','설명할 수 없는 현상'], a:0, hint:['A4','K3']},
+  {q:'Q2. 서하린에게 무슨 일이 있었나?', opts:['건물을 떠나 연락을 끊고 잠적했다','안전점검 조작 증거를 두고 다투다 화물용 엘리베이터 승강로로 추락했다','설비실 점검 중 혼자 사고로 숨졌다'], a:1, hint:['K1','K2','K6']},
+  {q:'Q3. 퇴실 기록이 매일 02:17에 출력된 이유는?', opts:['서하린의 혼이 남긴 메시지','노후한 프린터의 고장','강태식이 만든 확인용 자동 출력 작업이 3년 동안 남아 있었다'], a:2, hint:['K4','K5']}
+];
+function openDeduction(){
+  const html = '<p style="margin:0 0 12px;color:var(--dim)">확보한 단서로 사건을 정리하자. 세 문항을 모두 맞혀야 강태식과 마주할 수 있다.</p>' +
+    DEDUCTION.map((d,i)=>`<fieldset class="qset" id="q${i}"><legend>${esc(d.q)}</legend>${d.opts.map((o,j)=>`<label><input type="radio" name="d${i}" value="${j}">${esc(o)}</label>`).join('')}<div class="qres" id="qr${i}"></div></fieldset>`).join('');
+  openModal('사건 정리 — 추리', html, [
+    mkBtn('단서 다시 보기', 'tbtn', ()=>{ closeModal(); openClues(); }),
+    mkBtn('이 결론으로 확정', 'tbtn', checkDeduction)
+  ]);
+}
+function checkDeduction(){
+  let allOk = true, answered = true;
+  DEDUCTION.forEach((d,i)=>{
+    const v = document.querySelector(`input[name="d${i}"]:checked`);
+    const fs = $('#q'+i), res = $('#qr'+i);
+    fs.classList.remove('good','bad'); res.className = 'qres';
+    if (!v){ answered = false; allOk = false; res.textContent = '답을 고르세요.'; res.classList.add('bad'); fs.classList.add('bad'); return; }
+    if (+v.value === d.a){ fs.classList.add('good'); res.classList.add('good'); res.textContent = '단서와 맞아떨어진다.'; }
+    else { allOk = false; fs.classList.add('bad'); res.classList.add('bad'); res.textContent = '단서와 맞지 않는다. 다시 확인해 볼 단서: ' + d.hint.filter(h=>has(h)).map(h=>`${h} ${CLUES[h].title}`).join(', '); }
+  });
+  if (allOk){
+    later(()=>{ closeModal(); playScene('ch4_intro'); }, 900);
+  } else if (answered){
+    toast('맞지 않는 결론이 있다. 단서를 다시 확인해 보자.');
+  }
+}
+
+/* 엔딩 요약 */
+function showSummary(){
+  clearSave();
+  $('#report').innerHTML = `
+    <h2>사건 기록 — 청운빌딩 직원 실종</h2>
+    <dl>
+      <dt>범인</dt><dd>관리소장 강태식</dd>
+      <dt>서하린에게 일어난 일</dt>
+      <dd>2023년 11월 17일 새벽, 시설안전팀 서하린은 강태식이 화물용 엘리베이터 승강로의 안전점검 결과를 ‘부적합’에서 ‘적합’으로 조작한 사실을 구청에 알리려 했다. B1 설비실에서 서류를 빼앗으려던 강태식에게 밀쳐져, 난간이 부서진 승강로 아래로 추락해 숨졌다. 시각은 02:17이었다.</dd>
+      <dt>은폐 과정</dt>
+      <dd><ol>
+        <li>02:18 승강로 차단기 경보 해제 (kang.ts)</li>
+        <li>02:48 서하린의 ‘02:17 정문 퇴실’ 기록 수동 입력 (kang.ts)</li>
+        <li>03:09 CCTV 다섯 대의 02:10~02:25 영상 삭제 (kang.ts)</li>
+        <li>03:14 조작 기록 확인용 예약 작업 exit_check_0417 생성 (kang.ts)</li>
+        <li>11/19 ‘내부 확인 불요’ 승강로 긴급 용접 봉쇄 지시 (강태식)</li>
+      </ol></dd>
+      <dt>퇴실 기록이 매일 출력된 이유</dt>
+      <dd>강태식이 만든 확인용 예약 작업이 지워지지 않고 3년 동안 매일 02:17에 실행됐다. 야간 근무가 없고 프린터 용지가 비어 있어 출력되지 않았다. 그러다 새 경비원이 용지를 채운 날부터 다시 종이로 나오기 시작했다. 초자연 현상은 없었다.</dd>
+      <dt>결과</dt>
+      <dd>봉쇄된 승강로에서 서하린의 유해와 소지품, 안전점검 결과서 사본이 발견됐다. 강태식은 서하린을 숨지게 한 혐의와 시신 은닉, 기록 조작, 증거 인멸 혐의로 구속됐다.</dd>
+    </dl>
+    <p class="last">“오늘은 아무도 기록에서 사라지지 않았다.”</p>
+    <button class="bigbtn" id="btnAgain">처음부터 다시 플레이</button>`;
+  $('#summary').classList.add('show');
+  $('#btnAgain').addEventListener('click', ()=>resetGame());
+}
+
+/* =========================================================
+   시작 / 재시작 / 이어하기
+   ========================================================= */
+function hideOverlays(){
+  hidePortrait();
+  ['#card','#dayCard','#stamp','#summary','#modal'].forEach(s=>$(s).classList.remove('show','vis'));
+  $('#art').querySelectorAll('.printer-led').forEach(e=>e.classList.remove('alert'));
+}
+/* 시작: 비 내리는 건물 앞에서 1인칭으로 입구까지 걸어 들어간다 */
+let walking = false;
+function startGame(withSound){
+  if (walking) return;
+  walking = true;
+  if (withSound) Snd.enable(); else Snd.disable();
+  Snd.setLoc('outside');
+  const t = $('#title');
+  // 1) 버튼이 사라지며 화면이 살짝 밝아진다  2) 입구를 향해 걸어 들어간다
+  t.classList.add('lit');
+  const LIT = 1100, dur = reduceMotion ? 1300 : 4600;
+  later(()=>t.classList.add('walking'), LIT);
+  if (!reduceMotion){
+    [0,620,1240,1840,2420,2980,3500].forEach((ms,i)=>later(()=>Snd.step(i%2), LIT + ms));
+    later(()=>{ Snd.door(); Snd.setLoc('security'); }, LIT + 3900);
+  }
+  later(()=>{ walking = false; beginGame(withSound); }, LIT + dur);
+}
+function beginGame(withSound){
+  clearSave();
+  state = createInitialState(); renderedArt = null;
+  hideOverlays(); setRain('heavy');
+  Snd.setLoc('security');
+  state.mode = 'dialog'; renderView();
+  // 암전된 입구에서 바로 챕터 카드로 이어지도록, 카드가 뜬 뒤 시작 화면을 걷는다
+  setChapter(1);
+  later(()=>{ $('#title').classList.remove('show','walking','lit'); document.body.classList.remove('at-title'); }, 700);
+  later(()=>playScene('ch1_intro'), 3000);
+}
+function continueGame(){
+  const s = loadSave(); if (!s){ startGame(true); return; }
+  state = Object.assign(createInitialState(), s); renderedArt = null;
+  if (!Array.isArray(state.inspected)) state.inspected = [];
+  if (!Array.isArray(state.asked)) state.asked = [];
+  if (!Array.isArray(state.log)) state.log = [];
+  if (!state.flags || typeof state.flags!=='object') state.flags = {};
+  if (!LOCS[state.loc] || (state.loc==='basement' && !state.flags.key) || LOCS[state.loc].hidden) state.loc = 'security';
+  hideOverlays(); setRain('heavy');
+  Snd.enable(); Snd.setLoc(state.loc);
+  $('#title').classList.remove('show'); document.body.classList.remove('at-title');
+  if (state.chapter===4){ state.chapter = 3; renderView(); playScene('ch4_intro'); }
+  else enterExplore();
+}
+function resetGame(){
+  clearTimers(); stopTyping(); runner = null; busy = false; choicesOpen = false; frozen = false;
+  walking = false; $('#title').classList.remove('walking','lit');
+  clearSave();
+  state = createInitialState(); renderedArt = null;
+  hideOverlays(); setRain('heavy');
+  Snd.setLoc('security');
+  $('#dlgName').textContent = ''; $('#dlgName').className = ''; $('#dlgText').textContent = ''; $('#dlgChoices').innerHTML = ''; $('#dlgNext').hidden = true;
+  renderView();
+  $('#btnContinue').hidden = true;
+  $('#title').classList.add('show'); document.body.classList.add('at-title');
+}
+
+/* =========================================================
+   데이터 무결성 검사
+   ========================================================= */
+function integrityCheck(){
+  const err = [];
+  OBJECTS.forEach(o=>{
+    if (!SCENES[o.scene]) err.push(`조사 대상 ${o.id}: 장면 ${o.scene} 없음`);
+    if (o.again && !SCENES[o.again]) err.push(`조사 대상 ${o.id}: 장면 ${o.again} 없음`);
+    if (o.clue && !CLUES[o.clue]) err.push(`조사 대상 ${o.id}: 단서 ${o.clue} 없음`);
+    (o.req||[]).forEach(r=>{ if (!CLUES[r]) err.push(`조사 대상 ${o.id}: 조건 단서 ${r} 없음`); });
+    if (!LOCS[o.loc]) err.push(`조사 대상 ${o.id}: 장소 ${o.loc} 없음`);
+  });
+  Object.entries(SCENES).forEach(([id,sc])=>{
+    ['next','ret'].forEach(k=>{ if (sc[k] && !SCENES[sc[k]]) err.push(`장면 ${id}: ${k} ${sc[k]} 없음`); });
+    (sc.choices||[]).forEach(c=>{ if (!SCENES[c.go]) err.push(`장면 ${id}: 선택지 ${c.go} 없음`); });
+    if (Array.isArray(sc.lines)) sc.lines.forEach(L=>{
+      if (typeof L==='string'){
+        if (L.startsWith('@clue ') && !CLUES[L.slice(6)]) err.push(`장면 ${id}: 단서 ${L.slice(6)} 없음`);
+        if (L.startsWith('@goto ') && !LOCS[L.slice(6)]) err.push(`장면 ${id}: 장소 ${L.slice(6)} 없음`);
+      }
+    });
+  });
+  ROUNDS.forEach((r,i)=>{ if (!SCENES[r.ok]) err.push(`대면 ${i}: 장면 ${r.ok} 없음`); r.accept.forEach(a=>{ if (!CLUES[a]) err.push(`대면 ${i}: 단서 ${a} 없음`); }); });
+  Object.values(GOALS).forEach(g=>{ if (g.scene && !SCENES[g.scene]) err.push(`목표 장면 ${g.scene} 없음`); });
+  if (err.length) console.error('[무결성 검사] 오류:\n' + err.join('\n'));
+  else console.log('[무결성 검사] 통과 — 장면 ' + Object.keys(SCENES).length + '개, 단서 ' + CLUE_ORDER.length + '개');
+}
+
+/* =========================================================
+   이벤트 연결
+   ========================================================= */
+$('#dialog').addEventListener('click', onAdvance);
+document.addEventListener('keydown', e=>{
+  if (e.key==='Escape' && $('#modal').classList.contains('show')){ closeModal(); return; }
+  if (e.key==='Escape'){ closeDrawer(); return; }
+  if ((e.key===' ' || e.key==='Enter') && state.mode==='dialog' && !choicesOpen && !$('#modal').classList.contains('show')){
+    if (document.activeElement && document.activeElement.tagName==='BUTTON' && document.activeElement.id!=='dialog') document.activeElement.blur();
+    e.preventDefault(); onAdvance();
+  }
+});
+function proceed(){
+  const g = GOALS[state.chapter]; if (!g || !g.need() || state.mode!=='explore') return;
+  closeDrawer();
+  if (g.action) g.action(); else playScene(g.scene);
+}
+$('#proceed').addEventListener('click', proceed);
+$('#barProceed').addEventListener('click', e=>{ e.stopPropagation(); proceed(); });
+$('#btnDrawer').addEventListener('click', e=>{ e.stopPropagation(); toggleDrawer(); });
+$('#drawerClose').addEventListener('click', closeDrawer);
+$('#stage').addEventListener('click', e=>{ if (!e.target.closest('.printer-hot')) closeDrawer(); });
+// 대사 진행 중에는 화면 어디를 눌러도 다음 대사로 넘어간다
+$('#stage').addEventListener('click', ()=>{ if (state.mode==='dialog') onAdvance(); });
+$('#btnHint').addEventListener('click', openHint);
+$('#btnClues').addEventListener('click', ()=>openClues());
+$('#btnLog').addEventListener('click', openLog);
+$('#btnSound').addEventListener('click', ()=>{ if (Snd.on) Snd.disable(); else if (!Snd.enable()) toast('이 브라우저에서는 소리를 재생할 수 없습니다.'); renderTop(); });
+$('#btnReset').addEventListener('click', confirmReset);
+$('#modalClose').addEventListener('click', closeModal);
+$('#modal').addEventListener('click', e=>{ if (e.target.id==='modal') closeModal(); });
+/* 휴대폰: 시작할 때 전체화면 + 세로 고정 (막힌 환경이면 조용히 넘어간다) */
+function goPortrait(){
+  if (!matchMedia('(pointer:coarse)').matches) return;
+  try{
+    const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
+    const p = req ? req.call(el) : null;
+    const lock = ()=>{ try{ const r = screen.orientation && screen.orientation.lock && screen.orientation.lock('portrait'); if (r && r.catch) r.catch(()=>{}); }catch(e){} };
+    if (p && p.then) p.then(lock, ()=>{}); else lock();
+  }catch(e){}
+}
+$('#btnStart').addEventListener('click', goPortrait);
+$('#btnContinue').addEventListener('click', goPortrait);
+$('#btnStart').addEventListener('click', ()=>startGame(true));
+// 이어하기: 화면이 살짝 밝아진 뒤 저장된 곳으로 바로 들어간다
+$('#btnContinue').addEventListener('click', ()=>{
+  if (walking) return; walking = true;
+  Snd.enable(); Snd.setLoc('outside');
+  $('#title').classList.add('lit');
+  later(()=>{ walking = false; $('#title').classList.remove('lit'); continueGame(); }, 1100);
+});
+// 상단 바 높이를 CSS에 알려 준다 (모바일에서 줄바꿈되면 장면 위치가 맞춰진다)
+function syncTopH(){ document.documentElement.style.setProperty('--topH', $('#top').offsetHeight + 'px'); }
+function onResize(){ syncTopH(); syncDlgH(); requestAnimationFrame(()=>{ bgRain.resize(); winRain.resize(); photoRain.resize(); Cctv.resize(); }); }
+window.addEventListener('resize', onResize);
+window.addEventListener('orientationchange', ()=>setTimeout(onResize, 250));
+if (window.ResizeObserver) new ResizeObserver(syncTopH).observe($('#top'));
+// 대사창 높이도 알려 준다 (세로 화면에서 선택지가 뜰 때 장면을 그만큼 줄인다)
+function syncDlgH(){ document.documentElement.style.setProperty('--dlgH', $('#dialog').offsetHeight + 'px'); }
+if (window.ResizeObserver) new ResizeObserver(syncDlgH).observe($('#dialog'));
+syncTopH();
+// 탐색 중 가끔 형광등이 흔들린다
+setInterval(()=>{ if (state.mode==='explore' && state.loc!=='outside' && Math.random()<.35) flick(true); }, 14000);
+
+/* 초기화 */
+integrityCheck();
+bgRain.attach($('#bgRain'));
+if (loadSave()) $('#btnContinue').hidden = false;
+renderView();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

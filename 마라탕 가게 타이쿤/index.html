@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1a1220">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="마라탕 타이쿤">
+<title>마라탕 가게 타이쿤</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css">
+<style>
+:root{--ink:#2b1d14;--paper:#fffdf2;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#1a1220;overflow:hidden;overscroll-behavior:none}
+body{position:fixed;inset:0;font-family:'Galmuri11','Galmuri9',monospace;color:var(--ink);-webkit-font-smoothing:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+img,canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+#wrap{position:absolute;left:50%;top:50%;width:1200px;height:700px;margin:-350px 0 0 -600px;transform-origin:center}
+#stage{position:relative;width:1200px;height:700px;overflow:hidden;background:#000;border:4px solid #000}
+.scene{position:absolute;inset:0;display:none}
+.scene.on{display:block}
+
+/* ---------- 버튼 ---------- */
+.pbtn{font-family:inherit;font-size:20px;padding:10px 18px;border:4px solid var(--ink);background:#ffd23f;color:var(--ink);cursor:pointer;box-shadow:4px 4px 0 var(--ink);white-space:nowrap}
+@media (hover:hover){.pbtn:hover{background:#ffe27a}}
+.pbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+.pbtn:disabled{background:#a9a29a;color:#6b625a;cursor:not-allowed;transform:none;box-shadow:4px 4px 0 var(--ink)}
+.pbtn.red{background:#e2452b;color:#fff}
+@media (hover:hover){.pbtn.red:hover{background:#f0614a}}
+.pbtn.green{background:#6fd16c}
+@media (hover:hover){.pbtn.green:hover{background:#8be488}}
+.pbtn.big{font-size:28px;padding:14px 28px}
+.blink{animation:blink .8s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.bounce{animation:bounce .6s steps(3) infinite}
+@keyframes bounce{50%{transform:translateY(-6px)}}
+
+/* ---------- HUD ---------- */
+#hud{position:absolute;left:0;top:0;right:0;height:56px;background:#3b2a3f;border-bottom:4px solid #120a14;display:none;align-items:center;gap:12px;padding:0 14px;z-index:60;color:#fff}
+#hud.on{display:flex}
+#hud .logo{font-size:18px;color:#ffd23f;text-shadow:2px 2px 0 #120a14;margin-right:8px}
+.chip{background:#241826;border:3px solid #120a14;padding:6px 12px;font-size:17px}
+#hud .sp{flex:1}
+#peekBtn{font-size:17px;padding:6px 14px}
+
+/* ---------- 타이틀 ---------- */
+#title{background:#b3261e;background-image:linear-gradient(45deg,#c2301f 25%,transparent 25%,transparent 75%,#c2301f 75%),linear-gradient(45deg,#c2301f 25%,transparent 25%,transparent 75%,#c2301f 75%);background-size:32px 32px;background-position:0 0,16px 16px}
+#title .box{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;background:#2b1d14;border:6px solid #ffd23f;box-shadow:8px 8px 0 #120a14;padding:26px 40px;color:#fff;width:640px}
+#title h1{font-size:52px;color:#ffd23f;text-shadow:4px 4px 0 #b3261e,8px 8px 0 #120a14;letter-spacing:2px;margin-bottom:6px}
+#title .sub{font-size:16px;color:#ffcfa8;margin-bottom:16px}
+#titlePhoto{width:480px;height:288px;margin:0 auto 18px;border:4px solid #120a14;background:#3a2a20}
+#title .help{font-size:13px;color:#d9c7b0;margin-top:16px;line-height:1.7}
+
+/* ---------- 카운터 ---------- */
+#counter{background:repeating-linear-gradient(0deg,#e9b77f 0 28px,#d79f66 28px 32px)}
+#counter .floor{position:absolute;left:0;right:0;top:640px;bottom:0;background:repeating-conic-gradient(#5b3a2a 0 25%,#6d4733 0 50%) 0 0/32px 32px}
+.sign{position:absolute;left:30px;top:76px;width:430px;height:66px;background:#b3261e;border:6px solid #ffd23f;box-shadow:6px 6px 0 #120a14;color:#ffd23f;font-size:30px;display:flex;align-items:center;justify-content:center;gap:14px;text-shadow:3px 3px 0 #5a0f0a}
+.sign small{font-size:15px;color:#ffe9b8}
+.lantern{position:absolute;width:36px;height:44px;background:#e2452b;border:4px solid #120a14;box-shadow:inset 0 -8px 0 #b3261e,inset 0 8px 0 #f26a4f}
+.lantern::before{content:"";position:absolute;left:10px;top:-14px;width:8px;height:10px;background:#120a14}
+.lantern::after{content:"";position:absolute;left:10px;bottom:-14px;width:8px;height:10px;background:#ffd23f}
+.desk{position:absolute;left:0;top:380px;width:476px;height:320px;background:#9b5530;border:4px solid var(--ink);border-left:none;background-image:repeating-linear-gradient(90deg,transparent 0 76px,#7c4024 76px 80px)}
+.desk::before{content:"";position:absolute;left:0;right:0;top:-4px;height:28px;background:#d98b4d;border-bottom:4px solid var(--ink);border-top:4px solid var(--ink)}
+.printer{position:absolute;left:300px;top:298px;width:140px;height:86px;background:#5d6168;border:4px solid var(--ink);box-shadow:inset 0 8px 0 #7b8088,inset 0 -8px 0 #44474d}
+.printer .slot{position:absolute;left:18px;top:10px;width:96px;height:8px;background:#1b1c1f}
+.printer .led{position:absolute;right:12px;bottom:14px;width:12px;height:12px;background:#3a3a3a;border:2px solid #1b1c1f}
+.printer .led.on{background:#6ff26c;animation:blink .4s steps(2) infinite}
+.printer .brand{position:absolute;left:12px;bottom:10px;font-size:11px;color:#cfd3d8}
+#paper{position:absolute;left:322px;bottom:396px;width:96px;height:0;overflow:hidden;background:var(--paper);border:3px solid var(--ink);border-bottom:none;cursor:pointer;display:none;transition:height 1.4s steps(10)}
+#paper.show{display:block}
+#paper .pl{height:4px;background:#b9b0a0;margin:8px 10px 0}
+#paper .pl.s{width:40px}
+#paper .ph{font-size:11px;text-align:center;margin-top:8px}
+.hint{position:absolute;font-size:16px;background:#fff;border:4px solid var(--ink);padding:6px 10px;box-shadow:4px 4px 0 var(--ink);white-space:nowrap}
+#clickHint{left:300px;top:150px;display:none}
+#ding{position:absolute;left:60px;top:210px;font-size:30px;background:#fff;border:4px solid var(--ink);padding:10px 18px;box-shadow:6px 6px 0 var(--ink);display:none;color:#b3261e}
+#ding::after{content:"";position:absolute;left:24px;bottom:-16px;width:16px;height:12px;background:#fff;border:4px solid var(--ink);border-top:none}
+
+/* 바구니 */
+#basketWrap{position:absolute;left:110px;top:160px;width:256px;height:256px;display:none}
+#basketImg{position:absolute;inset:0;width:256px;height:256px}
+#basketItems{position:absolute;inset:0}
+#basketItems img{position:absolute;width:48px;height:48px}
+#basketTag{position:absolute;left:62px;top:-26px;font-size:15px;background:#2b1d14;color:#fff;padding:3px 10px}
+#listPanel{position:absolute;left:24px;top:418px;width:428px;height:196px;background:#2b1d14;border:4px solid #120a14;color:#fff;padding:10px 12px;display:none}
+#listPanel h3{font-size:15px;color:#ffd23f;font-weight:normal;margin-bottom:6px}
+#listRows{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:14px}
+.lrow{display:flex;align-items:center;gap:6px;background:#3d2b20;padding:3px 6px}
+.lrow img{width:24px;height:24px}
+.lrow .nm{flex:1}
+.lrow .g{color:#ffd23f}
+.lrow button{font-family:inherit;width:24px;height:24px;border:2px solid #120a14;background:#e2452b;color:#fff;cursor:pointer;font-size:14px;line-height:16px}
+#listEmpty{font-size:13px;color:#bfae9a}
+#cookBtn{position:absolute;left:110px;top:630px;display:none;z-index:5}
+
+/* 쇼케이스 냉장고 */
+.fridge{position:absolute;left:496px;top:70px;width:684px;height:630px;background:#d6edf6;border:6px solid var(--ink);background-image:repeating-linear-gradient(90deg,#d6edf6 0 60px,#c8e4ef 60px 64px)}
+.fr-top{position:absolute;left:-6px;right:-6px;top:-6px;height:66px;background:#2f5d7c;border:6px solid var(--ink);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;gap:14px;text-shadow:2px 2px 0 #12293a}
+.fr-top::after{content:"";position:absolute;left:0;right:0;bottom:-14px;height:8px;background:#bff3ff;box-shadow:0 0 0 2px #6fc9e3}
+.snow{width:16px;height:16px;position:relative}
+.snow::before,.snow::after{content:"";position:absolute;background:#bff3ff}
+.snow::before{left:6px;top:0;width:4px;height:16px}
+.snow::after{left:0;top:6px;width:16px;height:4px}
+.shelf{position:absolute;left:0;right:0}
+.bins{position:absolute;left:18px;right:18px;top:0;height:150px;display:flex;gap:12px}
+.bin{position:relative;flex:1;height:150px;border:4px solid #6fa7bd;background-color:rgba(232,248,255,.55);cursor:pointer;overflow:hidden;box-shadow:inset 0 -6px 0 rgba(111,167,189,.4)}
+.bin .fill{position:absolute;left:4px;right:4px;bottom:4px;top:26px;background-size:44px 44px;background-repeat:repeat}
+.bin .fill2{background-position:22px 18px;opacity:.95}
+.bin .shine{position:absolute;left:8px;top:6px;width:8px;height:60px;background:rgba(255,255,255,.75)}
+.bin .shine2{position:absolute;left:20px;top:6px;width:4px;height:30px;background:rgba(255,255,255,.6)}
+@media (hover:hover){.bin:hover{border-color:#ffd23f;background-color:rgba(255,248,200,.5)}}
+.bin:active{border-color:#ffd23f;background-color:rgba(255,248,200,.5)}
+.bin:active .fill{transform:translateY(2px)}
+.ledge{position:absolute;left:-6px;right:-6px;top:150px;height:40px;background:#e8eef2;border-top:4px solid var(--ink);border-bottom:4px solid var(--ink);display:flex;gap:12px;padding:0 24px;align-items:center}
+.tag{flex:1;background:#fff;border:3px solid #39424a;font-size:15px;text-align:center;padding:2px 0}
+.fr-base{position:absolute;left:0;right:0;bottom:0;height:72px;background:#3c4a54;border-top:6px solid var(--ink);background-image:repeating-linear-gradient(90deg,#3c4a54 0 12px,#27323a 12px 16px)}
+.fogLayer{position:absolute;inset:0;pointer-events:none;z-index:20}
+
+/* 픽셀 연기 */
+.puff{position:absolute;pointer-events:none;animation:drift var(--t) steps(14) forwards}
+@keyframes drift{0%{transform:translate(0,0);opacity:0}15%{opacity:var(--o)}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
+
+/* ---------- 주방 ---------- */
+#kitchen{background:#eef3f5;background-image:linear-gradient(#c3cdd3 4px,transparent 4px),linear-gradient(90deg,#c3cdd3 4px,transparent 4px);background-size:40px 40px}
+.steel{position:absolute;left:0;right:0;top:470px;bottom:0;background:repeating-linear-gradient(90deg,#b4bec5 0 76px,#a3aeb6 76px 80px);border-top:4px solid var(--ink)}
+.steel::before{content:"";position:absolute;left:0;right:0;top:0;height:22px;background:#e2e8ec;border-bottom:4px solid #7f8b93;box-shadow:inset 0 4px 0 #ffffff}
+.hood{position:absolute;left:20px;top:56px;width:380px;height:70px;background:#9aa6ae;border:4px solid var(--ink);box-shadow:inset 0 -10px 0 #7b878f}
+.hood::after{content:"";position:absolute;left:30px;right:30px;bottom:6px;height:6px;background:repeating-linear-gradient(90deg,#3d464c 0 10px,transparent 10px 16px)}
+.stove{position:absolute;left:20px;top:440px;width:380px;height:40px;background:#33383c;border:4px solid var(--ink);z-index:3}
+.stove i{position:absolute;bottom:6px;width:16px;height:16px;background:#c9ced2;border:3px solid #111}
+#pot{position:absolute;left:50px;top:196px;width:320px;height:240px;z-index:2}
+#pot img.body{position:absolute;inset:0;width:320px;height:240px}
+#potItems{position:absolute;left:0;top:0;width:320px;height:100px}
+#potItems img{position:absolute;width:40px;height:40px;animation:bob 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.bub{position:absolute;width:8px;height:8px;background:#fff;animation:bub .6s steps(3) forwards}
+@keyframes bub{to{transform:translateY(-12px);opacity:0}}
+.flames{position:absolute;left:84px;top:420px;width:250px;height:24px;z-index:4;display:flex;justify-content:space-between}
+.flames b{width:16px;height:20px;background:#4fb3ff;align-self:flex-end;box-shadow:inset 0 -6px 0 #1f6fd6;animation:flick .3s steps(2) infinite}
+.flames b:nth-child(2n){animation-delay:.15s;height:14px}
+@keyframes flick{50%{height:10px;background:#ffb84f}}
+#timerPanel{position:absolute;left:420px;top:70px;width:360px;background:#2b1d14;border:4px solid #120a14;box-shadow:6px 6px 0 rgba(0,0,0,.25);color:#fff;padding:10px 14px;text-align:center}
+#timerPanel .lbl{font-size:15px;color:#ffcfa8}
+#timerText{font-size:40px;color:#ffd23f;text-shadow:3px 3px 0 #120a14;margin:2px 0}
+#tbar{position:relative;height:20px;background:#120a14;border:3px solid #5b4a40;margin:4px 0 6px}
+#tbarFill{position:absolute;left:0;top:0;bottom:0;width:0;background:#ffd23f}
+#tbar .zone{position:absolute;top:0;bottom:0;left:66.6%;right:0;background:repeating-linear-gradient(90deg,rgba(111,209,108,.35) 0 6px,transparent 6px 10px)}
+#tbar .mark{position:absolute;top:-6px;bottom:-6px;width:4px;background:#fff}
+#tStatus{font-size:15px;min-height:20px}
+#tStatus.warn{color:#ff6b55}
+#tStatus.ok{color:#8be488}
+#bowlWrap{position:absolute;left:456px;top:336px;width:288px;height:144px;z-index:5}
+#bowlImg{width:288px;height:144px}
+#bowlItems{position:absolute;inset:0}
+#bowlItems img{position:absolute;width:40px;height:40px;animation:popin .3s steps(3)}
+@keyframes popin{from{transform:scale(0)}to{transform:scale(1)}}
+#sauceInfo{position:absolute;left:440px;top:510px;width:320px;background:#2b1d14;color:#fff;border:4px solid #120a14;font-size:15px;padding:8px;display:flex;justify-content:space-around}
+#sauceInfo b{color:#ffd23f;font-weight:normal}
+.station{position:absolute;top:356px;width:120px;cursor:pointer;text-align:center;z-index:5}
+.station img{width:120px;height:72px;margin-top:6px}
+.station .cnt{display:inline-block;background:#fff;border:3px solid var(--ink);font-size:15px;padding:1px 10px;min-width:40px}
+.station .stag{margin-top:24px;background:#fff;border:3px solid var(--ink);font-size:15px;padding:3px 0;box-shadow:3px 3px 0 var(--ink)}
+@media (hover:hover){.station:hover img{transform:translateY(-4px)}}
+.station:active img{transform:translateY(2px)}
+#recipe{position:absolute;left:800px;top:76px;width:380px;background:#2f4a2a;border:6px solid #8a5a32;box-shadow:6px 6px 0 rgba(0,0,0,.25),inset 0 0 0 4px #24391f;color:#fff;padding:10px 14px}
+#recipe h3{font-weight:normal;font-size:19px;color:#ffd23f;text-align:center;margin-bottom:6px;text-shadow:2px 2px 0 #142012}
+#recipe table{width:100%;border-collapse:collapse;font-size:15px;text-align:center}
+#recipe th{font-weight:normal;color:#cfe8b0;padding:3px 0;border-bottom:3px dashed #6f8f5a}
+#recipe td{padding:4px 0}
+#recipe td:first-child{color:#ffcfa8}
+#recipe .chilis{justify-content:flex-start;gap:2px;margin:0}
+#recipe .chilis img{width:14px;height:14px}
+#emptyBtn{position:absolute;left:440px;top:600px;font-size:17px}
+#serveBtn{position:absolute;left:610px;top:594px}
+.drop{position:absolute;width:12px;height:12px;z-index:30;transition:left .35s steps(5),top .35s steps(5)}
+.fly{position:absolute;width:44px;height:44px;z-index:40;transition:left .4s steps(6),top .4s steps(6)}
+
+/* ---------- 모달 / 영수증 ---------- */
+.modal{position:absolute;inset:0;background:rgba(18,10,20,.7);display:none;align-items:center;justify-content:center;z-index:80}
+.modal.on{display:flex}
+.receipt{position:relative;width:300px;background:var(--paper);border:4px solid var(--ink);border-bottom:none;padding:16px 18px 14px;font-size:16px;box-shadow:8px 8px 0 rgba(0,0,0,.35)}
+.receipt::after{content:"";position:absolute;left:-4px;right:-4px;bottom:-12px;height:12px;background:linear-gradient(135deg,var(--paper) 33%,transparent 33%) 0 0/12px 12px,linear-gradient(225deg,var(--paper) 33%,transparent 33%) 0 0/12px 12px}
+.r-title{text-align:center;font-size:20px;color:#b3261e}
+.r-sub{text-align:center;font-size:13px;color:#7a6a5a;margin-top:2px}
+.r-line{border-top:3px dashed #b9b0a0;margin:10px 0}
+.r-row{display:flex;justify-content:space-between;align-items:center;margin:5px 0}
+.r-row img{width:24px;height:24px;margin-right:6px}
+.r-row .l{display:flex;align-items:center}
+.r-row.big{font-size:20px;color:#b3261e}
+.chilis{display:flex;justify-content:center;gap:4px;margin-top:4px}
+.chilis img{width:24px;height:24px}
+.r-bar{height:30px;margin-top:10px;background:repeating-linear-gradient(90deg,#2b1d14 0 4px,transparent 4px 6px,#2b1d14 6px 8px,transparent 8px 12px,#2b1d14 12px 18px,transparent 18px 20px)}
+.mbox{display:flex;flex-direction:column;align-items:center;gap:26px}
+#peek{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:70;display:none}
+#peek.on{display:block}
+#peek .receipt{font-size:15px;padding:12px 16px}
+#peekBar{height:10px;background:#ffd23f;border:3px solid var(--ink);margin-top:20px;width:100%}
+#peekBar.run{animation:shrink 5s steps(20) forwards}
+@keyframes shrink{to{width:0}}
+#toast{position:absolute;left:50%;top:76px;transform:translateX(-50%);background:#2b1d14;color:#fff;border:4px solid #ffd23f;padding:8px 16px;font-size:17px;z-index:90;display:none;white-space:nowrap}
+
+/* 결과 */
+#result .panel{background:#2b1d14;border:6px solid #ffd23f;box-shadow:8px 8px 0 #120a14;color:#fff;width:820px;padding:20px 26px;display:flex;gap:24px}
+#result h2{font-size:38px;color:#ffd23f;text-shadow:3px 3px 0 #b3261e;margin-bottom:8px}
+#resultPhoto{width:340px;height:226px;border:4px solid #120a14;flex:none;background:#3a2a20}
+.stars{display:flex;gap:8px;margin:6px 0 10px}
+.stars img{width:40px;height:40px}
+.rs{font-size:15px;line-height:1.75}
+.rs .ok{color:#8be488}
+.rs .no{color:#ff6b55}
+.rs .dim{color:#bfae9a;font-size:13px}
+#earn{font-size:22px;color:#ffd23f;margin:10px 0 14px}
+
+/* =========== 세로(모바일) 레이아웃: 540x960 =========== */
+body.portrait #hud{gap:6px;padding:0 8px}
+body.portrait #hud .logo,body.portrait .pick-long{display:none}
+body.portrait .chip{font-size:14px;padding:5px 8px}
+body.portrait #peekBtn{font-size:14px;padding:6px 8px}
+body.portrait #title .box{width:496px;padding:22px 18px}
+body.portrait #title h1{font-size:40px}
+body.portrait #titlePhoto{width:440px;height:266px}
+body.portrait #title .help{font-size:12px}
+/* 카운터 */
+body.portrait .sign,body.portrait .lantern,body.portrait #counter .floor{display:none}
+body.portrait .fridge{left:10px;top:66px;width:520px;height:500px}
+body.portrait .fr-top{font-size:18px}
+body.portrait .bins{left:10px;right:10px;height:120px;gap:8px}
+body.portrait .bin{height:120px}
+body.portrait .bin .fill{background-size:34px 34px;top:20px}
+body.portrait .bin .fill2{background-position:17px 14px}
+body.portrait .ledge{top:120px;height:36px;gap:8px;padding:0 14px}
+body.portrait .tag{font-size:12px}
+body.portrait .desk{top:600px;width:540px;height:360px;border-right:none}
+body.portrait .printer{left:384px;top:516px;z-index:30}
+body.portrait #paper{left:406px;bottom:438px;z-index:30}
+body.portrait #clickHint{left:330px;top:360px;z-index:31}
+body.portrait #ding{left:40px;top:480px;z-index:31}
+body.portrait #basketWrap{left:14px;top:640px;z-index:30}
+body.portrait #listPanel{left:282px;top:620px;width:246px;height:250px;z-index:30;overflow-y:auto;padding:8px}
+body.portrait #listPanel h3{font-size:12px}
+body.portrait #listRows{grid-template-columns:1fr}
+body.portrait #cookBtn{left:286px;top:884px;z-index:31}
+/* 주방 */
+body.portrait .hood{display:none}
+body.portrait #timerPanel{left:20px;top:66px;width:500px;padding:6px 10px}
+body.portrait #timerText{font-size:32px}
+body.portrait .steel{top:440px}
+body.portrait #pot{left:16px;top:226px;transform:scale(.75);transform-origin:0 0}
+body.portrait .stove{left:10px;top:404px;width:264px}
+body.portrait .flames{left:44px;top:390px;width:188px}
+body.portrait #recipe{left:282px;top:200px;width:246px;padding:8px}
+body.portrait #recipe h3{font-size:16px}
+body.portrait #recipe table{font-size:13px}
+body.portrait #recipe .chilicol{display:none}
+body.portrait #bowlWrap{left:126px;top:470px}
+body.portrait #sauceInfo{left:110px;top:626px}
+body.portrait .station{top:690px}
+body.portrait .station[data-s=peanut]{left:40px!important}
+body.portrait .station[data-s=red]{left:210px!important}
+body.portrait .station[data-s=green]{left:380px!important}
+body.portrait #emptyBtn{left:30px;top:882px}
+body.portrait #serveBtn{left:240px;top:874px}
+/* 결과 */
+body.portrait #result .panel{width:500px;flex-direction:column;align-items:center;padding:16px 20px;gap:6px;text-align:center}
+body.portrait #result .panel>div:first-child{order:2;display:flex;flex-direction:column;align-items:center}
+body.portrait #result .stars{justify-content:center}
+body.portrait #resultPhoto{width:300px;height:200px}
+body.portrait #earn{margin:8px 0 10px}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="logo">마라탕 가게 타이쿤</div>
+    <div class="chip">돈 <span id="money">0</span>원</div>
+    <div class="chip">손님 <span id="custNo">1</span>번째</div>
+    <div class="chip" id="pickChip" style="display:none"><span class="pick-long">담기 </span>남은 시간 <span id="pickTime">0:30</span></div>
+    <div class="sp"></div>
+    <button id="peekBtn" class="pbtn" style="display:none">영수증 보기</button>
+  </div>
+
+  <!-- 타이틀 -->
+  <div id="title" class="scene on">
+    <div class="box">
+      <h1>마라탕 가게 타이쿤</h1>
+      <div class="sub">주문서대로 담고, 삶고, 소스 만들어서 마라탕 완성!</div>
+      <canvas id="titlePhoto"></canvas>
+      <button id="openBtn" class="pbtn big bounce">가게 오픈하기</button>
+      <div class="help">영수증 확인 → 30초 안에 쇼케이스에서 재료 담기(클릭 1번 = 100g) → 조리하기<br>재료 삶는 20초 동안 맵기 단계에 맞춰 소스 만들기 → 재료 담기!</div>
+    </div>
+  </div>
+
+  <!-- 카운터 -->
+  <div id="counter" class="scene">
+    <div class="floor"></div>
+    <div class="sign"><span>麻辣烫</span><span>마라탕</span><small>무게로 골라 담는</small></div>
+    <div class="lantern" style="left:40px;top:170px"></div>
+    <div class="lantern" style="left:410px;top:170px"></div>
+    <div class="desk"></div>
+    <div class="printer"><div class="slot"></div><div class="brand">POS-88</div><div class="led" id="led"></div></div>
+    <div id="paper"><div class="ph">주문서</div><div class="pl"></div><div class="pl s"></div><div class="pl"></div><div class="pl s"></div><div class="pl"></div><div class="pl"></div></div>
+    <div id="clickHint" class="hint blink">영수증을 클릭!</div>
+    <div id="ding">띵동~!</div>
+
+    <div id="basketWrap"><div id="basketTag">내 바구니</div><img id="basketImg" alt=""><div id="basketItems"></div></div>
+    <div id="listPanel"><h3>바구니에 담은 재료 (- 누르면 100g 빼기)</h3><div id="listRows"></div><div id="listEmpty">쇼케이스의 재료를 클릭해서 담아요!</div></div>
+    <button id="cookBtn" class="pbtn red big bounce">조리하기 &gt;</button>
+
+    <div class="fridge" id="fridge">
+      <div class="fr-top"><div class="snow"></div>셀프 재료 쇼케이스<div class="snow"></div></div>
+      <div id="shelves"></div>
+      <div class="fr-base"></div>
+      <div class="fogLayer" id="fog"></div>
+    </div>
+  </div>
+
+  <!-- 주방 -->
+  <div id="kitchen" class="scene">
+    <div class="hood"></div>
+    <div id="timerPanel">
+      <div class="lbl">재료 삶는 중 (0:20) · 제한시간 0:30</div>
+      <div id="timerText">0:00</div>
+      <div id="tbar"><div class="zone"></div><div id="tbarFill"></div><div class="mark" style="left:66.6%"></div></div>
+      <div id="tStatus">삶는 동안 소스를 만들어요!</div>
+    </div>
+    <div class="steel"></div>
+    <div id="pot"><img class="body" id="potImg" alt=""><div id="potItems"></div></div>
+    <div class="flames"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></div>
+    <div class="stove"><i style="left:20px"></i><i style="left:52px"></i></div>
+    <div class="fogLayer" id="steam"></div>
+
+    <div id="bowlWrap"><img id="bowlImg" alt=""><div id="bowlItems"></div></div>
+    <div id="sauceInfo"><span>땅콩 <b id="c_peanut">0</b></span><span>라유 <b id="c_red">0</b></span><span>마유 <b id="c_green">0</b></span></div>
+
+    <div id="recipe"><h3>소스 레시피</h3><table id="recipeTable"></table></div>
+
+    <div class="station" data-s="peanut" style="left:800px"><span class="cnt" id="s_peanut">0</span><img alt=""><div class="stag">땅콩소스</div></div>
+    <div class="station" data-s="red" style="left:930px"><span class="cnt" id="s_red">0</span><img alt=""><div class="stag">라유</div></div>
+    <div class="station" data-s="green" style="left:1060px"><span class="cnt" id="s_green">0</span><img alt=""><div class="stag">마유</div></div>
+
+    <button id="emptyBtn" class="pbtn">소스 비우기</button>
+    <button id="serveBtn" class="pbtn green big" disabled>재료 담기</button>
+  </div>
+
+  <!-- 영수증 모달 -->
+  <div id="rModal" class="modal"><div class="mbox"><div id="rFull"></div><button id="takeBasket" class="pbtn red">바구니 들기</button></div></div>
+  <!-- 5초 영수증 -->
+  <div id="peek"><div id="peekBody"></div><div id="peekBar"></div></div>
+  <!-- 결과 -->
+  <div id="result" class="modal"><div class="panel">
+    <div><canvas id="resultPhoto"></canvas><div id="earn"></div><button id="nextBtn" class="pbtn red big">다음 손님 받기</button></div>
+    <div><h2>마라탕 완성!</h2><div class="stars" id="stars"></div><div class="rs" id="rs"></div></div>
+  </div></div>
+  <div id="toast"></div>
+</div></div>
+
+<script>
+/* ================= 픽셀 스프라이트 ================= */
+function makeSprite(w,h,draw){
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const g=c.getContext('2d');
+  const p=(x,y,col)=>{x=Math.round(x);y=Math.round(y);if(x<0||y<0||x>=w||y>=h)return;g.fillStyle=col;g.fillRect(x,y,1,1)};
+  draw(p,g);return c.toDataURL();
+}
+function line(x0,y0,x1,y1,cb){
+  let dx=Math.abs(x1-x0),sx=x0<x1?1:-1,dy=-Math.abs(y1-y0),sy=y0<y1?1:-1,err=dx+dy;
+  for(;;){cb(x0,y0);if(x0===x1&&y0===y1)break;const e2=2*err;if(e2>=dy){err+=dy;x0+=sx}if(e2<=dx){err+=dx;y0+=sy}}
+}
+
+const ING=[
+  {id:'corn',name:'옥수수면',draw:p=>{
+    for(let n=0;n<4;n++){const y0=2+n*4;for(let x=0;x<16;x++){const y=y0+Math.round(Math.sin(x*0.9+n*1.7)*1.2);
+      p(x,y,n%2?'#f2bd1d':'#ffd43b');p(x,y+1,'#c48e00');if((x+n)%5===0)p(x,y,'#fff1a6');}}
+  }},
+  {id:'glass',name:'중국당면',draw:p=>{
+    for(let n=0;n<3;n++){const y0=1+n*5;for(let x=0;x<16;x++){const y=y0+Math.round(Math.sin(x*0.5+n*2)*1.4);
+      p(x,y,'#f4ead9');p(x,y+1,'#cdb593');p(x,y+2,'#a88d69');}}
+  }},
+  {id:'enoki',name:'팽이버섯',draw:p=>{
+    const tops=[[2,3],[4,1],[7,0],[9,1],[12,2],[14,4]];
+    tops.forEach(([tx,ty])=>line(8,14,tx,ty+1,(x,y)=>p(x,y,'#efe6c9')));
+    tops.forEach(([tx,ty])=>{p(tx,ty,'#fffcf2');p(tx+1,ty,'#fffcf2');p(tx,ty+1,'#d8cba5');p(tx+1,ty+1,'#d8cba5')});
+    for(let x=5;x<=11;x++){p(x,14,'#b8955f');p(x,15,'#8f6d3d')}
+  }},
+  {id:'woodear',name:'백목이버섯',draw:p=>{
+    for(let y=0;y<16;y++)for(let x=0;x<16;x++){const dx=x-7.5,dy=y-7.5,d=Math.hypot(dx,dy),a=Math.atan2(dy,dx);
+      const r=6.4+Math.sin(a*7)*0.9;
+      if(d<r-1.1)p(x,y,(Math.abs(d-r*0.5)<0.7)?'#ddd2b8':(dy>3?'#ece4d1':'#faf6ec'));
+      else if(d<r)p(x,y,'#c5b693');}
+  }},
+  {id:'bunmoja',name:'분모자',draw:p=>{
+    [[5,5],[11,6],[8,11]].forEach(([bx,by])=>{
+      for(let y=0;y<16;y++)for(let x=0;x<16;x++){const d=Math.hypot(x-bx,y-by);if(d>=4)continue;
+        const s=(x-bx)+(y-by);
+        p(x,y,d>3.1?'#8f7548':s<-2?'#fff6dd':s>2?'#c9ab72':'#e6cf9f');}
+    });
+  }},
+  {id:'tteok',name:'떡',draw:p=>{
+    const cyl=(x0,y0,len)=>{
+      for(let x=x0-1;x<=x0+len;x++)for(let y=y0-1;y<=y0+4;y++){const cx=(x===x0-1||x===x0+len),cy=(y===y0-1||y===y0+4);if(cx&&cy)continue;p(x,y,'#a59c85')}
+      for(let x=x0;x<x0+len;x++)for(let y=y0;y<y0+4;y++){const e=(x===x0||x===x0+len-1);
+        let c='#fbf9f1';if(y===y0)c='#ffffff';if(y===y0+3)c='#ddd5c0';if(e)c='#ebe5d3';p(x,y,c)}
+    };
+    cyl(2,1,11);cyl(4,6,11);cyl(1,11,10);
+  }},
+  {id:'yubu',name:'유부',draw:p=>{
+    const sq=(x0,y0,s)=>{for(let y=y0;y<y0+s;y++)for(let x=x0;x<x0+s;x++){
+      const b=(x===x0||y===y0||x===x0+s-1||y===y0+s-1);
+      p(x,y,b?'#8a5216':(y===y0+1||x===x0+1)?'#eab250':((x*7+y*3)%5===0?'#f3c063':'#d9952f'))}};
+    sq(1,1,9);sq(6,6,9);
+  }},
+  {id:'bokchoy',name:'청경채',draw:p=>{
+    for(let y=0;y<12;y++)for(let x=0;x<16;x++){const dx=(x-7.5)/5.6,dy=(y-5.5)/5.6,v=dx*dx+dy*dy;
+      if(v<1)p(x,y,v>0.72?'#24601f':((x===7||x===8)&&y>2)?'#8bd66a':(dx<-0.2&&dy<0)?'#58b04a':'#3f9a38');}
+    for(let y=8;y<16;y++){const w=y<12?2:3;for(let x=8-w;x<8+w;x++)p(x,y,(x===8-w||x===8+w-1)?'#93c26f':'#e3f3c8')}
+  }},
+];
+ING.forEach(i=>i.img=makeSprite(16,16,i.draw));
+const ingById=id=>ING.find(i=>i.id===id);
+
+const CHILI=makeSprite(10,10,p=>{
+  for(let i=0;i<7;i++){p(1+i,8-i,'#d6281b');p(2+i,8-i,'#e2452b');p(1+i,9-i,'#a31a10')}
+  p(8,1,'#3f9a38');p(9,0,'#3f9a38');p(8,0,'#24601f');p(3,6,'#ff8a70');
+});
+const STAR=on=>makeSprite(9,9,p=>{
+  const rows=['....#....','...###...','#########','.#######.','..#####..','..##.##..','.##...##.','##.....##','.........'];
+  rows.forEach((r,y)=>[...r].forEach((c,x)=>{if(c==='#')p(x,y,on?(y<3?'#fff1a6':'#ffd23f'):'#5b4a40')}));
+});
+
+const BASKET=makeSprite(32,32,p=>{
+  for(let y=0;y<32;y++)for(let x=0;x<32;x++){const d=Math.hypot(x-15.5,y-15.5);
+    if(d<13.5){p(x,y,(x%4===0||y%4===0)?'rgba(140,200,222,.55)':'rgba(215,242,252,.4)')}
+    else if(d<15.6){p(x,y,(d<14.6)?'#9fd6e8':'#4f8fa8')}}
+  for(let a=3.4;a<4.5;a+=0.05)p(15.5+Math.cos(a)*12,15.5+Math.sin(a)*12,'#ffffff');
+});
+
+function bowlSprite(color,amt){ // amt 0~1
+  return makeSprite(48,24,p=>{
+    for(let y=4;y<=20;y++){const t=(y-4)/16,hw=23.4*(1-t*t*0.45);
+      for(let x=0;x<48;x++){const dx=x-23.5;if(Math.abs(dx)>hw)continue;
+        let c='#1d1d1d';if(dx<-hw+2)c='#3d3d3d';else if(dx>hw-2)c='#0b0b0b';else if((x*5+y*3)%7===0)c='#272727';p(x,y,c)}}
+    for(let x=18;x<30;x++){p(x,21,'#141414');p(x,22,'#0b0b0b')}
+    for(let y=0;y<10;y++)for(let x=0;x<48;x++){const ex=(x-23.5)/23.5,ey=(y-4.5)/4.5,v=ex*ex+ey*ey;
+      if(v<=1){const ix=(x-23.5)/21,iy=(y-4.5)/3.3,iv=ix*ix+iy*iy;
+        p(x,y,iv<1?'#2c2c2c':(y<4?'#4a4a4a':'#151515'))}}
+    if(amt>0){const rx=4+17*amt,ry=1+2.3*amt;
+      for(let y=0;y<10;y++)for(let x=0;x<48;x++){const ex=(x-23.5)/rx,ey=(y-4.8)/ry;if(ex*ex+ey*ey<1)p(x,y,color)}
+      p(18,4,'rgba(255,255,255,.6)');p(19,4,'rgba(255,255,255,.6)');p(28,5,'rgba(255,255,255,.4)');}
+  });
+}
+function potSprite(water){
+  return makeSprite(40,30,p=>{
+    for(let y=5;y<28;y++)for(let x=2;x<38;x++){
+      let c='#b8c3c9';if(x<6)c='#e8eef1';else if(x<9)c='#d3dbdf';else if(x>33)c='#7d8a92';else if(x>30)c='#9aa6ad';
+      if(y===9||y===25)c='#8c989f';if(x===2||x===37||y===27)c='#2b2b2b';p(x,y,c)}
+    for(let y=9;y<12;y++){p(0,y,'#4a545c');p(1,y,'#4a545c');p(38,y,'#4a545c');p(39,y,'#4a545c')}
+    for(let y=0;y<12;y++)for(let x=0;x<40;x++){const ex=(x-19.5)/17.6,ey=(y-5.5)/4.6,v=ex*ex+ey*ey;
+      if(v<=1){const iv=((x-19.5)/15.8)**2+((y-5.5)/3.5)**2;p(x,y,iv<1?water:(v>0.86?'#2b2b2b':'#e3e9ec'))}}
+  });
+}
+function sauceSprite(col,dark){
+  return makeSprite(20,12,p=>{
+    for(let y=3;y<11;y++){const t=(y-3)/8,hw=9.6*(1-t*t*0.4);for(let x=0;x<20;x++){const dx=x-9.5;if(Math.abs(dx)>hw)continue;
+      p(x,y,dx<-hw+1.5?'#eef3f5':dx>hw-1.5?'#7d8a92':'#b8c3c9')}}
+    for(let x=6;x<14;x++)p(x,11,'#5f6b72');
+    for(let y=0;y<8;y++)for(let x=0;x<20;x++){const v=((x-9.5)/9.6)**2+((y-3.5)/3.4)**2;if(v<=1){
+      const iv=((x-9.5)/8.2)**2+((y-3.7)/2.4)**2;p(x,y,iv<1?((x+y)%6===0?dark:col):'#dfe6ea')}}
+    p(6,3,'rgba(255,255,255,.7)');p(7,3,'rgba(255,255,255,.7)');
+  });
+}
+
+/* ================= 사운드 (칩튠) ================= */
+let ac=null;
+function tone(f,t,dur,type='square',vol=0.06){
+  if(!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,ac.currentTime+t);
+  g.gain.setValueAtTime(vol,ac.currentTime+t);g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+t+dur);
+  o.connect(g).connect(ac.destination);o.start(ac.currentTime+t);o.stop(ac.currentTime+t+dur+0.05);
+}
+const SFX={
+  ding(){tone(988,0,0.6,'square',0.07);tone(784,0.38,0.8,'square',0.07)},
+  print(){for(let i=0;i<14;i++)tone(i%2?220:160,i*0.09,0.06,'square',0.03)},
+  pop(){tone(660,0,0.07);tone(990,0.05,0.08)},
+  minus(){tone(500,0,0.07);tone(330,0.05,0.08)},
+  sauce(){tone(220,0,0.12,'triangle',0.15);tone(330,0.06,0.1,'triangle',0.1)},
+  ok(){tone(784,0,0.1);tone(1047,0.1,0.18)},
+  alarm(){for(let i=0;i<4;i++){tone(880,i*0.3,0.14,'square',0.06);tone(660,i*0.3+0.15,0.14,'square',0.06)}},
+  fanfare(){[523,659,784,1047].forEach((f,i)=>tone(f,i*0.12,0.2));tone(1047,0.5,0.5)},
+  bad(){tone(330,0,0.2);tone(247,0.2,0.4)},
+};
+
+/* ================= 화면 스케일 ================= */
+const wrap=document.getElementById('wrap'),stage=document.getElementById('stage');
+let scale=1,portrait=false;
+// 화면이 세로로 길면 540x960 세로 레이아웃, 아니면 1200x700 가로 레이아웃
+const L=()=>portrait?{shelfTop:66,shelfGap:190,binH:120,fogW:500,fogBottom:420}:{shelfTop:76,shelfGap:236,binH:150,fogW:640,fogBottom:540};
+function layoutShelves(){document.querySelectorAll('.shelf').forEach(s=>{const l=L();s.style.top=(l.shelfTop+s.dataset.ri*l.shelfGap)+'px';s.style.height=(l.binH+40)+'px'})}
+function fit(){
+  portrait=innerHeight>innerWidth;
+  document.body.classList.toggle('portrait',portrait);
+  const W=portrait?540:1200,H=portrait?960:700;
+  stage.style.width=(W+8)+'px';stage.style.height=(H+8)+'px';
+  wrap.style.width=(W+8)+'px';wrap.style.height=(H+8)+'px';wrap.style.margin=`${-(H+8)/2}px 0 0 ${-(W+8)/2}px`;
+  scale=Math.min(innerWidth/(W+8),innerHeight/(H+8));
+  wrap.style.transform=`scale(${scale})`;
+  layoutShelves();
+}
+addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,200));fit();
+const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+const $=id=>document.getElementById(id);
+function stagePos(el){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();
+  return {x:(r.left-s.left)/scale+r.width/scale/2,y:(r.top-s.top)/scale+r.height/scale/2}}
+let toastT;
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>t.style.display='none',1800)}
+
+/* ================= 픽셀 사진 ================= */
+const photo=new Image();
+photo.src='마라탕.jfif';
+function pixelPhoto(cv,w,h){
+  cv.width=w;cv.height=h;const g=cv.getContext('2d');g.imageSmoothingEnabled=true;
+  if(photo.complete&&photo.naturalWidth){
+    const r=Math.max(w/photo.naturalWidth,h/photo.naturalHeight),dw=photo.naturalWidth*r,dh=photo.naturalHeight*r;
+    g.drawImage(photo,(w-dw)/2,(h-dh)/2,dw,dh);
+  }else{const im=new Image();im.onload=()=>{g.fillStyle='#3a2a20';g.fillRect(0,0,w,h);g.imageSmoothingEnabled=false;g.drawImage(im,w/2-24,h/2-14,48,24)};im.src=bowlSprite('#d4471f',1)}
+}
+photo.onload=()=>pixelPhoto($('titlePhoto'),96,58);
+pixelPhoto($('titlePhoto'),96,58);
+
+/* ================= 상태 ================= */
+const S={money:0,cust:1,orderNo:Math.floor(Math.random()*40)+10,order:null,basket:{},pieces:[],holding:false,
+  sauce:{peanut:0,red:0,green:0},kStart:0,boiled:false,smoking:false,served:false,scene:'title',peeking:false};
+const LEVEL_NAME=['','순한맛','보통맛','매운맛','아주 매운맛'];
+const PRICE_100G=1800;
+const PICK_SEC=30,BOIL_SEC=20,LIMIT_SEC=30; // 재료 담기 제한, 삶는 시간, 냄비 연기 시작
+
+function newOrder(){
+  const pool=[...ING].sort(()=>Math.random()-0.5),n=3+Math.floor(Math.random()*3);
+  const items=pool.slice(0,n).map(i=>({id:i.id,g:(1+Math.floor(Math.random()*3))*100}));
+  const level=1+Math.floor(Math.random()*4);
+  S.orderNo++;
+  const total=items.reduce((a,b)=>a+b.g,0);
+  return {no:S.orderNo,items,level,price:total/100*PRICE_100G};
+}
+function receiptHTML(o){
+  const rows=o.items.map(it=>{const i=ingById(it.id);return `<div class="r-row"><span class="l"><img src="${i.img}">${i.name}</span><span>${it.g}g</span></div>`}).join('');
+  const chilis=Array.from({length:o.level},()=>`<img src="${CHILI}">`).join('');
+  return `<div class="receipt"><div class="r-title">★ 마라탕 가게 ★</div><div class="r-sub">주문번호 #${String(o.no).padStart(4,'0')}</div>
+  <div class="r-line"></div>${rows}<div class="r-line"></div>
+  <div class="r-row big"><span>맵기</span><span>${o.level}단계</span></div><div class="r-sub">${LEVEL_NAME[o.level]}</div><div class="chilis">${chilis}</div>
+  <div class="r-line"></div><div class="r-row"><span>합계</span><span>${o.price.toLocaleString()}원</span></div><div class="r-bar"></div></div>`;
+}
+
+/* ================= 장면 전환 ================= */
+function show(name){
+  document.querySelectorAll('.scene').forEach(s=>s.classList.toggle('on',s.id===name));
+  S.scene=name;$('hud').classList.toggle('on',name!=='title');
+}
+function updHud(){$('money').textContent=S.money.toLocaleString();$('custNo').textContent=S.cust}
+
+/* ================= 쇼케이스 만들기 ================= */
+(function buildShelves(){
+  const sh=$('shelves');
+  [ING.slice(0,4),ING.slice(4)].forEach((row,ri)=>{
+    const s=document.createElement('div');s.className='shelf';s.dataset.ri=ri;
+    s.innerHTML=`<div class="bins">${row.map(i=>`<div class="bin" data-id="${i.id}"><div class="fill" style="background-image:url(${i.img})"></div><div class="fill fill2" style="background-image:url(${i.img})"></div><div class="shine"></div><div class="shine2"></div></div>`).join('')}</div>
+      <div class="ledge">${row.map(i=>`<div class="tag">${i.name}</div>`).join('')}</div>`;
+    sh.appendChild(s);
+  });
+  layoutShelves();
+})();
+$('basketImg').src=BASKET;
+
+/* ================= 픽셀 연기 ================= */
+const CLOUD=[[1,0],[2,0],[0,1],[1,1],[2,1],[3,1],[1,2],[2,2]];
+function puff(layer,x,y,{u=8,color='rgba(240,250,255,.8)',dx=0,dy=40,t=4,o=0.8}={}){
+  const d=document.createElement('div');d.className='puff';
+  d.style.cssText=`left:${x}px;top:${y}px;width:${u}px;height:${u}px;background:${color};--dx:${dx}px;--dy:${dy}px;--t:${t}s;--o:${o};`;
+  d.style.boxShadow=CLOUD.map(([a,b])=>`${a*u}px ${b*u}px 0 ${color}`).join(',');
+  layer.appendChild(d);setTimeout(()=>d.remove(),t*1000+50);
+}
+setInterval(()=>{
+  if(S.scene==='counter'){
+    const fog=$('fog'),l=L();
+    for(let k=0;k<2;k++){const ri=Math.floor(Math.random()*2);
+      puff(fog,10+Math.random()*(l.fogW-20),l.shelfTop+ri*l.shelfGap+l.binH+20,{u:6+Math.floor(Math.random()*3)*2,dx:Math.random()*40-20,dy:40+Math.random()*50,t:3+Math.random()*2,o:0.75});}
+    puff(fog,Math.random()*l.fogW,l.fogBottom,{u:10,dx:Math.random()*60-30,dy:70,t:4,o:0.6});
+  }else if(S.scene==='kitchen'){
+    const st=$('steam'),pt=$('pot'),pw=portrait?240:320,px=pt.offsetLeft,py=pt.offsetTop;
+    if(S.smoking){
+      for(let k=0;k<3;k++)puff(st,px+pw*0.05+Math.random()*pw*0.8,py-26+Math.random()*30,{u:12+Math.floor(Math.random()*3)*4,color:k%2?'rgba(90,90,95,.85)':'rgba(150,150,155,.85)',dx:Math.random()*120-60,dy:-180-Math.random()*80,t:2.5+Math.random(),o:0.95});
+    }else if(!S.served||S.boiled){
+      puff(st,px+pw*0.1+Math.random()*pw*0.7,py-6,{u:8,color:'rgba(255,255,255,.85)',dx:Math.random()*40-20,dy:-110,t:2.5,o:0.8});
+    }
+    if(!S.served){const b=document.createElement('div');b.className='bub';b.style.left=(70+Math.random()*180)+'px';b.style.top=(30+Math.random()*30)+'px';$('pot').appendChild(b);setTimeout(()=>b.remove(),700)}
+  }
+},220);
+
+/* ================= 카운터 진행 ================= */
+function startCustomer(){
+  S.order=newOrder();S.basket={};S.pieces=[];S.holding=false;S.served=false;
+  show('counter');updHud();
+  ['basketWrap','listPanel','cookBtn','clickHint','ding'].forEach(id=>$(id).style.display='none');
+  $('peekBtn').style.display='none';
+  const paper=$('paper');paper.classList.remove('show');paper.style.height='0';
+  renderBasket();
+  setTimeout(()=>{
+    SFX.ding();$('ding').style.display='block';$('led').classList.add('on');
+    setTimeout(()=>{
+      SFX.print();paper.classList.add('show');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>paper.style.height='110px'));
+      setTimeout(()=>{$('ding').style.display='none';$('clickHint').style.display='block';$('led').classList.remove('on')},1500);
+    },700);
+  },600);
+}
+$('paper').onclick=()=>{
+  $('rFull').innerHTML=receiptHTML(S.order);$('rModal').classList.add('on');SFX.pop();
+};
+$('takeBasket').onclick=()=>{
+  $('rModal').classList.remove('on');$('paper').classList.remove('show');$('clickHint').style.display='none';
+  S.holding=true;$('basketWrap').style.display='block';$('listPanel').style.display='block';
+  $('peekBtn').style.display='block';SFX.ok();toast('30초 안에 담아요! 클릭하면 100g씩');
+  startPickTimer();
+};
+
+/* 재료 담기 30초 제한 */
+let pickTimer=null;
+function startPickTimer(){
+  const t0=performance.now();let warned=false;
+  $('pickChip').style.display='block';$('pickChip').classList.remove('blink');
+  clearInterval(pickTimer);
+  pickTimer=setInterval(()=>{
+    const left=Math.max(0,PICK_SEC-(performance.now()-t0)/1000);
+    $('pickTime').textContent=fmt(Math.ceil(left));
+    if(left<=10&&!warned){warned=true;$('pickChip').classList.add('blink');tone(880,0,0.1)}
+    if(left<=0){stopPickTimer();toast('시간 끝! 담은 재료로 조리해요');SFX.bad();goCook()}
+  },100);
+}
+function stopPickTimer(){clearInterval(pickTimer);$('pickChip').style.display='none'}
+function goCook(){stopPickTimer();$('peek').classList.remove('on');enterKitchen()}
+document.querySelectorAll('.bin').forEach(b=>b.onclick=()=>{
+  if(!S.holding){toast(S.order?'먼저 영수증을 확인하고 바구니를 들어요!':'손님을 기다려요');return}
+  const id=b.dataset.id;
+  if((S.basket[id]||0)>=900){toast('그만~ 너무 많이 담았어요!');return}
+  S.basket[id]=(S.basket[id]||0)+100;
+  const ang=Math.random()*Math.PI*2,rad=Math.random()*70;
+  const piece={id,x:128+Math.cos(ang)*rad-24,y:128+Math.sin(ang)*rad-24,rot:[0,90,180,270][Math.floor(Math.random()*4)]};
+  S.pieces.push(piece);
+  const from=stagePos(b),to=stagePos($('basketWrap'));
+  const f=document.createElement('img');f.className='fly';f.src=ingById(id).img;
+  f.style.left=(from.x-22)+'px';f.style.top=(from.y-22)+'px';stage.appendChild(f);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{f.style.left=(to.x-128+piece.x)+'px';f.style.top=(to.y-128+piece.y)+'px'}));
+  setTimeout(()=>{f.remove();renderBasket()},420);
+  SFX.pop();buzz(15);renderList();
+});
+function renderBasket(){
+  $('basketItems').innerHTML=S.pieces.map(p=>`<img src="${ingById(p.id).img}" style="left:${p.x}px;top:${p.y}px;transform:rotate(${p.rot}deg)">`).join('');
+}
+function renderList(){
+  const ids=ING.filter(i=>S.basket[i.id]>0);
+  $('listEmpty').style.display=ids.length?'none':'block';
+  $('listRows').innerHTML=ids.map(i=>`<div class="lrow"><img src="${i.img}"><span class="nm">${i.name}</span><span class="g">${S.basket[i.id]}g</span><button data-id="${i.id}">-</button></div>`).join('');
+  $('listRows').querySelectorAll('button').forEach(btn=>btn.onclick=()=>{
+    const id=btn.dataset.id;S.basket[id]-=100;if(S.basket[id]<=0)delete S.basket[id];
+    const idx=S.pieces.map(p=>p.id).lastIndexOf(id);if(idx>=0)S.pieces.splice(idx,1);
+    SFX.minus();renderBasket();renderList();
+  });
+  $('cookBtn').style.display=ids.length?'block':'none';
+}
+
+/* 5초 영수증 */
+$('peekBtn').onclick=()=>{
+  if(S.peeking||!S.order)return;S.peeking=true;$('peekBtn').disabled=true;
+  $('peekBody').innerHTML=receiptHTML(S.order);$('peek').classList.add('on');
+  const bar=$('peekBar');bar.classList.remove('run');void bar.offsetWidth;bar.classList.add('run');SFX.pop();
+  setTimeout(()=>{$('peek').classList.remove('on');S.peeking=false;$('peekBtn').disabled=false},5000);
+};
+
+/* ================= 주방 ================= */
+const SAUCE={peanut:{col:'#d9b07a',dark:'#b98c52',rgb:[217,176,122]},red:{col:'#c8301c',dark:'#8e1d10',rgb:[200,48,28]},green:{col:'#7a9a2a',dark:'#56701a',rgb:[122,154,42]}};
+document.querySelectorAll('.station').forEach(st=>{
+  const k=st.dataset.s;st.querySelector('img').src=sauceSprite(SAUCE[k].col,SAUCE[k].dark);
+  st.onclick=()=>{
+    if(S.served)return;
+    if(S.sauce[k]>=9){toast('너무 많이 넣었어요!');return}
+    S.sauce[k]++;SFX.sauce();buzz(20);
+    const from=stagePos(st.querySelector('img')),to=stagePos($('bowlWrap'));
+    const d=document.createElement('div');d.className='drop';d.style.background=SAUCE[k].col;d.style.boxShadow=`0 0 0 3px ${SAUCE[k].dark}`;
+    d.style.left=from.x+'px';d.style.top=(from.y-20)+'px';stage.appendChild(d);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.left=(to.x+Math.random()*60-30)+'px';d.style.top=(to.y-50)+'px'}));
+    setTimeout(()=>{d.remove();renderBowl()},380);
+    $('s_'+k).textContent=S.sauce[k];$('c_'+k).textContent=S.sauce[k];
+  };
+});
+$('recipeTable').innerHTML='<tr><th>맵기</th><th class="chilicol"></th><th>땅콩소스</th><th>라유</th><th>마유</th></tr>'+
+  [1,2,3,4].map(l=>`<tr><td>${l}단계</td><td class="chilicol"><div class="chilis">${`<img src="${CHILI}">`.repeat(l)}</div></td><td>${l}</td><td>${l}</td><td>${l}</td></tr>`).join('');
+function mixColor(){
+  let r=0,g=0,b=0,n=0;for(const k in S.sauce){const c=S.sauce[k];r+=SAUCE[k].rgb[0]*c;g+=SAUCE[k].rgb[1]*c;b+=SAUCE[k].rgb[2]*c;n+=c}
+  if(!n)return null;return `rgb(${Math.round(r/n)},${Math.round(g/n)},${Math.round(b/n)})`;
+}
+function renderBowl(){
+  const n=S.sauce.peanut+S.sauce.red+S.sauce.green;
+  $('bowlImg').src=bowlSprite(mixColor()||'#000',Math.min(1,n/12));
+}
+$('emptyBtn').onclick=()=>{if(S.served)return;S.sauce={peanut:0,red:0,green:0};
+  for(const k in S.sauce){$('s_'+k).textContent=0;$('c_'+k).textContent=0}renderBowl();SFX.minus()};
+
+let kTimer=null;
+function fmt(s){s=Math.floor(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function enterKitchen(){
+  show('kitchen');S.kStart=performance.now();S.boiled=false;S.smoking=false;S.served=false;
+  S.sauce={peanut:0,red:0,green:0};for(const k in S.sauce){$('s_'+k).textContent=0;$('c_'+k).textContent=0}
+  $('bowlItems').innerHTML='';renderBowl();$('potImg').src=potSprite('#e6dcc0');
+  $('potItems').innerHTML=S.pieces.slice(0,14).map((p,i)=>`<img src="${ingById(p.id).img}" style="left:${40+(i*37)%230}px;top:${12+(i%3)*10}px;animation-delay:${(i%4)*0.25}s">`).join('');
+  $('serveBtn').disabled=true;$('serveBtn').textContent='삶는 중...';
+  $('tStatus').className='';$('tStatus').textContent='삶는 동안 소스를 만들어요!';$('tbarFill').style.background='#ffd23f';
+  clearInterval(kTimer);kTimer=setInterval(kTick,100);kTick();
+}
+function kTick(){
+  const el=(performance.now()-S.kStart)/1000;
+  $('timerText').textContent=fmt(el);
+  $('tbarFill').style.width=Math.min(100,Math.floor(el)/30*100)+'%';
+  if(el>=BOIL_SEC&&!S.boiled){S.boiled=true;$('serveBtn').disabled=false;$('serveBtn').textContent='재료 담기';$('serveBtn').classList.add('bounce');
+    $('tStatus').className='ok';$('tStatus').textContent='다 삶아졌어요! 재료 담기를 눌러요';$('tbarFill').style.background='#6fd16c';SFX.ok()}
+  if(el>=LIMIT_SEC&&!S.smoking){S.smoking=true;$('tStatus').className='warn blink';$('tStatus').textContent='으악! 냄비에서 연기가 펄펄!!';
+    $('tbarFill').style.background='#e2452b';$('potImg').src=potSprite('#6b4a2a');SFX.alarm();buzz([200,100,200,100,200])}
+}
+$('serveBtn').onclick=()=>{
+  if(!S.boiled||S.served)return;
+  S.served=true;clearInterval(kTimer);S.serveTime=(performance.now()-S.kStart)/1000;
+  $('serveBtn').disabled=true;$('serveBtn').classList.remove('bounce');
+  const sc=mixColor();
+  $('bowlImg').src=bowlSprite('#d4471f',1);
+  const pieces=S.pieces.slice(0,16);$('potItems').innerHTML='';
+  pieces.forEach((p,i)=>setTimeout(()=>{
+    const im=document.createElement('img');im.src=ingById(p.id).img;
+    im.style.left=(144-20+Math.cos(i*2.4)*(30+(i%4)*22))+'px';im.style.top=(18+Math.sin(i*2.4)*10-(i%3)*4)+'px';
+    $('bowlItems').appendChild(im);SFX.pop();
+  },i*90));
+  setTimeout(showResult,pieces.length*90+900);
+};
+
+/* ================= 결과 ================= */
+function showResult(){
+  const o=S.order,lines=[];
+  let ingOk=true;
+  o.items.forEach(it=>{const got=S.basket[it.id]||0,ok=got===it.g;if(!ok)ingOk=false;
+    lines.push(`<span class="${ok?'ok':'no'}">${ok?'O':'X'} ${ingById(it.id).name} ${it.g}g</span> <span class="dim">(담은 양 ${got}g)</span>`)});
+  Object.keys(S.basket).forEach(id=>{if(!o.items.find(it=>it.id===id)){ingOk=false;lines.push(`<span class="no">X ${ingById(id).name} ${S.basket[id]}g</span> <span class="dim">(주문에 없음)</span>`)}});
+  const L=o.level,sOk=S.sauce.peanut===L&&S.sauce.red===L&&S.sauce.green===L;
+  const tOk=S.serveTime<=LIMIT_SEC;
+  const stars=[ingOk,sOk,tOk].filter(Boolean).length;
+  const earned=stars===3?o.price+2000:stars===2?o.price:stars===1?Math.round(o.price/2/100)*100:0;
+  S.money+=earned;updHud();
+  $('stars').innerHTML=[0,1,2].map(i=>`<img src="${STAR(i<stars)}">`).join('');
+  $('rs').innerHTML=`<div>[재료]</div>${lines.join('<br>')}
+    <div style="margin-top:8px">[소스] 맵기 ${L}단계 = 각각 ${L}개</div>
+    <span class="${sOk?'ok':'no'}">${sOk?'O':'X'} 땅콩 ${S.sauce.peanut} · 라유 ${S.sauce.red} · 마유 ${S.sauce.green}</span>
+    <div style="margin-top:8px">[조리 시간]</div><span class="${tOk?'ok':'no'}">${tOk?'O':'X'} ${fmt(S.serveTime)} ${tOk?'(딱 좋게 삶았어요)':'(너무 오래 삶아서 탔어요)'}</span>`;
+  $('earn').innerHTML=stars===3?`+${earned.toLocaleString()}원<br><small style="font-size:14px">팁 2,000원 포함! 손님 대만족</small>`:
+    stars===0?'+0원<br><small style="font-size:14px">손님이 화났어요...</small>':`+${earned.toLocaleString()}원`;
+  pixelPhoto($('resultPhoto'),84,56);
+  $('result').classList.add('on');stars>=2?SFX.fanfare():SFX.bad();
+}
+$('nextBtn').onclick=()=>{$('result').classList.remove('on');S.cust++;startCustomer()};
+$('cookBtn').onclick=()=>{SFX.ok();goCook()};
+$('openBtn').onclick=()=>{
+  try{ac=new (window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}
+  // 모바일: 전체화면 + 세로 고정 시도 (지원 안 하는 브라우저는 그냥 넘어감)
+  if(matchMedia('(pointer:coarse)').matches){
+    const de=document.documentElement,rf=de.requestFullscreen||de.webkitRequestFullscreen;
+    if(rf){Promise.resolve(rf.call(de)).then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait')).catch(()=>{}).finally(()=>setTimeout(fit,300))}
+  }
+  startCustomer();
+};
+</script>
+</body>
+</html>

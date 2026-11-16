@@ -1,0 +1,2276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TRIP I</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F1EA;
+    --card: #FFFFFF;
+    --ink: #1D2B2F;
+    --sub: #5D6B6E;
+    --line: #E3DDD2;
+    --accent: #0E7C70;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #DCEFEB;
+    --coral: #D4553A;
+    --coral-soft: #FBE3DB;
+    --gold-soft: #F7EDCF;
+    --gold-ink: #7A5A0B;
+    --shadow: 0 6px 20px rgba(29, 43, 47, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101719;
+      --card: #182224;
+      --ink: #E6ECEB;
+      --sub: #9AA9A8;
+      --line: #2A3638;
+      --accent: #48B3A3;
+      --accent-ink: #0B1414;
+      --accent-soft: #1E3633;
+      --coral: #F08A6C;
+      --coral-soft: #3A2520;
+      --gold-soft: #332C17;
+      --gold-ink: #E8C76A;
+      --shadow: 0 6px 20px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101719;
+    --card: #182224;
+    --ink: #E6ECEB;
+    --sub: #9AA9A8;
+    --line: #2A3638;
+    --accent: #48B3A3;
+    --accent-ink: #0B1414;
+    --accent-soft: #1E3633;
+    --coral: #F08A6C;
+    --coral-soft: #3A2520;
+    --gold-soft: #332C17;
+    --gold-ink: #E8C76A;
+    --shadow: 0 6px 20px rgba(0, 0, 0, .35);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans KR", system-ui, -apple-system, "Malgun Gothic", sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  button, input { font: inherit; color: inherit; }
+  a { color: var(--accent); }
+  .app { max-width: 480px; margin: 0 auto; padding: 20px 16px 64px; }
+
+  header.top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  header.top .brand { margin-right: auto; }
+  .back { width: 40px; height: 40px; margin: 0 6px 0 -8px; border: 0; border-radius: 12px; background: transparent; font-size: 22px; font-weight: 700; line-height: 1; cursor: pointer; }
+  .back:hover { background: var(--accent-soft); }
+  .back[hidden] { display: none; }
+  .brand { font-family: "Gowun Dodum", sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -.3px; }
+  .brand img { display: block; height: 40px; width: auto; }
+  :root[data-theme="dark"] .brand img { background: #F4F6FA; border-radius: 10px; padding: 3px 8px; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .brand img { background: #F4F6FA; border-radius: 10px; padding: 3px 8px; } }
+  .steps { font-size: 13px; color: var(--sub); }
+
+  .screen { display: none; }
+  .screen.on { display: block; animation: fade .25s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  h1.q { font-family: "Gowun Dodum", sans-serif; font-size: 24px; line-height: 1.35; margin: 0 0 6px; }
+  p.lead { color: var(--sub); margin: 0 0 20px; }
+
+  .card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 18px 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 14px;
+  }
+  .card h2 { font-size: 16px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+  .card h2 .num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 12px; display: inline-grid; place-items: center;
+  }
+
+  .grid-months { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: 1.5px solid var(--line);
+    background: transparent;
+    border-radius: 12px;
+    padding: 10px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: background .15s, border-color .15s;
+    min-height: 44px;
+  }
+  .chips .chip { padding: 10px 14px; }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .chip small { display: block; font-size: 11px; opacity: .75; font-weight: 400; }
+
+  .stepper { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .stepper button {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 1.5px solid var(--line); background: transparent;
+    font-size: 22px; cursor: pointer;
+  }
+  .stepper button:disabled { opacity: .35; cursor: default; }
+  .stepper .val { text-align: center; flex: 1; }
+  .stepper .val b { font-size: 26px; font-family: "Gowun Dodum", sans-serif; }
+  .stepper .val div { font-size: 13px; color: var(--sub); }
+
+  .btn {
+    display: block; width: 100%;
+    border: 0; border-radius: 14px;
+    padding: 15px 16px;
+    background: var(--accent); color: var(--accent-ink);
+    font-weight: 700; font-size: 16px;
+    cursor: pointer;
+    min-height: 50px;
+  }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+  .btn.coral { background: var(--coral); color: #fff; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .link-btn { background: none; border: 0; color: var(--sub); text-decoration: underline; cursor: pointer; padding: 8px 0; font-size: 14px; }
+
+  .search {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border-radius: 16px; padding: 6px 6px 6px 14px;
+    box-shadow: var(--shadow); border: 1.5px solid transparent;
+  }
+  .search:focus-within { border-color: var(--accent); }
+  .search input { flex: 1; border: 0; outline: 0; background: transparent; font-size: 16px; padding: 8px 0; min-width: 0; }
+  .search button { border: 0; background: var(--accent); color: var(--accent-ink); border-radius: 12px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
+
+  .country { margin-top: 18px; }
+  .country h3 { font-size: 13px; color: var(--sub); margin: 0 0 8px; font-weight: 500; }
+  .results { margin-top: 14px; display: grid; gap: 10px; }
+  .result {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); border-radius: 16px; padding: 14px;
+    box-shadow: var(--shadow); border: 0; text-align: left; cursor: pointer; width: 100%;
+  }
+  .result .flag { font-size: 26px; }
+  .result b { display: block; font-size: 16px; }
+  .result span { font-size: 13px; color: var(--sub); }
+  .notice { background: var(--coral-soft); border-radius: 14px; padding: 14px; font-size: 14px; }
+
+  /* 결과 화면 */
+  .ticket {
+    background: var(--accent); color: var(--accent-ink);
+    border-radius: 18px; padding: 16px; margin-bottom: 14px; position: relative;
+  }
+  .ticket .city { font-family: "Gowun Dodum", sans-serif; font-size: 28px; line-height: 1.2; }
+  .ticket .country-name { font-size: 13px; opacity: .85; }
+  .ticket .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1.5px dashed rgba(255,255,255,.45); }
+  :root[data-theme="dark"] .ticket .meta { border-top-color: rgba(0,0,0,.35); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ticket .meta { border-top-color: rgba(0,0,0,.35); } }
+  .ticket .meta span { background: rgba(255,255,255,.18); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+  .ticket .edit { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,.2); color: inherit; border: 0; border-radius: 10px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+
+  .tips { display: grid; gap: 8px; }
+  .tip { display: flex; gap: 10px; font-size: 14px; }
+  .tip .ic { flex: none; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--accent-soft); font-size: 15px; }
+
+  .tabs { display: flex; gap: 6px; overflow-x: auto; margin: 6px 0 12px; padding-bottom: 2px; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: none; border: 1.5px solid var(--line); background: transparent; border-radius: 999px; padding: 8px 14px; cursor: pointer; font-size: 14px; }
+  .tab[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 700; }
+
+  .route-head { margin-bottom: 10px; }
+  .route-head h2 { font-family: "Gowun Dodum", sans-serif; font-size: 20px; margin: 0 0 4px; }
+  .route-head p { margin: 0; color: var(--sub); font-size: 14px; }
+  .intro-msg { background: var(--gold-soft); color: var(--gold-ink); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; font-size: 14px; font-weight: 500; }
+
+  .day { padding: 16px 14px 8px; }
+  .day-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+  .day-head .d { font-size: 12px; font-weight: 700; color: var(--coral); letter-spacing: .5px; }
+  .day-head .area { font-size: 16px; font-weight: 700; }
+  .day-head a { flex: none; font-size: 12px; text-decoration: none; border: 1.5px solid var(--line); border-radius: 10px; padding: 6px 9px; color: var(--ink); white-space: nowrap; }
+  ol.timeline { list-style: none; margin: 0; padding: 0; }
+  ol.timeline li { display: grid; grid-template-columns: 46px 1fr; gap: 10px; position: relative; padding-bottom: 14px; }
+  ol.timeline li::before { content: ""; position: absolute; left: 22px; top: 26px; bottom: 0; width: 2px; background: var(--line); }
+  ol.timeline li:last-child::before { display: none; }
+  .slot { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 8px; height: 26px; display: grid; place-items: center; position: relative; z-index: 1; }
+  .spot-name { font-weight: 700; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .spot-name a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--sub); }
+  .spot-desc { font-size: 13px; color: var(--sub); margin-top: 2px; }
+  .badge { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 1px 6px; }
+  .badge.must { background: var(--coral); color: #fff; }
+  .badge.season { background: var(--gold-soft); color: var(--gold-ink); }
+  .badge.who { background: var(--accent-soft); color: var(--accent); }
+  .badge.custom { background: var(--coral-soft); color: var(--coral); }
+  .placeholder .spot-name { font-weight: 500; color: var(--sub); }
+  .stay h2 { font-size: 17px; }
+  .stay-item { padding: 12px 0; border-top: 1px solid var(--line); }
+  .stay-item:first-of-type { border-top: 0; padding-top: 0; }
+  .stay-links { display: flex; gap: 14px; margin-top: 6px; font-size: 13px; }
+  .stay-links a { text-decoration: none; font-weight: 500; }
+  .badge.moved { background: var(--line); color: var(--ink); }
+  .move-btn { margin-left: auto; flex: none; border: 1.5px solid var(--line); background: transparent; border-radius: 8px; padding: 2px 8px; font-size: 12px; color: var(--sub); cursor: pointer; min-height: 28px; }
+  .move-btn[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
+  .move-panel { margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: var(--accent-soft); }
+  .move-q { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .move-q small { font-weight: 400; color: var(--sub); }
+  .move-panel .chip { background: var(--card); }
+  .move-actions { display: flex; justify-content: space-between; margin-top: 4px; }
+  .travel .slot { background: var(--gold-soft); color: var(--gold-ink); }
+  .travel .spot-name { font-weight: 500; }
+  .day-head .sub { font-size: 12px; color: var(--gold-ink); background: var(--gold-soft); border-radius: 6px; padding: 1px 7px; display: inline-block; margin-top: 4px; }
+  .nearby h2 { font-family: "Gowun Dodum", sans-serif; font-size: 20px; }
+  .nb-item { padding: 14px 0; border-top: 1px solid var(--line); }
+  .nb-item:first-of-type { border-top: 0; padding-top: 4px; }
+  .nb-name { font-weight: 700; font-size: 16px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .nb-facts { display: grid; gap: 3px; margin: 6px 0 10px; font-size: 13px; color: var(--sub); }
+  .nb-facts b { color: var(--ink); font-weight: 500; }
+  .seg { display: inline-flex; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .seg button { border: 0; background: transparent; padding: 8px 14px; font-size: 14px; cursor: pointer; min-height: 38px; }
+  .seg button + button { border-left: 1.5px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .seg button:disabled { opacity: .35; cursor: default; }
+  .nb-cap { font-size: 13px; color: var(--sub); margin: 0 0 6px; }
+  .gate .slot { background: var(--coral-soft); color: var(--coral); }
+
+  .ask { border: 2px solid var(--accent); }
+  .ask h2 { font-family: "Gowun Dodum", sans-serif; font-size: 20px; }
+  .must-input { display: flex; gap: 8px; margin: 10px 0; }
+  .must-input input { flex: 1; min-width: 0; border: 1.5px solid var(--line); background: transparent; border-radius: 12px; padding: 12px; font-size: 16px; }
+  .must-input input:focus { outline: 0; border-color: var(--accent); }
+  .must-input button { border: 0; background: var(--ink); color: var(--bg); border-radius: 12px; padding: 0 16px; font-weight: 700; cursor: pointer; }
+  .suggest-label { font-size: 13px; color: var(--sub); margin: 12px 0 6px; }
+  .chips.small .chip { padding: 7px 11px; min-height: 36px; font-size: 13px; border-radius: 999px; }
+  .picked { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 12px; }
+  .picked span { background: var(--coral-soft); color: var(--coral); border-radius: 999px; padding: 6px 6px 6px 12px; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+  .picked button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 6px; }
+  .trip-box { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 0 0 10px; }
+  .trip-box .nb-facts { margin-bottom: 0; }
+  .trip-box a, .spot-desc a { color: var(--accent); }
+
+  .refs a { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+  .refs a:last-child { border-bottom: 0; }
+  .refs a span { color: var(--sub); font-size: 13px; }
+  .fine { font-size: 12px; color: var(--sub); margin-top: 10px; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .toast.on { opacity: 1; }
+
+  /* 나라 색: 여행지를 고르면 <html data-country="나라">로 바꾼다. --c1 주색, --c2 보조색, 끝의 d는 다크 모드용 */
+  :root[data-country="한국"]     { --c1: #0047A0; --c2: #CD2E3A; --c1d: #7EA6E8; --c2d: #F07A82; --flag: linear-gradient(90deg, #CD2E3A 0 33%, #fff 33% 67%, #0047A0 67%); }
+  :root[data-country="일본"]     { --c1: #BC002D; --c2: #2B3A67; --c1d: #F2667E; --c2d: #9DB0E6; --flag: linear-gradient(90deg, #fff 0 42%, #BC002D 42% 58%, #fff 58%); }
+  :root[data-country="베트남"]   { --c1: #DA251D; --c2: #8F6B00; --c1d: #F07068; --c2d: #F2C94C; --flag: linear-gradient(90deg, #DA251D 0 42%, #FFCD00 42% 58%, #DA251D 58%); }
+  :root[data-country="태국"]     { --c1: #2D2A4A; --c2: #A51931; --c1d: #9C98E0; --c2d: #F07A8A; --flag: linear-gradient(90deg, #A51931 0 17%, #F4F5F8 17% 33%, #2D2A4A 33% 67%, #F4F5F8 67% 83%, #A51931 83%); }
+  :root[data-country="대만"]     { --c1: #1A1F9C; --c2: #D21F2B; --c1d: #8C91F0; --c2d: #F2737B; --flag: linear-gradient(90deg, #000095 0 40%, #fff 40% 46%, #FE0000 46%); }
+  :root[data-country="홍콩"]     { --c1: #C8102E; --c2: #1F5F7A; --c1d: #F27088; --c2d: #7CC4DE; --flag: linear-gradient(90deg, #DE2910 0 42%, #fff 42% 58%, #DE2910 58%); }
+  :root[data-country="싱가포르"] { --c1: #D62839; --c2: #2A4A6B; --c1d: #F2737E; --c2d: #8FB4DB; --flag: linear-gradient(90deg, #EF3340 0 50%, #fff 50%); }
+  :root[data-country="필리핀"]   { --c1: #0038A8; --c2: #CE1126; --c1d: #7EA2F0; --c2d: #F07484; --flag: linear-gradient(90deg, #0038A8 0 45%, #FCD116 45% 55%, #CE1126 55%); }
+  :root[data-country="인도네시아"] { --c1: #CE1126; --c2: #7A5230; --c1d: #F07484; --c2d: #D9A877; --flag: linear-gradient(90deg, #CE1126 0 50%, #fff 50%); }
+  :root[data-country="미국"]     { --c1: #3C3B6E; --c2: #B22234; --c1d: #A3A1E6; --c2d: #F0707E; --flag: linear-gradient(90deg, #3C3B6E 0 34%, transparent 34%), repeating-linear-gradient(90deg, #B22234 0 5.5%, #fff 5.5% 11%); }
+  :root[data-country="프랑스"]   { --c1: #1F3F99; --c2: #D7263D; --c1d: #8AA2EE; --c2d: #F27583; --flag: linear-gradient(90deg, #002395 0 33.3%, #fff 33.3% 66.6%, #ED2939 66.6%); }
+  :root[data-country="영국"]     { --c1: #012169; --c2: #C8102E; --c1d: #8197E0; --c2d: #F06A7E; --flag: linear-gradient(90deg, #012169 0 40%, #fff 40% 44%, #C8102E 44% 56%, #fff 56% 60%, #012169 60%); }
+  :root[data-country="이탈리아"] { --c1: #00804A; --c2: #CD212A; --c1d: #4CC78A; --c2d: #F06F76; --flag: linear-gradient(90deg, #009246 0 33.3%, #fff 33.3% 66.6%, #CE2B37 66.6%); }
+  :root[data-country="스페인"]   { --c1: #AA151B; --c2: #8F6B00; --c1d: #F06E73; --c2d: #F1BF00; --flag: linear-gradient(90deg, #AA151B 0 25%, #F1BF00 25% 75%, #AA151B 75%); }
+  :root[data-country] {
+    --accent: var(--c1);
+    --accent-ink: #FFFFFF;
+    --coral: var(--c2);
+    --accent-soft: color-mix(in srgb, var(--c1) 12%, #FFFFFF);
+    --coral-soft: color-mix(in srgb, var(--c2) 13%, #FFFFFF);
+    --bg: color-mix(in srgb, var(--c1) 7%, #F6F4EF);
+    --line: color-mix(in srgb, var(--c1) 16%, #E4E0D8);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-country]:not([data-theme="light"]) {
+      --accent: var(--c1d);
+      --accent-ink: #0B1414;
+      --coral: var(--c2d);
+      --accent-soft: color-mix(in srgb, var(--c1d) 18%, #182224);
+      --coral-soft: color-mix(in srgb, var(--c2d) 16%, #182224);
+      --bg: color-mix(in srgb, var(--c1d) 8%, #0F1517);
+      --line: color-mix(in srgb, var(--c1d) 18%, #2A3638);
+    }
+    :root[data-country]:not([data-theme="light"]) :is(.btn.coral, .badge.must) { color: var(--accent-ink); }
+  }
+  :root[data-country][data-theme="dark"] {
+    --accent: var(--c1d);
+    --accent-ink: #0B1414;
+    --coral: var(--c2d);
+    --accent-soft: color-mix(in srgb, var(--c1d) 18%, #182224);
+    --coral-soft: color-mix(in srgb, var(--c2d) 16%, #182224);
+    --bg: color-mix(in srgb, var(--c1d) 8%, #0F1517);
+    --line: color-mix(in srgb, var(--c1d) 18%, #2A3638);
+  }
+  :root[data-country][data-theme="dark"] :is(.btn.coral, .badge.must) { color: var(--accent-ink); }
+  body { transition: background-color .4s; }
+  .ticket { overflow: hidden; }
+  .ticket::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--flag, none); }
+
+  /* 로딩: 여행지를 고르면 구름 위를 두둥실 나는 비행기를 보여 준 뒤 루트를 보여 준다 */
+  html:has(.flight.on) { overflow: hidden; }
+  .flight { position: fixed; inset: 0; z-index: 100; display: none; overflow: hidden; cursor: pointer; background: linear-gradient(#4F8FE0 0%, #8EC0F0 50%, #DDEEFC 100%); }
+  .flight.on { display: block; animation: flight-out .5s ease 2.3s both; }
+  .cloud { position: absolute; left: 0; top: var(--y); width: var(--w); height: calc(var(--w) * .34); border-radius: 999px; background: linear-gradient(#fff 55%, #E4EEF9); opacity: var(--o, 1); animation: drift var(--t) linear var(--d) infinite; }
+  .cloud::before, .cloud::after { content: ""; position: absolute; background: #fff; border-radius: 50%; }
+  .cloud::before { width: 52%; height: 165%; left: 14%; bottom: 18%; }
+  .cloud::after { width: 38%; height: 125%; right: 13%; bottom: 22%; }
+  .cloud.far { filter: blur(1.5px); }
+  .cloud.near { z-index: 3; filter: blur(.5px); }
+  .cloud-floor {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 150px; z-index: 2;
+    background:
+      radial-gradient(circle at 70px 105px, #fff 66px, transparent 68px) 0 0 / 180px 150px repeat-x,
+      radial-gradient(circle at 136px 112px, #F4F8FD 42px, transparent 44px) 0 0 / 180px 150px repeat-x,
+      linear-gradient(transparent 105px, #fff 105px);
+    animation: floor 1.4s linear infinite;
+  }
+  .flight-plane { position: absolute; left: 50%; top: 50%; width: min(240px, 56vw); margin-left: calc(min(240px, 56vw) / -2); z-index: 2; animation: plane-path 2.6s both; }
+  .flight-plane svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 10px 14px rgba(20, 60, 110, .25)); animation: bob 1.3s ease-in-out infinite alternate; }
+  .flight-plane::before { content: ""; position: absolute; right: 88%; top: 52%; width: 70vw; height: 5px; border-radius: 99px; background: linear-gradient(to left, rgba(255,255,255,.95), transparent); }
+  .flight-text { position: absolute; left: 0; right: 0; top: calc(50% - 175px); text-align: center; color: #fff; text-shadow: 0 2px 12px rgba(10, 50, 110, .35); z-index: 2; animation: flight-text .6s ease .1s both; }
+  .flight-text small { display: block; font-size: 15px; opacity: .95; }
+  .flight-text b { display: block; font-family: "Gowun Dodum", sans-serif; font-size: clamp(30px, 9vmin, 42px); line-height: 1.2; margin: 2px 0; }
+  .flight-text span { font-size: 15px; }
+  .flight-text i { font-style: normal; animation: dot 1s infinite; }
+  .flight-text i:nth-child(2) { animation-delay: .2s; }
+  .flight-text i:nth-child(3) { animation-delay: .4s; }
+  .flight-bar { position: absolute; left: 50%; bottom: 165px; width: 160px; height: 5px; margin-left: -80px; border-radius: 99px; background: rgba(255,255,255,.45); overflow: hidden; z-index: 4; }
+  .flight-bar::after { content: ""; position: absolute; inset: 0; background: var(--accent); border-radius: inherit; transform-origin: left; animation: bar 2.3s ease-in-out both; }
+  @keyframes drift { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+  @keyframes floor { to { background-position: -180px 0, -180px 0, 0 0; } }
+  @keyframes bob { from { transform: translateY(-7px) rotate(-1.5deg); } to { transform: translateY(7px) rotate(1.5deg); } }
+  @keyframes plane-path {
+    0% { transform: translate(-75vw, 30px); animation-timing-function: cubic-bezier(.2, .7, .3, 1); }
+    30%, 74% { transform: translate(0, -50%); animation-timing-function: cubic-bezier(.6, 0, .9, .4); }
+    100% { transform: translate(80vw, calc(-50% - 120px)) rotate(-8deg); }
+  }
+  @keyframes flight-text { from { opacity: 0; transform: translateY(14px); } }
+  @keyframes dot { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+  @keyframes bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes flight-out { to { opacity: 0; visibility: hidden; } }
+  .land { animation: land .55s cubic-bezier(.2, .7, .3, 1) both; }
+  @keyframes land { from { opacity: 0; transform: translateY(28px); } }
+  @media (prefers-reduced-motion: reduce) {
+    .cloud, .cloud-floor, .flight-plane, .flight-plane svg, .flight-text, .flight-text i, .land { animation: none; }
+    .flight-plane { transform: translateY(-50%); }
+    .flight-plane::before { display: none; }
+    .flight.on { animation-delay: .5s; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <button type="button" class="back" id="backBtn" aria-label="이전 화면으로" hidden>&lt;</button>
+    <div class="brand"><img src="trip-i-logo.png" alt="TRIP I"></div>
+    <div class="steps" id="stepLabel">1 / 2</div>
+  </header>
+
+  <!-- 1단계: 여행 정보 -->
+  <section class="screen on" id="screenPlan">
+    <h1 class="q">어떤 여행을<br>계획하고 있나요?</h1>
+    <p class="lead">세 가지만 알려주면 루트를 짜 드릴게요.</p>
+
+    <div class="card">
+      <h2><span class="num">1</span>몇 월에 가나요?</h2>
+      <div class="grid-months" id="months"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="num">2</span>며칠 동안 가나요?</h2>
+      <div class="stepper">
+        <button type="button" id="dayMinus" aria-label="하루 줄이기">−</button>
+        <div class="val"><b id="dayVal">3박 4일</b><div id="daySub">4일 일정</div></div>
+        <button type="button" id="dayPlus" aria-label="하루 늘리기">+</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="num">3</span>누구랑 가나요?</h2>
+      <div class="chips" id="whoChips"></div>
+    </div>
+
+    <button class="btn" id="toDest" disabled>다음 · 여행지 고르기</button>
+  </section>
+
+  <!-- 2단계: 여행지 검색 -->
+  <section class="screen" id="screenDest">
+    <h1 class="q">어느 나라, 어느 도시로<br>가고 싶나요?</h1>
+    <p class="lead">나라·도시·명소 이름으로 검색해 보세요.</p>
+    <form class="search" id="searchForm">
+      <input id="searchInput" type="search" placeholder="예: 일본, 오사카, 에펠탑" autocomplete="off">
+      <button type="submit">검색</button>
+    </form>
+    <div class="results" id="results"></div>
+    <div id="countryList"></div>
+    <button class="link-btn" id="backPlan">← 여행 정보 다시 고르기</button>
+  </section>
+
+  <!-- 3단계: 결과 -->
+  <section class="screen" id="screenResult">
+    <div class="ticket" id="ticket"></div>
+    <div class="card"><div class="tips" id="tips"></div></div>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div id="route"></div>
+    <div id="nearbyArea"></div>
+    <div id="askArea"></div>
+    <div class="card refs" id="refs"></div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+<div class="flight" id="flight" aria-hidden="true">
+  <div class="cloud far" style="--w:110px; --y:12%; --t:9s; --d:-2s; --o:.75"></div>
+  <div class="cloud far" style="--w:80px; --y:30%; --t:11s; --d:-7s; --o:.6"></div>
+  <div class="cloud far" style="--w:140px; --y:22%; --t:10s; --d:-5s; --o:.7"></div>
+  <div class="cloud" style="--w:170px; --y:58%; --t:6s; --d:-1s; --o:.9"></div>
+  <div class="cloud" style="--w:130px; --y:40%; --t:7s; --d:-4.5s; --o:.85"></div>
+  <div class="cloud far" style="--w:100px; --y:66%; --t:8s; --d:-6s; --o:.7"></div>
+  <div class="cloud-floor"></div>
+  <div class="flight-text" id="flightText"></div>
+  <div class="flight-plane">
+    <svg viewBox="0 0 200 80" aria-hidden="true">
+      <path d="M102 31 L120 31 L106 16 L96 16 Z" fill="#C9D3DE"/>
+      <path d="M30 32 L14 4 L30 4 L56 31 Z" fill="var(--accent)"/>
+      <path d="M20 40 C20 33 30 30 46 30 L158 30 C178 30 192 35 197 41 C192 47 180 50 160 50 L42 50 C28 50 20 46 20 40 Z" fill="#fff"/>
+      <path d="M22 44 C30 48 36 50 42 50 L160 50 C176 50 188 47 194 44 Z" fill="#E1E8F0"/>
+      <rect x="40" y="44" width="148" height="2.5" rx="1.2" fill="var(--accent)"/>
+      <path d="M24 42 L6 49 L16 52 L44 46 Z" fill="#DCE3EB"/>
+      <g fill="#5B7FA8"><circle cx="62" cy="37.5" r="2.2"/><circle cx="71" cy="37.5" r="2.2"/><circle cx="80" cy="37.5" r="2.2"/><circle cx="89" cy="37.5" r="2.2"/><circle cx="98" cy="37.5" r="2.2"/><circle cx="125" cy="37.5" r="2.2"/><circle cx="134" cy="37.5" r="2.2"/><circle cx="143" cy="37.5" r="2.2"/><circle cx="152" cy="37.5" r="2.2"/><circle cx="161" cy="37.5" r="2.2"/></g>
+      <path d="M176 35 L186 36 L190 40 L178 40 Z" fill="#33506F"/>
+      <ellipse cx="100" cy="55" rx="13" ry="5" fill="#B7C3D0"/>
+      <path d="M88 45 L118 45 L90 72 L76 72 Z" fill="#D3DCE6"/>
+    </svg>
+  </div>
+  <div class="cloud near" style="--w:230px; --y:78%; --t:3.2s; --d:-1.2s; --o:.95"></div>
+  <div class="cloud near" style="--w:190px; --y:8%; --t:4s; --d:-3s; --o:.55"></div>
+  <div class="flight-bar"></div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   데이터
+   블로그·여행 사이트에서 자주 소개되는 코스를 직접 정리한 예시 데이터.
+   장소 한 줄 형식: 이름|지역|종류|인기|동행|설명|월
+     - 이름 앞 * : 대표 루트보다 '다른 루트'에서 먼저 쓰는 숨은 명소
+     - 이름 뒤 #그룹 : 비슷한 곳(전망대·관람차·야시장 등). 한 루트에 그룹마다 인기가 가장 높은 한 곳만 넣는다
+     - 종류: s 낮 일정, f 식사, n 저녁·야경, a 하루 종일 (여러 개 가능)
+     - 인기: 1~3
+     - 동행: k 아이와 / p 부모님과 / r 친구 / c 연인 / s 혼자, 대문자는 비추천
+     - 월: 그 달에만 추천 (예: 3-4, 12-2, 7,8)
+   지역 id 앞 ! : 근교 당일치기
+------------------------------------------------------------------- */
+const WHO = [
+  { id: 'k', label: '가족', sub: '아이와' },
+  { id: 'p', label: '가족', sub: '부모님과' },
+  { id: 'r', label: '친구', sub: '' },
+  { id: 'c', label: '연인', sub: '' },
+  { id: 's', label: '혼자', sub: '' },
+];
+const WHO_TIP = {
+  k: '아이와 함께라 테마파크·수족관·체험 위주로 골랐어요. 낮잠 시간을 생각해 하루 동선을 한 지역으로 묶었어요.',
+  p: '부모님과 함께라 오래 걷지 않고 경치·전통·맛집 위주로 골랐어요. 이동은 택시나 투어를 추천해요.',
+  r: '친구와 함께라 맛집·야시장·액티비티를 먼저 넣었어요.',
+  c: '연인과 함께라 노을·야경 명소와 분위기 좋은 곳을 먼저 넣었어요.',
+  s: '혼자 여행이라 걷기 좋은 거리·카페·미술관처럼 혼자서도 편한 곳을 먼저 넣었어요.',
+};
+
+const CITIES = [];
+function city(id, name, country, flag, alias, areas, hi, notes, spotText) {
+  const c = {
+    id, name, country, flag, alias, hi, notes,
+    areas: areas.map(([aid, aname, nb], i) => ({ id: aid.replace('!', ''), name: aname, trip: aid.startsWith('!'), idx: i, nb: nb || null })),
+  };
+  c.spots = spotText.trim().split('\n').map((line, i) => {
+    const [nameField, a, k, p, who = '', desc = '', m = ''] = line.trim().split('|');
+    const [rawName, g = ''] = nameField.split('#');
+    const alt = rawName.startsWith('*');
+    return {
+      id: id + '-' + i,
+      name: alt ? rawName.slice(1) : rawName,
+      alt, g, a: a.replace('!', ''), k, p: Number(p),
+      w: who.replace(/[A-Z]/g, ''),
+      no: who.replace(/[a-z]/g, '').toLowerCase(),
+      desc,
+      m: m ? parseMonths(m) : null,
+    };
+  });
+  CITIES.push(c);
+}
+function parseMonths(str) {
+  const out = new Set();
+  str.split(',').forEach(part => {
+    const [a, b] = part.split('-').map(Number);
+    if (!b) { out.add(a); return; }
+    for (let m = a; ; m = m % 12 + 1) { out.add(m); if (m === b) break; }
+  });
+  return [...out];
+}
+
+city('osaka', '오사카', '일본', '🇯🇵', ['오사카', 'osaka', '간사이', '교토', 'kyoto', '나라'],
+  [['nb', '난바·도톤보리'], ['sh', '신세카이·텐노지'], ['os', '오사카성'], ['um', '우메다'], ['bay', '베이 에리어'], ['!kt', '교토', {"how": "JR 신쾌속 약 30분 · 한큐 전철 약 45분", "icon": "🚆", "plan": "day", "stay": "기온·가와라마치 또는 교토역 주변", "what": "천년 고도의 사찰·신사와 전통 거리", "who": "pcs", "best": ["3-4,11", "벚꽃·단풍 명소가 가장 많은 때예요"]}], ['!nr', '나라', {"how": "긴테츠 전철 약 40분", "icon": "🚆", "plan": "half", "use": ["오전", "점심", "오후"], "what": "사슴 공원과 거대한 대불, 반나절이면 충분해요", "who": "kp"}], ['!kb', '고베', {"how": "JR 신쾌속 약 25분 · 한큐 전철 약 30분", "icon": "🚆", "plan": "half", "use": ["점심", "오후", "저녁"], "what": "항구 야경과 고베규 스테이크, 이국적인 이인관 거리", "who": "cp"}]],
+  [9, 10, 14, 20, 25, 28, 32, 33, 29, 23, 17, 12],
+  [['3-4', '벚꽃 시즌이라 오사카성·교토가 가장 붐벼요. 숙소는 일찍 예약하세요.'], ['6-7', '6월~7월 중순은 장마철이에요. 실내 일정(수족관·쇼핑)을 하나씩 섞어 두세요.'], ['8-9', '무덥고 태풍이 올 수 있어요.'], ['11', '교토 단풍 절정(11월 중·하순)이에요.'], ['12-1', '연말연시엔 일부 상점·관광지가 쉬어요.']],
+  `도톤보리|nb|fn|3|rcsk|글리코 간판 앞 먹자골목, 타코야키·오코노미야키
+구로몬 시장|nb|f|2|pks|'오사카의 부엌', 해산물·과일 먹방 시장
+신사이바시스지 상점가|nb|s|3|rcs|드럭스토어·브랜드 매장이 모인 쇼핑 아케이드
+*호젠지 요코초|nb|n|1|cps|이끼 낀 부동명왕과 돌길, 조용한 이자카야 골목
+*아메리카무라|nb|s|1|rs|빈티지숍·카페가 모인 젊은 거리
+오사카성 공원|os|s|3|kpcrs|천수각 전망대, 봄에는 벚꽃 명소
+*오사카성 고자부네 놀잇배|os|s|1|kp|해자를 한 바퀴 도는 20분 유람선
+우메다 스카이빌딩 공중정원#view|um|n|3|cprs|360° 야외 전망대에서 보는 야경
+한큐 백화점·그랑 프론트|um|s|2|prs|우메다역에 붙어 있는 쇼핑 거리
+*나카자키초 카페 거리|um|s|1|cs|오래된 골목에 숨은 감성 카페
+*햅파이브 관람차#wheel|um|n|1|ckr|빌딩 위 빨간 대관람차
+유니버설 스튜디오 재팬|bay|sa|3|krc|닌텐도 월드·해리포터, 하루를 통째로 잡으세요
+가이유칸 수족관|bay|s|2|kpc|고래상어가 사는 대형 수족관
+*덴포잔 대관람차#wheel|bay|n|1|kc|항구 야경을 보는 관람차
+신세카이·쓰텐카쿠|sh|sf|2|rps|레트로 거리와 쿠시카츠 원조 골목
+*아베노 하루카스 300#view|sh|n|1|cps|300m 높이 전망대 야경
+기요미즈데라·산넨자카|kt|s|3|kpcrs|절벽 위 목조 무대와 전통 언덕길
+후시미 이나리 신사|kt|s|3|crs|끝없이 이어지는 붉은 도리이
+*아라시야마 대나무숲|kt|s|2|cps|대나무숲 산책과 도게츠교
+기온·니시키 시장|kt|fn|2|pcrs|교토의 부엌 시장과 게이샤 거리
+나라 공원·도다이지|nr|s|3|kp|사슴 먹이 주기와 거대한 대불
+*나라마치|nr|f|1|ps|옛 상가 거리의 카페·식당
+*금각사|kt|s|2|ps|연못에 비친 금빛 누각
+*은각사·철학의 길|kt|s|1|cs|수로 따라 걷는 산책길
+고베 기타노 이인관 거리|kb|s|2|cp|언덕 위 서양식 옛 저택
+고베 하버랜드·메리켄 파크|kb|sn|2|kc|항구 야경과 고베 포트 타워
+고베규 스테이크|kb|f|3|pcr|철판에 구워 주는 고베 소고기
+*난킨마치 차이나타운|kb|f|1|kr|고베 차이나타운 길거리 음식`);
+
+city('tokyo', '도쿄', '일본', '🇯🇵', ['도쿄', 'tokyo', '동경'],
+  [['sb', '시부야·하라주쿠'], ['sj', '신주쿠'], ['gz', '긴자·도쿄역'], ['as', '아사쿠사·우에노'], ['od', '오다이바·도요스'], ['!kd', '도쿄 디즈니 리조트', {"how": "도쿄역에서 게이요선 약 15분 (마이하마역)", "icon": "🚆", "plan": "day", "what": "디즈니랜드·디즈니씨, 하루를 통째로 써요", "who": "kcr"}], ['!kk', '가마쿠라·에노시마', {"how": "JR 요코스카선 약 1시간 + 에노덴", "icon": "🚆", "plan": "day", "what": "대불과 바다 마을, 슬램덩크 건널목", "who": "cps", "best": ["6", "하세데라 수국이 절정이에요"]}], ['!hn', '하코네', {"how": "신주쿠에서 오다큐 로망스카 약 1시간 20분", "icon": "🚆", "plan": "day", "stay": "하코네유모토·고라 온천 료칸", "rec": "night", "what": "온천 료칸, 화산 계곡과 호수 해적선, 맑은 날엔 후지산", "who": "pc", "best": ["11", "단풍과 온천이 가장 좋은 때예요"]}], ['!yh', '요코하마', {"how": "JR·도큐선 약 30분", "icon": "🚆", "plan": "half", "use": ["점심", "오후", "저녁"], "what": "미나토미라이 항구 야경과 차이나타운", "who": "kc"}]],
+  [10, 10, 14, 19, 23, 26, 30, 31, 27, 22, 17, 12],
+  [['3-4', '벚꽃 시즌이에요. 메구로강·신주쿠 교엔이 인기예요.'], ['6-7', '장마철이에요. 6월 가마쿠라는 수국이 예뻐요.'], ['7-8', '불꽃축제 시즌이지만 매우 더워요.'], ['11-12', '단풍과 일루미네이션 시즌이에요.']],
+  `시부야 스크램블 교차로|sb|s|3|rcs|세계에서 가장 붐비는 교차로
+시부야 스카이#view|sb|n|3|crs|옥상 전망대에서 보는 노을·야경 (예약 추천)
+메이지 신궁|sb|s|2|pks|도심 속 숲길 신사
+다케시타 거리|sb|sf|2|rk|하라주쿠 크레페와 개성 있는 패션 거리
+*오모테산도 카페 거리|sb|s|1|cs|건축물 구경과 카페 산책
+*나카메구로 강변|sb|s|1|cs|감성 편집숍 골목, 봄엔 벚꽃 터널
+도쿄도청 전망대#view|sj|n|2|kps|무료로 보는 신주쿠 야경
+오모이데 요코초|sj|fn|2|rsK|연기 자욱한 꼬치구이 골목
+신주쿠 교엔|sj|s|2|pcks|넓은 정원, 벚꽃·단풍 명소
+*골든가이|sj|n|1|rsKP|작은 바 200여 곳이 모인 골목
+센소지·나카미세 거리|as|s|3|kpcrs|도쿄 대표 사찰과 기념품 거리
+도쿄 스카이트리#view|as|n|3|kpc|634m 전망대 야경
+우에노 공원·아메요코 시장|as|sf|2|kpr|박물관·동물원과 시장 먹거리
+츠키지 장외시장|gz|f|2|prs|초밥·달걀말이 아침 먹방
+긴자 쇼핑 거리|gz|s|2|pc|백화점과 명품 거리
+*도쿄역 마루노우치·황거|gz|s|1|ps|붉은 벽돌 역사와 황거 외원 산책
+팀랩 플래닛|od|s|3|kcr|물 위를 걷는 디지털 아트 (도요스)
+오다이바 해변공원·건담|od|sn|2|kc|레인보우 브릿지 야경과 실물 크기 건담
+도쿄 디즈니랜드·씨|kd|sa|3|kcr|하루를 통째로 쓰는 테마파크
+가마쿠라 대불·에노시마|kk|s|2|cps|슬램덩크 건널목과 바다 마을
+*하세데라|kk|s|1|ps|바다가 보이는 사찰, 6월 수국 명소
+오와쿠다니 (검은 달걀)|hn|s|3|kpcr|화산 연기 속 검은 온천 달걀
+아시노코 해적선·로프웨이|hn|s|3|kpc|호수 유람선, 맑은 날엔 후지산
+하코네 신사 (물 위 도리이)|hn|s|2|cps|호수 위 붉은 도리이 사진 명소
+온천 료칸 가이세키 저녁|hn|n|3|pc|노천탕과 코스 요리
+하코네유모토 온천 거리|hn|f|2|kpr|온천 만주와 소바
+*하코네 조각의 숲 미술관|hn|s|1|kc|야외 조각 정원과 족욕
+요코하마 차이나타운|yh|f|2|kr|일본 최대 차이나타운
+미나토미라이·아카렌가 창고|yh|sn|2|ck|붉은 벽돌 창고와 항구 야경
+컵누들 뮤지엄|yh|s|2|k|나만의 컵라면 만들기`);
+
+city('fukuoka', '후쿠오카', '일본', '🇯🇵', ['후쿠오카', 'fukuoka', '유후인', '하카타'],
+  [['hk', '하카타역'], ['tj', '텐진·나카스'], ['sp', '모모치 해변'], ['!dz', '다자이후', {"how": "니시테츠 전철 약 30분 · 버스 약 40분", "icon": "🚆", "plan": "half", "use": ["오전", "점심", "오후"], "what": "학문의 신 신사와 참배길 간식", "who": "kpcrs"}], ['!yf', '유후인', {"how": "고속버스 약 2시간 · 유후인노모리 열차 약 2시간 10분", "icon": "🚌", "plan": "day", "stay": "유후인 온천 료칸", "rec": "night", "what": "안개 낀 호수와 온천 마을, 료칸 1박을 많이 해요", "who": "pc", "best": ["11-2", "온천 여행하기 가장 좋은 때예요"]}]],
+  [10, 11, 15, 20, 24, 27, 31, 32, 28, 23, 18, 12],
+  [['6-7', '장마철이에요. 실내 쇼핑몰 일정을 섞어 두세요.'], ['8-9', '태풍이 올 수 있어요.'], ['11', '유후인·다자이후 단풍이 예뻐요.'], ['12-2', '온천 여행하기 가장 좋은 때예요.']],
+  `캐널시티 하카타|hk|s|2|krs|분수쇼가 있는 대형 쇼핑몰
+모츠나베 맛집|hk|f|3|rpc|하카타 명물 곱창전골
+*쿠시다 신사|hk|s|1|ps|하카타 기온 야마카사 장식이 있는 신사
+*도초지|hk|s|1|ps|일본 최대급 목조 좌불이 있는 절
+나카스 포장마차 거리|tj|n|3|rcsK|강변 야타이에서 라멘·꼬치
+이치란 라멘 본점|tj|f|2|rs|돈코츠 라멘 본고장
+텐진 지하상가·다이묘|tj|s|2|crs|쇼핑과 카페 골목
+오호리 공원|tj|s|2|kpc|호수를 따라 걷는 산책 코스
+*후쿠오카 타워|sp|n|2|kc|해변 전망대 야경
+*모모치 해변|sp|s|1|kc|인공 해변의 노을
+다자이후 텐만구|dz|s|3|kpcrs|학문의 신 신사와 우메가에모치
+*다자이후 스타벅스|dz|s|1|cs|나무막대를 엮은 구마 겐고 건축
+유후인 긴린코 호수|yf|s|3|pc|아침 안개가 피어오르는 호수
+유노츠보 거리|yf|f|2|kpc|간식과 잡화가 모인 온천 마을 거리
+유후인 료칸 온천|yf|n|3|pc|노천탕과 가이세키 저녁
+*유후인 플로랄 빌리지|yf|s|1|kc|동화 같은 작은 마을`);
+
+city('sapporo', '삿포로', '일본', '🇯🇵', ['삿포로', 'sapporo', '홋카이도', '오타루', '비에이'],
+  [['od', '오도리·스스키노'], ['sp', '삿포로역 주변'], ['wt', '모이와산·서쪽'], ['!ot', '오타루', {"how": "JR 쾌속 약 40분", "icon": "🚆", "plan": "half", "use": ["점심", "오후", "저녁"], "stay": "오타루 운하 주변", "what": "가스등 켜진 운하와 오르골·유리공예, 초밥", "who": "cp", "best": ["2", "오타루 눈빛거리 축제가 열려요"]}], ['!bi', '비에이·후라노', {"how": "버스 투어로 하루 (편도 약 2시간 30분)", "icon": "🚌", "plan": "day", "what": "청의 호수와 패치워크 언덕, 여름엔 라벤더 밭", "who": "pc", "best": ["7", "라벤더가 절정이에요"]}], ['!nb', '노보리베츠', {"how": "JR 특급 약 1시간 10분 + 버스 15분", "icon": "🚆", "plan": "day", "stay": "노보리베츠 온천 료칸", "rec": "night", "what": "유황 연기 피어오르는 지옥계곡과 온천 료칸", "who": "kpc"}]],
+  [-1, 0, 4, 11, 17, 21, 25, 26, 22, 16, 8, 2],
+  [['2', '삿포로 눈축제 시즌이에요. 숙소가 빨리 차요.'], ['12-3', '눈이 많이 와서 길이 미끄러워요. 미끄럼 방지 신발을 챙기세요.'], ['7', '후라노 라벤더가 절정이에요.'], ['9-10', '단풍 시즌이에요.']],
+  `오도리 공원·TV타워|od|s|3|kpcrs|도심 공원, 2월 눈축제 메인 회장
+스스키노 거리|od|n|2|rsK|네온사인 번화가
+징기스칸 양고기 구이|od|f|3|rpc|삿포로 명물 양고기 숯불구이
+라멘 요코초|od|f|2|rs|미소 라멘 가게가 모인 골목
+니조 시장|od|f|2|ps|게·성게 해산물 덮밥
+삿포로 시계탑|sp|s|2|ps|삿포로 상징 목조 시계탑
+삿포로 맥주 박물관|sp|sf|2|rcP|맥주 시음과 비어가든
+*홋카이도 구 본청사|sp|s|1|ps|붉은 벽돌 건물과 정원
+모이와산 로프웨이|wt|n|3|cp|일본 신 3대 야경
+시로이 코이비토 파크|wt|s|2|k|과자 공장 견학과 동화풍 정원
+오타루 운하|ot|sn|3|cp|가스등 켜진 운하 산책
+오타루 오르골당·사카이마치|ot|s|2|kc|오르골·유리공예 거리
+*오타루 초밥 거리|ot|f|2|p|항구 도시 초밥
+비에이 청의 호수|bi|s|3|pc|신비한 푸른빛 호수
+팜 도미타 라벤더 밭|bi|s|2|pck|보랏빛 라벤더 언덕|6-8
+*텐구야마 야경|ot|n|1|c|오타루 항구 야경 전망대
+패치워크 로드 언덕|bi|s|2|pc|알록달록 언덕 밭 드라이브
+*흰수염 폭포|bi|s|1|p|푸른 강으로 떨어지는 폭포
+지옥계곡 (지고쿠다니)|nb|s|3|kpc|유황 연기 피어오르는 화산 계곡
+노보리베츠 온천 료칸|nb|n|3|pc|유황 온천과 가이세키 저녁
+*오유누마 천연 족욕|nb|s|1|pc|숲속 개울 족욕
+노보리베츠 온천 거리|nb|f|1|kp|온천가 식당과 간식`);
+
+city('okinawa', '오키나와', '일본', '🇯🇵', ['오키나와', 'okinawa', '나하'],
+  [['nh', '나하'], ['cn', '중부·서해안'], ['nt', '북부 (모토부)'], ['sn', '남부']],
+  [20, 20, 22, 24, 27, 29, 31, 31, 30, 28, 25, 22],
+  [['5-6', '5월~6월은 오키나와 장마철이에요.'], ['7-9', '태풍이 잦은 시기예요. 일정을 여유 있게 잡으세요.'], ['1-2', '1월 말~2월 초 벚꽃이 피어요. 바다 수영은 쌀쌀해요.'], ['4-10', '바다 수영하기 좋은 시기예요.']],
+  `국제거리|nh|sf|3|kpcrs|기념품·오키나와 음식이 모인 메인 거리
+마키시 공설시장|nh|f|2|pr|1층에서 생선 사서 2층에서 요리
+오키나와 소바 맛집|nh|f|2|kps|돼지고기 고명 얹은 오키나와식 소바
+슈리성 공원|nh|s|2|kp|류큐 왕국의 성 (복원 공사 중, 일부 관람)
+*나미노우에 해변|nh|s|1|kc|도심 해변과 절벽 위 신사
+아메리칸 빌리지|cn|sn|3|kcr|선셋 비치 노을과 미국풍 거리
+만좌모#cape|cn|s|2|pc|코끼리 코 모양 해안 절벽
+*잔파곶#cape|cn|s|1|c|등대와 절벽, 노을 명소
+츄라우미 수족관|nt|s|3|kpc|거대 수조의 고래상어
+코우리 대교·코우리섬|nt|s|3|c|에메랄드빛 바다 위 드라이브
+*비세 후쿠기 가로수길|nt|s|1|pc|오래된 나무 터널 산책
+*나고 파인애플 파크|nt|s|1|k|파인애플 카트 타고 시식
+세이화우타키|sn|s|1|ps|류큐 최고의 성지
+*오키나와 월드 (교쿠센도)|sn|s|2|k|종유 동굴과 전통 마을
+니라이카나이 다리|sn|s|1|c|바다를 내려다보는 굽은 다리`);
+
+city('danang', '다낭', '베트남', '🇻🇳', ['다낭', 'danang', '호이안', 'hoian'],
+  [['mk', '미케 해변'], ['ct', '다낭 시내'], ['sn', '선짜 반도·오행산'], ['!ba', '바나힐', {"how": "차로 약 45분 + 케이블카 약 20분", "icon": "🚗", "plan": "day", "what": "거대한 손 골든 브릿지와 산 위 테마파크", "who": "kpcr"}], ['!ha', '호이안', {"how": "차로 약 45분 (그랩·호텔 셔틀)", "icon": "🚗", "plan": "half", "use": ["점심", "오후", "저녁"], "stay": "호이안 올드타운·안방 해변", "what": "등불 켜진 올드타운 야경과 소원배, 1박하면 조용한 아침 산책까지", "who": "kpcrs"}], ['!hu', '후에', {"how": "차로 약 2시간 30분 (하이반 고개 경유)", "icon": "🚗", "plan": "day", "what": "응우옌 왕조 황궁과 황제릉, 하이반 고개 드라이브", "who": "ps"}]],
+  [25, 26, 28, 31, 33, 34, 34, 34, 32, 30, 27, 25],
+  [['9-12', '우기예요. 특히 10~11월은 비와 태풍이 잦아요.'], ['2-5', '건기라 여행하기 가장 좋아요.'], ['6-8', '무덥지만 맑은 성수기예요.']],
+  `미케 해변|mk|s|3|kpcrs|부드러운 모래의 긴 해변
+미케 해변 해산물 식당|mk|f|2|krp|수조에서 골라 먹는 해산물
+*스카이36 루프탑 바#view|mk|n|1|rcK|다낭 시내 야경 루프탑
+한시장|ct|sf|2|prs|아오자이 맞춤·기념품 시장
+다낭 대성당 (핑크 성당)|ct|s|2|cs|분홍빛 성당 사진 명소
+용다리 불쇼|ct|n|3|kprc|주말 밤 9시, 용이 불과 물을 뿜어요
+콩카페|ct|f|2|crs|코코넛 커피 원조 카페
+*미꽝·반쎄오 로컬 식당|ct|f|2|rs|다낭식 국수와 베트남 부침개
+영응사|sn|s|2|pk|67m 해수관음상과 바다 전망
+*오행산 (마블 마운틴)|sn|s|1|r|동굴 속 사원 탐험
+바나힐 골든 브릿지|ba|sa|3|kpcr|거대한 손이 받친 다리와 테마파크
+호이안 올드타운 야경|ha|sn|3|kpcrs|등불 거리와 소원배 띄우기
+*껌탄 코코넛 바구니배|ha|s|2|kr|동그란 바구니배 체험
+까오러우·반미 맛집|ha|f|2|rs|호이안 국수와 유명 반미
+*안방 비치|ha|s|1|c|조용한 호이안 해변
+*호이안 야시장|ha|n|1|kr|등불 가게와 길거리 음식
+후에 황성 (다이노이)|hu|s|3|ps|응우옌 왕조의 황궁
+카이딘 황제릉|hu|s|2|ps|유럽풍이 섞인 화려한 황제 무덤
+*하이반 고개 전망|hu|s|1|cr|바다와 산이 만나는 고갯길
+분보후에 맛집|hu|f|2|rs|후에식 매콤한 쌀국수`);
+
+city('nhatrang', '나트랑', '베트남', '🇻🇳', ['나트랑', '냐짱', 'nhatrang', 'nha trang'],
+  [['bc', '나트랑 해변·시내'], ['nt', '북쪽 (참탑·머드 온천)'], ['!vw', '혼째섬 (빈원더스)', {"how": "케이블카·스피드보트 약 15분", "icon": "⛴️", "plan": "day", "what": "섬 하나가 통째로 테마파크·워터파크", "who": "kr"}], ['!is', '섬 호핑 투어', {"how": "항구에서 배로 약 30분, 반나절 투어", "icon": "⛴️", "plan": "half", "use": ["오전", "점심", "오후"], "what": "배 타고 섬을 돌며 스노클링", "who": "rc"}], ['!dl', '달랏', {"how": "차·버스로 약 3시간 30분 (산길)", "icon": "🚌", "plan": "day", "stay": "쑤언흐엉 호수 주변", "rec": "night", "what": "선선한 고원 도시, 꽃·카페·야시장 (이동이 길어 1박 추천)", "who": "crs"}]],
+  [27, 28, 29, 31, 32, 33, 32, 32, 31, 29, 28, 27],
+  [['9-12', '우기예요. 바다가 거칠어 투어가 취소될 수 있어요.'], ['1-8', '건기라 바다 투어하기 좋아요.']],
+  `나트랑 해변|bc|s|3|kpcr|시내 앞 6km 해변 산책
+나트랑 야시장|bc|n|2|kr|기념품과 길거리 음식
+담 시장|bc|sf|1|prs|현지 재래시장 구경
+해산물 바베큐 식당|bc|f|2|kprc|랍스터·조개 숯불구이
+*반쎄오 로컬 식당|bc|f|1|rs|바삭한 베트남 부침개
+*스카이라이트 루프탑|bc|n|1|rcK|해변 야경 루프탑 바
+포나가르 참탑|nt|s|2|ps|천 년 된 참파 왕국 사원
+I-리조트 머드 스파|nt|s|2|kpc|진흙 온천욕
+*롱선사|nt|s|1|p|언덕 위 하얀 대불
+*혼총 바위|nt|s|1|c|바다 위 바위 해안
+빈원더스 나트랑|vw|sa|3|kr|케이블카로 가는 섬 테마파크·워터파크
+호핑 투어 (혼문섬 스노클링)|is|s|3|rc|배 타고 섬 돌며 스노클링
+쑤언흐엉 호수|dl|s|2|pc|도시 한가운데 호수 산책
+크레이지 하우스|dl|s|2|kr|동화 속 같은 기묘한 건축물
+달랏 야시장|dl|fn|3|rcs|반짱느엉(달랏 피자)과 따뜻한 두유
+달랏 언덕 뷰 카페|dl|f|2|cs|소나무 숲이 보이는 카페
+*다딴라 폭포 루지|dl|s|1|kr|숲속 루지 타고 폭포까지
+*달랏 기차역|dl|s|1|cs|프랑스풍 옛 기차역`);
+
+city('bangkok', '방콕', '태국', '🇹🇭', ['방콕', 'bangkok'],
+  [['rt', '왕궁·강변'], ['ks', '카오산·차이나타운'], ['sk', '시암·실롬'], ['cc', '짜뚜짝'], ['!ay', '아유타야', {"how": "차로 약 1시간 30분 · 기차 약 2시간", "icon": "🚗", "plan": "day", "what": "태국 옛 수도 유적과 나무뿌리 속 불상", "who": "ps"}], ['!mk', '수상시장·기찻길', {"how": "차로 약 1시간 30분, 아침 일찍 출발하는 반나절 투어", "icon": "🚗", "plan": "half", "use": ["오전", "점심"], "what": "배 위 시장과 기차가 지나가는 시장", "who": "kpr"}], ['!pt', '파타야', {"how": "차로 약 2시간", "icon": "🚗", "plan": "day", "stay": "파타야 비치 로드", "what": "산호섬 해양 스포츠와 바다, 화려한 쇼", "who": "kr"}]],
+  [32, 33, 34, 35, 34, 33, 33, 33, 32, 32, 32, 31],
+  [['3-5', '1년 중 가장 더운 시기예요.'], ['4', '4월 13~15일은 송끄란 물축제예요.'], ['6-10', '우기라 오후에 스콜이 자주 와요.'], ['11-2', '건기라 여행하기 가장 좋아요.']],
+  `왕궁·에메랄드 사원|rt|s|3|kpcrs|태국 대표 왕궁 (긴 바지·어깨 가리는 옷)
+왓포|rt|s|3|kps|거대한 와불과 타이 마사지 원조
+왓아룬|rt|sn|2|cps|새벽사원, 강 건너 노을이 예뻐요
+아이콘시암|rt|sf|2|kpc|강변 쇼핑몰과 실내 수상시장 푸드코트
+*짜오프라야 디너 크루즈|rt|n|2|pck|강 위에서 보는 사원 야경
+카오산 로드|ks|n|2|rsK|배낭여행자 거리
+야오와랏 차이나타운|ks|fn|2|rs|밤에 열리는 길거리 음식 거리
+*팁싸마이 팟타이|ks|f|2|rs|방콕 대표 팟타이 맛집
+시암 파라곤·센트럴월드|sk|s|2|kr|대형 쇼핑몰
+쩟페어 야시장|sk|fn|3|rcs|랭쎕(돼지등뼈) 먹방 야시장
+마하나콘 스카이워크#view|sk|n|2|c|314m 유리 바닥 전망대
+*루프탑 바#view|sk|n|2|cK|방콕 야경 루프탑
+짜뚜짝 주말시장|cc|sf|2|rcs|주말에만 열리는 초대형 시장
+아유타야 유적|ay|s|3|ps|나무뿌리 속 불상과 옛 왕국 유적
+담넌사두악 수상시장·매끌롱 기찻길|mk|s|2|kpr|배 위 시장과 기찻길 시장
+*아유타야 보트 투어|ay|n|1|pc|해 질 녘 강에서 보는 유적
+아유타야 강변 새우구이|ay|f|2|rp|큼직한 강새우 숯불구이
+산호섬 (꼬란) 투어|pt|s|3|kcr|파라세일링과 맑은 해변
+진리의 성전|pt|s|2|ps|못 하나 없이 지은 거대한 목조 사원
+알카자 쇼|pt|n|2|kpr|화려한 무대 공연
+파타야 해산물 레스토랑|pt|f|2|kpc|바다 앞 해산물 저녁
+*워킹 스트리트|pt|n|1|rK|밤에만 열리는 유흥 거리`);
+
+city('taipei', '타이베이', '대만', '🇹🇼', ['타이베이', '대만', 'taipei', '타이페이', '지우펀'],
+  [['xm', '시먼딩·용산사'], ['da', '중정기념당·융캉제'], ['xy', '신이·101'], ['zs', '스린·북부'], ['!jf', '예스진지', {"how": "버스 투어로 하루 (예류→스펀→진과스→지우펀)", "icon": "🚌", "plan": "day", "what": "바위 공원, 천등 날리기, 붉은 등 언덕 마을을 하루에", "who": "kpcr"}], ['!ds', '단수이', {"how": "MRT 단수이선 약 40분", "icon": "🚆", "plan": "half", "use": ["오후", "저녁"], "what": "강변 노을과 옛거리 간식", "who": "c"}]],
+  [19, 19, 21, 25, 28, 32, 34, 34, 31, 27, 24, 20],
+  [['5-6', '매우(梅雨) 장마철이에요.'], ['7-9', '덥고 태풍이 올 수 있어요.'], ['10-4', '선선해서 걷기 좋아요.'], ['2', '정월대보름 무렵 스펀·핑시 천등 축제가 열려요.']],
+  `시먼딩|xm|sf|3|rs|타이베이의 명동, 길거리 간식
+룽산쓰 (용산사)|xm|s|2|ps|300년 된 사원
+*보피랴오 옛거리|xm|s|1|cs|붉은 벽돌 옛 거리
+중정기념당|da|s|2|kps|정시 위병 교대식
+융캉제 (딘타이펑·망고빙수)|da|f|3|kpcrs|샤오롱바오와 망고빙수 맛집 거리
+타이베이 101 전망대#view|xy|n|3|kpcr|89층 전망대 야경
+샹산 (코끼리산) 야경#view|xy|n|2|crs|20분 오르면 보이는 101 야경
+*송산문창원구|xy|s|1|cs|담배 공장을 바꾼 문화 공간
+*라오허제 야시장#nightmarket|xy|fn|2|rs|후추빵이 유명한 야시장
+스린 야시장#nightmarket|zs|fn|3|krs|타이베이 최대 야시장
+고궁박물원|zs|s|2|ps|배추 옥 조각 등 중국 보물
+*베이터우 온천|zs|s|1|pc|도심에서 가까운 온천 마을
+예류 지질공원|jf|s|2|kp|여왕 머리 바위
+스펀 천등 날리기|jf|s|3|kcr|소원 적은 등 날리기
+지우펀 야경|jf|n|3|cpr|붉은 등이 켜지는 언덕 마을
+단수이 노을|ds|n|2|c|어인마두 연인의 다리 노을
+*단수이 옛거리|ds|f|1|kr|대왕 카스텔라 간식 거리`);
+
+city('singapore', '싱가포르', '싱가포르', '🇸🇬', ['싱가포르', 'singapore', '센토사'],
+  [['mb', '마리나 베이'], ['cq', '클락키·차이나타운'], ['oc', '오차드·부기스'], ['ss', '센토사'], ['!nt', '북부 동물원 단지', {"how": "시내에서 차로 약 30분", "icon": "🚗", "plan": "day", "what": "싱가포르 동물원부터 나이트 사파리까지 하루", "who": "kp"}]],
+  [30, 31, 32, 32, 32, 31, 31, 31, 31, 31, 31, 30],
+  [['11-1', '몬순 우기라 짧은 소나기가 자주 와요.'], ['1-12', '1년 내내 덥고 습해요. 실내는 에어컨이 세서 얇은 겉옷이 필요해요.']],
+  `마리나 베이 샌즈 스카이파크|mb|n|3|cpk|57층 전망대 야경
+가든스 바이 더 베이|mb|sn|3|kpcrs|슈퍼트리 빛 쇼와 실내 식물원
+멀라이언 파크|mb|s|2|kp|싱가포르 상징 사자상
+*라우파삿 사테 거리|mb|fn|2|rs|밤마다 열리는 꼬치구이 거리
+클락키 리버 크루즈|cq|n|2|pc|강을 따라 보는 야경
+맥스웰 호커센터|cq|f|3|prs|치킨라이스 맛집 푸드코트
+*점보 칠리크랩|cq|f|2|kpcr|싱가포르 대표 요리
+*하지 레인·아랍 스트리트|oc|s|1|cs|알록달록 벽화 골목과 모스크
+오차드 로드 쇼핑|oc|s|2|c|백화점이 모인 쇼핑 거리
+유니버설 스튜디오 싱가포르|ss|sa|3|kr|센토사섬 테마파크
+S.E.A. 아쿠아리움|ss|s|2|k|대형 수조 수족관
+*실로소 해변|ss|s|1|c|센토사 해변 휴식
+*윙스 오브 타임|ss|n|1|kc|바닷가 레이저·불꽃 쇼
+싱가포르 동물원|nt|s|2|kp|우리 없이 열린 동물원, 오랑우탄과 아침 식사
+나이트 사파리|nt|n|2|kpc|밤에 트램 타고 보는 야행성 동물
+*리버 원더스 (판다)|nt|s|1|k|강 테마 동물원과 자이언트 판다`);
+
+city('cebu', '세부', '필리핀', '🇵🇭', ['세부', 'cebu', '보홀', '막탄'],
+  [['mt', '막탄 (리조트)'], ['ct', '세부 시티'], ['!os', '남부 (오슬롭·모알보알)', {"how": "차로 약 3시간, 새벽 출발 투어", "icon": "🚗", "plan": "day", "what": "고래상어와 수영, 폭포 캐녀닝", "who": "rc"}], ['!bh', '보홀', {"how": "페리 약 2시간", "icon": "⛴️", "plan": "day", "stay": "알로나 비치 (팡라오섬)", "what": "초콜릿 힐·안경원숭이와 맑은 알로나 비치", "who": "kpc"}]],
+  [30, 30, 31, 32, 33, 32, 31, 31, 31, 31, 31, 30],
+  [['6-11', '우기라 스콜이 잦고, 8~10월엔 태풍이 올 수 있어요.'], ['12-5', '건기라 바다 투어하기 가장 좋아요.']],
+  `호핑 투어 (날루수안·힐루뚱안)|mt|s|3|kcr|배 타고 섬 돌며 스노클링
+리조트 수영장 휴식|mt|s|2|kpc|리조트 안에서 여유롭게
+마사지 스파|mt|s|2|pcrs|필리핀식 힐롯 마사지
+수투킬 해산물 시장|mt|f|2|kr|해산물 골라 바로 요리
+*막탄 슈라인|mt|s|1|p|라푸라푸 동상과 역사 공원
+산토니뇨 성당·마젤란 십자가|ct|s|2|ps|필리핀에서 가장 오래된 성당
+탑스 전망대|ct|n|2|c|세부 시내 야경 전망대
+SM 시사이드 몰|ct|s|1|k|대형 쇼핑몰
+레촌 맛집|ct|f|2|rp|바삭한 통돼지 구이
+오슬롭 고래상어 투어|os|s|3|kr|이른 아침 고래상어와 수영
+*가와산 폭포 캐녀닝|os|s|2|r|폭포 따라 점프하는 액티비티
+*모알보알 정어리떼 스노클링|os|s|1|rc|수만 마리 정어리떼
+보홀 초콜릿 힐·안경원숭이|bh|s|2|kp|초콜릿 언덕과 작은 원숭이
+로복강 런치 크루즈|bh|f|2|kp|강 위 뷔페 점심과 공연
+알로나 비치|bh|sn|2|c|하얀 모래 해변과 노을
+*발리카삭 호핑|bh|s|1|r|바다거북과 스노클링`);
+
+city('bali', '발리', '인도네시아', '🇮🇩', ['발리', 'bali', '우붓'],
+  [['kt', '꾸따·스미냑·짱구'], ['ub', '우붓'], ['ul', '울루와뚜·짐바란'], ['nd', '누사두아'], ['!np', '누사페니다', {"how": "사누르에서 스피드보트 약 45분", "icon": "⛴️", "plan": "day", "stay": "누사페니다 해변 숙소", "what": "공룡 모양 절벽 해변과 만타 스노클링", "who": "cr"}]],
+  [30, 30, 30, 31, 31, 30, 29, 30, 30, 31, 31, 30],
+  [['11-3', '우기라 오후에 비가 자주 와요.'], ['4-10', '건기라 여행하기 좋아요.'], ['3', '녜삐(힌두 새해) 하루는 섬 전체가 멈춰요. 날짜를 꼭 확인하세요.']],
+  `스미냑 비치클럽|kt|n|2|rcK|선베드에서 보는 노을과 음악
+꾸따 해변 서핑 강습|kt|s|2|r|초보도 할 수 있는 서핑
+따나롯 사원 일몰#sunsettemple|kt|n|3|pc|바다 위 바위 사원과 노을
+*짱구 카페 거리|kt|f|2|cs|브런치 카페와 편집숍
+우붓 몽키 포레스트|ub|s|2|k|원숭이가 사는 숲 (소지품 주의)
+뜨갈랄랑 계단식 논|ub|s|3|pcs|초록빛 계단 논
+발리 스윙|ub|s|2|cr|정글 위 그네 사진
+*띠르따 엠풀 사원|ub|s|1|ps|성수에 몸을 씻는 사원
+우붓 왕궁·시장|ub|sf|2|ps|왕궁과 수공예 시장
+*바비굴링 맛집|ub|f|2|rs|발리식 돼지 바비큐
+울루와뚜 사원 께짝 댄스#sunsettemple|ul|n|3|kpcrs|절벽 위 노을과 불춤 공연
+짐바란 해변 씨푸드 디너|ul|f|3|kpc|모래사장 위 해산물 저녁
+*빠당빠당 비치|ul|s|1|cr|절벽 사이 작은 해변
+누사두아 리조트|nd|s|2|kp|조용한 리조트 해변
+누사페니다 켈링킹 비치|np|s|3|cr|티라노 모양 절벽 해변
+*크리스탈 베이 스노클링|np|s|1|r|맑은 바다 스노클링
+*브로큰 비치·엔젤스 빌라봉|np|s|1|cr|바다가 뚫은 아치와 천연 수영장`);
+
+city('hongkong', '홍콩', '홍콩', '🇭🇰', ['홍콩', 'hongkong', 'hong kong', '마카오'],
+  [['ts', '침사추이'], ['mk', '몽콕·야우마테이'], ['ct', '센트럴·소호'], ['!dz', '홍콩 디즈니랜드', {"how": "MTR 약 30분", "icon": "🚆", "plan": "day", "what": "하루 종일 테마파크", "who": "kc"}], ['!lt', '란타우섬', {"how": "MTR 퉁청역 + 옹핑 케이블카, 약 1시간", "icon": "🚡", "plan": "half", "use": ["오전", "점심", "오후"], "what": "바다 위 케이블카와 거대 불상, 어촌 마을", "who": "kp"}], ['!mc', '마카오', {"how": "페리 약 1시간 · 강주아오 대교 버스 약 1시간", "icon": "⛴️", "plan": "day", "stay": "코타이 리조트 호텔", "what": "포르투갈풍 구시가지와 화려한 리조트, 에그타르트", "who": "kpcr"}]],
+  [19, 19, 21, 25, 28, 30, 31, 31, 30, 28, 24, 20],
+  [['6-9', '무덥고 태풍이 올 수 있어요.'], ['10-12', '선선하고 맑아 여행하기 가장 좋아요.'], ['1-2', '춘절 연휴엔 일부 가게가 쉬어요.']],
+  `스타의 거리·심포니 오브 라이트|ts|n|3|kpcr|밤 8시 빌딩 레이저 쇼
+스타페리|ts|s|2|kp|바다를 건너는 100년 된 페리
+침사추이 딤섬 맛집|ts|f|2|kprs|딤섬으로 든든한 점심
+*1881 헤리티지|ts|s|1|c|옛 해경 본부 건물, 사진 명소
+빅토리아 피크 트램|ct|n|3|kpcr|홍콩 최고의 야경
+미드레벨 에스컬레이터·소호|ct|s|2|crs|세계에서 가장 긴 옥외 에스컬레이터
+완탕면·에그타르트 맛집|ct|f|2|kprs|홍콩 대표 간식
+*할리우드 로드·PMQ|ct|s|1|cs|벽화 골목과 디자인 숍
+*란콰이퐁|ct|n|1|rK|바·펍이 모인 거리
+레이디스 마켓#nightmarket|mk|sf|2|rs|흥정하는 재미가 있는 노점 시장
+템플 스트리트 야시장#nightmarket|mk|fn|2|rs|노점 해산물과 야시장
+홍콩 디즈니랜드|dz|sa|3|kc|하루 종일 테마파크
+옹핑 360 케이블카·빅부다|lt|s|2|kp|바다 위 케이블카와 거대 불상
+*타이오 어촌 마을|lt|s|1|ps|수상 가옥 어촌
+세나도 광장·성 바울 성당 유적|mc|s|3|kpcrs|물결무늬 광장과 성당 정면 유적
+로드 스토우 에그타르트|mc|f|2|kr|마카오식 에그타르트 원조
+베네시안 마카오 곤돌라|mc|sn|2|kc|실내 운하 곤돌라와 쇼핑
+*타이파 빌리지|mc|f|1|cs|알록달록 골목과 포르투갈 음식
+*마카오 타워|mc|n|1|cr|338m 전망대와 번지점프`);
+
+city('paris', '파리', '프랑스', '🇫🇷', ['파리', 'paris', '프랑스'],
+  [['ef', '에펠탑·샹젤리제'], ['lv', '루브르·마레'], ['lb', '생제르맹·라탱'], ['mm', '몽마르트르'], ['!vs', '베르사유', {"how": "RER C선 약 40분", "icon": "🚆", "plan": "half", "use": ["오전", "점심", "오후"], "what": "거울의 방과 끝없는 정원", "who": "kp"}], ['!mt', '몽생미셸', {"how": "투어 버스로 편도 약 4시간 (하루 투어)", "icon": "🚌", "plan": "day", "stay": "몽생미셸 섬 안·근처 호텔", "what": "바다 위 수도원과 야경, 하루가 꼬박 걸려요", "who": "pcs"}]],
+  [7, 8, 12, 16, 20, 23, 25, 25, 21, 16, 10, 7],
+  [['5-6', '날씨가 좋고 해가 길어 여행하기 최고예요.'], ['7-8', '성수기이고, 8월엔 휴가로 쉬는 가게가 있어요.'], ['11-2', '흐리고 추워요. 대신 박물관이 덜 붐벼요.'], ['12', '크리스마스 마켓과 조명이 예뻐요.']],
+  `에펠탑|ef|sn|3|kpcrs|밤마다 정시에 반짝이는 조명 쇼
+개선문 전망대|ef|s|2|cr|샹젤리제가 내려다보이는 전망대
+샹젤리제 거리|ef|s|2|cps|쇼핑과 산책
+센강 바토무슈 크루즈|ef|n|2|kpc|배 위에서 보는 파리 야경
+*샹드마르스 피크닉|ef|f|1|cr|바게트·치즈 사 들고 에펠탑 앞 잔디밭에서
+루브르 박물관|lv|s|3|kpcrs|모나리자가 있는 세계 최대 박물관 (예약 필수)
+노트르담 대성당|lv|s|2|ps|복원을 마친 고딕 성당
+마레 지구 산책|lv|sf|2|cs|편집숍·팔라펠 맛집 골목
+비스트로 맛집|lv|f|2|kpcr|어니언 수프와 스테이크
+*오랑주리 미술관|lv|s|1|ps|모네의 수련 연작
+오르세 미술관|lb|s|2|ps|인상파 명화 미술관
+생제르맹 카페|lb|f|2|cs|헤밍웨이가 다닌 노천 카페
+*뤽상부르 공원|lb|s|1|kps|파리지앵이 쉬는 정원
+몽마르트르 언덕·사크레쾨르|mm|s|3|cr|하얀 성당과 화가의 언덕
+*크레페 맛집|mm|f|1|k|달콤한 길거리 크레페
+*물랑루즈 쇼|mm|n|1|cK|캉캉 춤 공연
+베르사유 궁전|vs|s|3|kp|거울의 방과 넓은 정원
+*베르사유 정원 자전거|vs|s|1|kc|넓은 정원을 자전거로
+몽생미셸 수도원|mt|s|3|pcs|바다 위 바위섬 수도원
+몽생미셸 야경|mt|n|2|c|불 켜진 섬을 다리에서
+*라 메르 풀라르 오믈렛|mt|f|1|p|폭신한 수플레 오믈렛`);
+
+city('london', '런던', '영국', '🇬🇧', ['런던', 'london', '영국'],
+  [['wm', '웨스트민스터'], ['sb', '사우스뱅크'], ['cl', '시티·타워 브리지'], ['cv', '코벤트 가든·소호'], ['kn', '켄싱턴'], ['!hp', '해리포터 스튜디오', {"how": "왓퍼드 정션역 + 셔틀버스, 약 1시간", "icon": "🚆", "plan": "half", "use": ["오전", "점심", "오후"], "what": "영화 세트장과 소품, 4~5시간 걸려요", "who": "kr"}], ['!cw', '코츠월드', {"how": "투어 버스로 하루 (편도 약 2시간)", "icon": "🚌", "plan": "day", "what": "꿀색 돌집이 늘어선 시골 마을", "who": "pc"}], ['!bs', '바스·스톤헨지', {"how": "투어 버스로 하루 (편도 약 2시간)", "icon": "🚌", "plan": "day", "what": "고대 돌 유적과 로마 목욕탕 도시", "who": "ps"}]],
+  [8, 9, 12, 15, 18, 21, 23, 23, 20, 16, 11, 8],
+  [['6-8', '해가 밤 9시까지 길고 쾌적해요.'], ['11-2', '흐리고 해가 짧아요. 일정을 일찍 시작하세요.'], ['12', '하이드파크 윈터 원더랜드가 열려요.']],
+  `빅벤·웨스트민스터 사원|wm|s|3|kpcrs|런던의 상징 시계탑
+버킹엄 궁전 근위병 교대식|wm|s|2|kp|오전 11시 교대식 (날짜 확인)
+애프터눈 티|wm|f|2|pcs|3단 트레이에 나오는 영국식 티타임
+런던 아이#view|sb|n|3|kc|템스강 대관람차
+테이트 모던|sb|s|2|cs|발전소를 바꾼 현대미술관 (무료)
+*버로우 마켓|sb|f|2|prs|런던에서 가장 오래된 음식 시장
+타워 브리지·런던 탑|cl|s|3|kp|도개교와 왕관 보석
+*스카이 가든#view|cl|n|2|cs|무료 실내 정원 전망대 (예약)
+대영박물관|cv|s|3|kps|로제타석이 있는 무료 박물관
+코벤트 가든|cv|s|2|cr|거리 공연과 마켓
+웨스트엔드 뮤지컬|cv|n|3|kpcr|라이온킹·레미제라블
+피시앤칩스 펍|cv|f|2|rs|영국식 펍 저녁
+자연사 박물관|kn|s|2|k|공룡 뼈 전시 (무료)
+*노팅힐 포토벨로 마켓|kn|s|1|c|알록달록 집과 앤티크 마켓
+해리포터 스튜디오|hp|s|3|kr|영화 세트장 투어 (예약 필수)
+코츠월드 마을|cw|s|2|pc|꿀색 돌집의 시골 마을
+코츠월드 펍 점심|cw|f|1|pc|시골 마을 펍의 파이와 에일
+*버튼 온 더 워터|cw|s|1|kp|개울이 흐르는 작은 마을
+스톤헨지|bs|s|3|kps|5천 년 된 거대한 돌 유적
+로만 바스|bs|s|2|ps|로마 시대 온천 목욕탕
+바스 시내 펍 점심|bs|f|1|pr|조지안 건축 거리의 펍`);
+
+city('rome', '로마', '이탈리아', '🇮🇹', ['로마', 'rome', '이탈리아', '바티칸', '피렌체'],
+  [['cl', '콜로세움'], ['ct', '트레비·판테온'], ['vt', '바티칸'], ['tr', '트라스테베레'], ['!fl', '피렌체', {"how": "고속열차 약 1시간 30분", "icon": "🚄", "plan": "day", "stay": "두오모·산타 마리아 노벨라역 주변", "what": "르네상스 예술 도시, 두오모와 우피치, 티본스테이크", "who": "pcs"}], ['!pm', '폼페이·아말피 해안', {"how": "남부 투어 버스로 하루 (편도 약 3시간)", "icon": "🚌", "plan": "day", "what": "화산재에 묻힌 고대 도시와 절벽 해안 마을", "who": "pc", "best": ["5-9", "해안 마을이 가장 예쁜 때예요"]}]],
+  [12, 13, 16, 19, 23, 28, 31, 31, 27, 22, 16, 13],
+  [['4-6', '날씨가 좋아 여행하기 가장 좋아요.'], ['9-10', '선선하고 덜 붐벼요.'], ['7-8', '35°C까지 오르는 한여름이에요. 한낮엔 쉬세요.'], ['12-2', '비가 잦은 비수기예요.']],
+  `콜로세움·포로 로마노|cl|s|3|kpcrs|2천 년 된 원형 경기장 (예약 필수)
+*진실의 입|cl|s|1|kc|로마의 휴일 촬영지
+트레비 분수|ct|sn|3|kpcrs|동전 던지기, 밤이 덜 붐벼요
+판테온|ct|s|2|ps|2천 년 된 돔 신전
+스페인 광장|ct|s|2|cr|영화 속 계단
+나보나 광장|ct|s|1|ps|분수와 거리 화가
+젤라또 맛집|ct|f|2|kc|로마 3대 젤라또
+로마 파스타 맛집|ct|f|2|kpcrs|카치오 에 페페·까르보나라
+바티칸 박물관·시스티나 성당|vt|s|3|ps|천지창조 천장화 (가이드 투어 추천)
+성 베드로 대성당|vt|s|2|kp|세계 최대 성당과 쿠폴라
+*산탄젤로 성 야경|vt|n|1|c|테베레강 다리 야경
+트라스테베레 트라토리아|tr|fn|3|crs|골목 식당 저녁
+*자니콜로 언덕 전망|tr|n|1|c|로마 시내 전망
+피렌체 두오모|fl|s|3|kpcrs|붉은 돔 꼭대기 전망 (예약)
+우피치 미술관|fl|s|2|ps|비너스의 탄생이 있는 미술관
+베키오 다리|fl|s|2|c|보석 가게가 늘어선 다리
+피렌체 티본스테이크|fl|f|3|kpcr|두툼한 비스테카 알라 피오렌티나
+*미켈란젤로 광장 노을|fl|n|2|c|피렌체가 한눈에 보이는 노을
+폼페이 유적|pm|s|3|kps|화산재에 묻힌 로마 도시
+포지타노 절벽 마을|pm|s|2|c|파스텔 집이 쌓인 해안 마을
+*레몬 해산물 파스타|pm|f|1|pc|아말피 레몬과 해산물`);
+
+city('barcelona', '바르셀로나', '스페인', '🇪🇸', ['바르셀로나', 'barcelona', '스페인'],
+  [['eg', '에이샴플레 (가우디)'], ['gr', '그라시아·구엘 공원'], ['gt', '고딕 지구·람블라스'], ['bc', '바르셀로네타'], ['mj', '몬주익'], ['!mt', '몬세라트', {"how": "기차 + 산악열차 약 1시간 30분", "icon": "🚆", "plan": "half", "use": ["오전", "점심", "오후"], "what": "톱니 바위산 위 수도원과 검은 성모상", "who": "ps"}]],
+  [14, 15, 17, 19, 22, 26, 29, 29, 26, 22, 17, 14],
+  [['5-6', '바다·도시 모두 즐기기 좋아요.'], ['9', '선선해지고 축제(라 메르세)가 열려요.'], ['7-8', '덥고 매우 붐벼요.'], ['1-12', '관광지 소매치기가 많아요. 가방은 앞으로 메세요.']],
+  `사그라다 파밀리아|eg|s|3|kpcrs|가우디의 미완성 성당 (예약 필수)
+카사 바트요|eg|sn|2|cp|뼈와 용을 닮은 가우디 집
+카사 밀라|eg|s|2|ps|물결 모양 건물과 옥상 굴뚝
+구엘 공원|gr|s|3|kcr|모자이크 도마뱀과 시내 전망
+*벙커 전망대#view|gr|n|2|cr|바르셀로나 최고의 노을 명소
+람블라스·보케리아 시장|gt|sf|3|rcs|과일 주스와 하몽 시장
+고딕 지구 골목|gt|s|2|cs|중세 골목 산책
+타파스 바 (엘 보른)|gt|fn|2|rcs|작은 접시 요리와 샹그리아
+*피카소 미술관|gt|s|1|ps|피카소 초기 작품
+바르셀로네타 해변|bc|s|2|kcr|도심 해변
+빠에야 해산물 식당|bc|f|3|kpc|바닷가 빠에야
+몬주익 매직 분수|mj|n|2|kpc|음악 분수 쇼 (운영일 확인)
+*몬주익 성·케이블카#view|mj|s|1|k|항구가 보이는 언덕
+몬세라트 수도원|mt|s|2|ps|톱니 바위산 위 수도원
+*산 조안 푸니쿨라 전망|mt|s|1|cr|산 위로 올라가는 케이블 열차`);
+
+city('newyork', '뉴욕', '미국', '🇺🇸', ['뉴욕', 'newyork', 'new york', '맨해튼'],
+  [['cp', '센트럴파크·어퍼'], ['mt', '미드타운'], ['lm', '첼시·로어맨해튼'], ['bk', '브루클린']],
+  [4, 6, 10, 17, 22, 27, 29, 29, 25, 19, 13, 7],
+  [['4-6', '꽃 피고 선선해 걷기 좋아요.'], ['9-10', '맑고 선선한 최적기예요.'], ['7-8', '덥고 습해요.'], ['12', '록펠러 센터 트리와 크리스마스 장식이 유명해요.'], ['1-2', '매우 추워요. 두꺼운 패딩이 필요해요.']],
+  `센트럴파크|cp|s|3|kpcrs|자전거·마차로 도는 도심 공원
+메트로폴리탄 미술관|cp|s|2|ps|세계 3대 미술관
+*자연사 박물관|cp|s|2|k|박물관이 살아있다 촬영지
+타임스스퀘어|mt|n|3|kpcrs|전광판 가득한 밤거리
+브로드웨이 뮤지컬|mt|n|3|kpcr|라이온킹·위키드
+엠파이어 스테이트 빌딩#view|mt|n|3|kpc|뉴욕 대표 전망대
+탑 오브 더 락#view|mt|s|2|c|엠파이어가 보이는 전망대
+*서밋 원 밴더빌트#view|mt|n|2|cr|거울 방 체험 전망대
+뉴욕 피자·베이글 맛집|mt|f|2|kprs|1달러 피자부터 유명 베이글까지
+자유의 여신상 페리|lm|s|2|kp|리버티섬 가는 배
+9/11 메모리얼·월스트리트|lm|s|2|ps|추모 공원과 황소상
+*첼시마켓·하이라인|lm|sf|2|cs|공중 공원 산책과 푸드홀
+브루클린 브릿지 도보|bk|s|3|cr|맨해튼 스카이라인을 보며 걷기
+덤보|bk|sn|2|c|맨해튼 브릿지 사진 명소와 야경
+*브루클린 피자·스테이크 맛집|bk|f|1|rc|현지인 맛집`);
+
+city('hawaii', '하와이 (오아후)', '미국', '🇺🇸', ['하와이', 'hawaii', '호놀룰루', '와이키키', '오아후'],
+  [['wk', '와이키키'], ['dh', '다이아몬드헤드·동부'], ['ns', '노스쇼어·윈드워드'], ['pt', '펄하버·서부']],
+  [27, 27, 28, 28, 29, 30, 31, 31, 31, 30, 29, 27],
+  [['11-3', '우기지만 짧게 지나가는 비예요. 노스쇼어는 겨울 파도가 커요.'], ['4-10', '건기라 바다 놀이하기 좋아요.']],
+  `와이키키 해변|wk|s|3|kpcrs|서핑 강습과 해변 휴식
+알라모아나 센터|wk|s|2|pc|하와이 최대 쇼핑몰
+포케·로코모코 맛집|wk|f|2|kprcs|하와이 대표 음식
+선셋 디너 크루즈|wk|n|2|pc|배 위 노을 저녁
+*힐튼 금요일 불꽃놀이|wk|n|1|kc|금요일 밤 와이키키 불꽃
+다이아몬드 헤드 하이킹|dh|s|3|crs|분화구 정상 전망 (입장 예약)
+하나우마 베이 스노클링|dh|s|2|kcr|산호초 만 스노클링 (예약, 월·화 휴무)
+*라니카이 해변·마카푸우 전망대|dh|s|2|c|하와이에서 가장 예쁜 해변
+쿠알로아 랜치|ns|s|2|kr|쥬라기 공원 촬영지 투어
+노스쇼어 새우트럭|ns|f|3|kpcr|갈릭 새우 맛집
+*할레이바 마을·거북이 해변|ns|s|2|kc|바다거북을 볼 수 있는 해변
+돌 플랜테이션|ns|s|1|k|파인애플 농장과 기차
+진주만 (펄하버)|pt|s|2|ps|애리조나 기념관
+*루아우 폴리네시안 쇼|pt|n|1|kp|불춤 공연과 전통 만찬`);
+
+city('guam', '괌', '미국', '🇬🇺', ['괌', 'guam'],
+  [['tm', '투몬'], ['hg', '하갓냐·남부']],
+  [29, 29, 30, 31, 31, 31, 31, 31, 31, 31, 31, 30],
+  [['7-11', '우기라 소나기가 잦고 태풍이 올 수 있어요.'], ['12-6', '건기라 바다가 가장 맑아요.']],
+  `투몬 비치|tm|s|3|kpc|리조트 앞 얕고 맑은 바다
+사랑의 절벽|tm|n|2|c|투몬만이 내려다보이는 노을 명소
+T 갤러리아·마이크로네시아 몰|tm|s|2|pc|면세 쇼핑
+돌핀 크루즈|tm|s|2|kc|야생 돌고래 보기
+워터파크|tm|s|2|k|아이들이 좋아하는 리조트 워터파크
+리조트 수영장 휴식|tm|s|1|kp|리조트에서 여유롭게
+차모로 바비큐 맛집|tm|f|2|kprc|레드라이스와 바비큐
+*건비치 선셋 바|tm|n|1|cr|해변 노을과 라이브 음악
+*피시아이 마린파크|hg|s|2|k|바다 속 수중 전망대
+스페인 광장·하갓냐 대성당|hg|s|1|p|스페인 식민 시절 유적
+남부 섬 일주 드라이브|hg|s|2|pc|우마탁 마을과 해안 절경
+차모로 빌리지 수요 야시장|hg|fn|2|kr|수요일 밤 야시장 (요일 확인)`);
+
+city('seoul', '서울', '한국', '🇰🇷', ['서울', 'seoul', '경복궁', '홍대', '강남'],
+  [['mp', '홍대·연남·망원'], ['yd', '여의도'], ['ys', '용산·이태원·한남'], ['ms', '명동·남산·을지로'], ['jg', '종로·광화문'], ['ss', '성수·서울숲'], ['gn', '강남·잠실'], ['!sw', '수원', {"how": "지하철 약 1시간 · KTX·ITX 약 30분", "icon": "🚆", "plan": "half", "use": ["오전", "점심", "오후"], "what": "정조의 성곽 화성과 행궁동 카페, 통닭거리", "who": "kprs"}], ['!nm', '가평·남이섬', {"how": "ITX-청춘 약 1시간 + 배 5분", "icon": "🚆", "plan": "day", "what": "메타세쿼이아 길과 강 위의 섬, 닭갈비", "who": "kc", "best": ["10-11", "단풍이 예뻐요"]}], ['!ev', '에버랜드', {"how": "강남에서 버스 약 1시간", "icon": "🚌", "plan": "day", "what": "판다월드와 T익스프레스, 하루 종일", "who": "kr"}]],
+  [2, 5, 11, 18, 23, 27, 29, 30, 26, 20, 12, 4],
+  [['3-4', '벚꽃 시즌이에요. 여의도 윤중로·석촌호수가 인기예요.'], ['7-8', '장마와 무더위가 있어요. 박물관·쇼핑몰 같은 실내 일정을 섞어 두세요.'], ['10-11', '단풍이 예뻐요. 고궁과 남산이 특히 좋아요.'], ['12-2', '매우 추워요. 두꺼운 패딩과 장갑을 챙기세요.']],
+  `홍대 걷고싶은거리|mp|sn|3|rs|버스킹과 클럽·펍이 모인 젊은 거리
+연남동 경의선숲길|mp|sf|2|cs|숲길 산책과 골목 맛집·카페
+*망원시장·망원한강공원#hangang|mp|f|1|rs|시장 먹거리를 사 들고 한강 피크닉
+여의도 한강공원#hangang|yd|sn|2|kcr|치맥 피크닉과 한강 유람선
+더현대 서울|yd|s|2|kcr|실내 정원이 있는 백화점
+여의도 윤중로 벚꽃길|yd|s|2|kpc|국회 뒤 벚꽃 터널|4
+국립중앙박물관|ys|s|2|kps|무료 박물관, 반가사유상이 있는 '사유의 방'
+*리움 미술관|ys|s|1|cs|한남동 현대미술관
+이태원·한남동 맛집 거리|ys|fn|2|rc|세계 음식점과 바
+명동 쇼핑거리|ms|sf|2|rs|화장품 쇼핑과 길거리 음식
+N서울타워 (남산)#view|ms|n|3|kpcr|케이블카 타고 올라가 보는 서울 야경
+*을지로 노가리 골목|ms|n|1|rsK|레트로 맥줏집 골목 '힙지로'
+남대문시장#market|ms|f|1|p|갈치조림 골목과 시장 구경
+경복궁#palace|jg|s|3|kpcrs|수문장 교대식, 한복 입으면 무료 입장
+북촌 한옥마을|jg|s|2|pcs|한옥 골목 산책 (주민이 사는 곳이라 조용히)
+인사동·쌈지길|jg|s|2|ps|전통 공예품과 찻집
+익선동 한옥거리|jg|f|2|cr|한옥을 고친 카페·맛집 골목
+광장시장#market|jg|f|3|prs|빈대떡·육회·마약김밥 먹방
+*창덕궁 후원#palace|jg|s|1|ps|예약해야 들어가는 비밀의 정원
+*서촌·통인시장|jg|f|1|cs|엽전 도시락과 골목 산책
+청계천|jg|n|1|kc|도심 개울 산책, 밤 조명
+성수동 카페·팝업 거리|ss|sf|3|crs|공장을 고친 카페와 팝업스토어
+서울숲|ss|s|2|kpc|넓은 공원 산책과 꽃사슴
+*뚝섬 한강공원#hangang|ss|n|1|cr|한강 야경과 치맥
+롯데월드|gn|sa|3|kr|실내외 테마파크
+롯데월드타워 서울스카이#view|gn|n|2|kpc|555m 전망대 야경
+코엑스 별마당 도서관|gn|s|2|krs|거대한 서가 사진 명소
+석촌호수|gn|s|2|cp|호숫가 산책, 봄엔 벚꽃 명소
+*봉은사|gn|s|1|ps|코엑스 옆 도심 사찰
+반포 한강공원 달빛무지개분수#hangang|gn|n|2|kpc|다리에서 뿜는 무지개 분수 쇼|4-10
+수원 화성·행궁동|sw|s|2|kp|성곽 산책과 행궁동 카페 골목
+*수원 통닭거리|sw|f|1|r|가마솥 통닭 골목
+남이섬|nm|s|2|kc|메타세쿼이아 길과 강 위의 섬
+*쁘띠프랑스|nm|s|1|kc|프랑스 마을 테마 공원
+에버랜드|ev|sa|3|kr|판다월드와 T익스프레스
+*화성행궁|sw|s|1|kp|정조의 임시 궁궐
+가평 닭갈비·막국수|nm|f|2|kpr|숯불 닭갈비와 시원한 막국수
+*가평 레일바이크|nm|s|1|kc|북한강 옆 레일바이크`);
+
+city('jeju', '제주', '한국', '🇰🇷', ['제주', '제주도', 'jeju'],
+  [['jc', '제주시'], ['ew', '동부 (성산·우도)'], ['hl', '한라산·중산간'], ['sw', '서귀포·중문'], ['ws', '서부 (애월·협재)']],
+  [9, 10, 14, 18, 22, 25, 29, 30, 26, 22, 16, 11],
+  [['3-4', '유채꽃·벚꽃 시즌이에요.'], ['7-8', '해수욕 성수기, 태풍 소식을 확인하세요.'], ['10-11', '억새가 은빛으로 물들어요.'], ['12-2', '동백꽃과 한라산 눈꽃이 예뻐요.']],
+  `동문시장 야시장|jc|fn|2|kprs|흑돼지 꼬치·딱새우 야시장
+흑돼지 거리|jc|f|3|kprc|두툼한 제주 흑돼지 구이
+*용두암·이호테우 해변|jc|n|1|c|말 등대와 노을
+성산일출봉|ew|s|3|kpcrs|분화구 위 일출 명소
+우도|ew|s|3|kcr|전기차로 도는 섬과 땅콩아이스크림
+섭지코지|ew|s|2|pc|바다 절벽 산책길
+*비자림|ew|s|1|ps|천 년 비자나무 숲
+*새별오름|hl|s|2|cr|가을 억새 오름
+한라산 성판악 탐방|hl|s|2|rs|백록담까지 하루 등산 (예약)
+*사려니숲길|hl|s|1|pcs|삼나무 숲 산책
+중문 주상절리|sw|s|2|kp|육각형 돌기둥 해안
+천지연 폭포|sw|sn|2|pc|밤에도 열려 있는 폭포 산책
+매일올레시장|sw|f|2|kr|서귀포 먹거리 시장
+갈치조림·고기국수|sw|f|2|kprs|제주 향토 음식
+애월 해안도로 카페|ws|sf|3|cr|바다가 보이는 카페 거리
+협재 해변|ws|s|3|kcr|에메랄드빛 바다와 비양도
+*오설록 티뮤지엄|ws|s|2|pc|녹차밭과 녹차 디저트`);
+
+city('busan', '부산', '한국', '🇰🇷', ['부산', 'busan', '해운대'],
+  [['gj', '기장'], ['hu', '해운대'], ['gw', '광안리'], ['nm', '남포·중구'], ['yd', '영도'], ['!gy', '경주', {"how": "KTX 약 30분 · 시외버스 약 1시간", "icon": "🚄", "plan": "day", "stay": "황리단길 한옥 숙소", "what": "신라 천년 고도, 대릉원·불국사와 동궁과 월지 야경", "who": "kpc"}]],
+  [8, 10, 14, 19, 22, 25, 28, 30, 26, 22, 16, 10],
+  [['7-8', '해수욕장이 열리는 성수기예요.'], ['10', '부산국제영화제가 열려요.'], ['11', '광안리 불꽃축제가 열려요 (날짜 확인).']],
+  `해동용궁사|gj|s|2|p|바다 위 절벽 사찰
+*롯데월드 어드벤처 부산|gj|s|2|k|오시리아 테마파크
+해운대 해수욕장|hu|s|3|kpcrs|부산 대표 해변
+블루라인파크 스카이캡슐|hu|s|3|kpc|해안선 따라 달리는 4인용 캡슐
+*더베이101 야경#view|hu|n|2|cr|마린시티 고층 빌딩 야경
+*해리단길 카페|hu|f|1|cs|옛 철길 옆 카페 골목
+광안리 해변·광안대교 야경|gw|n|3|cr|다리 조명이 켜지는 밤바다
+민락 회센터|gw|f|2|pr|회 떠서 바다 보며 먹기
+감천문화마을|nm|s|3|crs|알록달록 산동네와 어린왕자
+자갈치시장|nm|f|2|pr|부산 대표 수산시장
+BIFF 광장 씨앗호떡|nm|f|2|kr|부산 길거리 간식
+돼지국밥 맛집|nm|f|2|rs|뽀얀 국물의 부산 국밥
+용두산공원·부산타워#view|nm|n|1|kp|부산항 야경 전망
+흰여울 문화마을|yd|s|2|cs|바다 절벽 마을 산책
+*태종대|yd|s|1|kp|등대와 기암절벽
+대릉원·황리단길|gy|sf|3|kpcrs|신라 왕릉과 한옥 카페 거리
+불국사|gy|s|2|kps|다보탑·석가탑
+동궁과 월지 야경|gy|n|3|kpc|연못에 비친 궁궐 야경`);
+
+city('gangneung', '강릉', '한국', '🇰🇷', ['강릉', 'gangneung', '속초', '양양'],
+  [['jm', '주문진'], ['gm', '경포·초당'], ['ac', '안목 해변'], ['ct', '강릉 시내'], ['dw', '정동진'], ['!so', '속초·양양', {"how": "차로 약 1시간 · 버스 약 1시간 20분", "icon": "🚗", "plan": "day", "stay": "속초 해변", "what": "설악산 케이블카와 속초 시장, 양양 서핑", "who": "kpr"}]],
+  [6, 7, 12, 19, 23, 26, 29, 29, 25, 21, 14, 8],
+  [['4', '경포호 벚꽃이 예뻐요.'], ['7-8', '해수욕장 성수기예요.'], ['1', '정동진 해맞이가 유명해요.']],
+  `주문진 수산시장|jm|f|2|pr|대게·회 수산시장
+*도깨비 촬영지 방파제|jm|s|1|c|드라마 속 그 방파제
+경포대·경포해변|gm|s|3|kpcrs|강릉 대표 해변과 누각
+*경포호 산책|gm|s|1|ps|호수를 도는 산책길
+초당순두부 마을|gm|f|3|kp|짬뽕순두부와 순두부 젤라또
+안목 커피거리|ac|f|3|cr|바다 보며 커피 한잔
+오죽헌|ct|s|2|kp|율곡 이이가 태어난 집
+강릉 중앙시장|ct|f|2|kr|닭강정·고로케 먹거리
+*선교장|ct|s|1|p|조선 사대부 고택
+*월화거리|ct|n|1|r|옛 철길 위 산책로와 야시장
+정동진 레일바이크|dw|s|2|kc|바다 옆 레일바이크
+하슬라 아트월드|dw|s|2|c|바다 언덕 위 미술관
+설악산 케이블카·속초 중앙시장|so|s|2|kp|권금성 전망과 닭강정
+*양양 서피비치|so|s|2|r|서핑과 해변 펍
+속초 아바이마을 갯배|so|f|1|kp|줄 당기는 배 타고 오징어순대`);
+
+city('gyeongju', '경주', '한국', '🇰🇷', ['경주', 'gyeongju'],
+  [['hw', '황리단길·대릉원'], ['wl', '첨성대·동궁과 월지'], ['bm', '보문단지'], ['bg', '불국사·토함산']],
+  [6, 8, 14, 20, 25, 28, 30, 31, 26, 21, 14, 8],
+  [['4', '보문호 벚꽃이 절정이에요.'], ['9-10', '첨성대 주변 핑크뮬리가 예뻐요.'], ['10-11', '불국사 단풍 시즌이에요.'], ['7-8', '매우 더워요. 낮엔 실내, 저녁엔 야경 일정을 추천해요.']],
+  `대릉원·천마총|hw|s|3|kps|신라 왕릉 사이 산책
+황리단길|hw|f|3|crs|한옥 카페와 맛집 골목
+경주 쌈밥 거리|hw|f|2|kp|푸짐한 쌈밥 정식
+*경주 십원빵|hw|f|1|kr|10원 동전 모양 치즈빵
+첨성대|wl|s|2|kps|동양에서 가장 오래된 천문대
+동궁과 월지 야경#nightpalace|wl|n|3|kpcr|연못에 비친 궁궐 야경
+*월정교 야경#nightpalace|wl|n|2|c|불 켜진 신라 다리
+*교촌마을|wl|s|1|p|최부잣집과 한옥 마을
+*국립경주박물관|wl|s|1|kp|신라 금관과 에밀레종
+보문호 산책|bm|s|2|pc|호수 둘레길, 봄엔 벚꽃
+경주월드|bm|s|2|kr|롤러코스터 테마파크
+불국사|bg|s|3|kpcrs|다보탑·석가탑
+석굴암|bg|s|2|p|토함산 위 석굴 불상`);
+
+// 첫날 도착·마지막 날 출발 지점: [이름, 시내까지 가는 방법, 기차역이면 true]
+const GATEWAYS = {
+  osaka: ['간사이 국제공항', '난카이 라피트로 난바까지 약 40분'],
+  tokyo: ['하네다·나리타 공항', '하네다는 시내까지 약 30분, 나리타는 스카이라이너로 약 45분'],
+  fukuoka: ['후쿠오카 공항', '지하철로 하카타역까지 약 5분'],
+  sapporo: ['신치토세 공항', 'JR 쾌속 에어포트로 삿포로역까지 약 40분'],
+  okinawa: ['나하 공항', '렌터카를 받거나, 모노레일로 국제거리까지 약 15분'],
+  danang: ['다낭 국제공항', '택시·그랩으로 미케 해변까지 약 15분'],
+  nhatrang: ['깜라인 국제공항', '차로 나트랑 시내까지 약 40분'],
+  bangkok: ['수완나품 공항', '공항철도나 택시로 시내까지 30~50분'],
+  taipei: ['타오위안 국제공항', '공항 MRT로 타이베이역까지 약 40분'],
+  singapore: ['창이 공항', '쥬얼 실내 폭포 구경 후 시내까지 약 25분'],
+  cebu: ['막탄 세부 국제공항', '막탄 리조트까지 차로 약 20분'],
+  bali: ['응우라라이 국제공항', '꾸따까지 약 15분, 우붓까지 약 1시간 30분'],
+  hongkong: ['홍콩 국제공항', '공항철도(AEL)로 센트럴까지 약 25분'],
+  paris: ['샤를 드골 공항', 'RER B선으로 시내까지 약 40분'],
+  london: ['히드로 공항', '엘리자베스 라인·히드로 익스프레스로 20~40분'],
+  rome: ['피우미치노 공항', '레오나르도 익스프레스로 테르미니역까지 약 32분'],
+  barcelona: ['엘 프라트 공항', '에어로버스로 카탈루냐 광장까지 약 35분'],
+  newyork: ['JFK 공항', '에어트레인+지하철로 맨해튼까지 약 1시간'],
+  hawaii: ['호놀룰루 국제공항', '와이키키까지 차로 약 25분'],
+  guam: ['괌 국제공항', '투몬 호텔까지 차로 약 10분'],
+  seoul: ['서울역 (KTX·공항철도)', 'KTX면 바로 도착, 인천공항에서는 공항철도로 약 1시간', true],
+  jeju: ['제주국제공항', '렌터카를 받아 바로 출발'],
+  busan: ['김해국제공항·부산역', 'KTX면 부산역, 비행기면 김해공항에서 해운대까지 약 50분'],
+  gangneung: ['강릉역', '서울역에서 KTX로 약 2시간', true],
+  gyeongju: ['신경주역', 'KTX 역에서 황리단길까지 버스·택시로 약 30분', true],
+};
+
+// 숙소 동네 추천. 한 줄 형식: 동네|이유|잘 맞는 동행|가까운 지역 id(쉼표)
+// 앞에 있을수록 기본 추천도가 높고, 동행이 맞거나 루트에서 그 지역에 머무는 날이 많으면 위로 올라간다.
+const STAYS = {
+  osaka: `난바|간사이공항에서 라피트 직행, 도톤보리·구로몬 시장이 걸어서 가까워요. 처음 가는 오사카라면 가장 무난해요|rcs|nb,sh
+우메다|JR·한큐 출발점이라 교토·나라 이동이 편하고, 백화점과 깔끔한 호텔이 많아요|pck|um,os
+유니버설 시티|USJ 바로 앞 호텔이라 아이와 파크를 오래 즐기기 좋아요|k|bay`,
+  tokyo: `신주쿠|공항 리무진버스와 JR 노선이 모이는 교통 중심, 숙소 선택지가 가장 많아요|rs|sj,sb
+긴자·도쿄역|조용하고 깔끔해요. 나리타·하네다 이동도 편해서 부모님과 가기 좋아요|pc|gz
+우에노·아사쿠사|스카이라이너로 나리타 직행, 숙소비가 비교적 저렴해요|ks|as
+마이하마 (디즈니 리조트)|디즈니를 이틀 즐길 계획이면 파크 앞 호텔이 편해요|k|kd`,
+  fukuoka: `하카타역|공항 지하철 5분, 유후인·다자이후 가는 버스·기차 출발점이에요|pkrs|hk
+텐진·나카스|쇼핑과 포장마차가 걸어서 가까워 밤에 놀기 좋아요|rc|tj,sp`,
+  sapporo: `스스키노·오도리|맛집과 밤거리 중심, 눈축제 회장까지 걸어갈 수 있어요|rcs|od,wt
+삿포로역|신치토세 공항 JR 직행, 오타루·비에이 가는 기차 출발점이에요|pk|sp`,
+  okinawa: `나하 국제거리|모노레일로 공항 15분, 렌터카 없이도 다니기 쉬워요|rs|nh,sn
+중부 서해안 (온나·차탄)|리조트 호텔과 선셋 비치, 렌터카 여행의 중간 거점이에요|kpc|cn
+북부 모토부|츄라우미 수족관·코우리섬이 가까운 리조트|kc|nt`,
+  danang: `미케 해변|바다 앞 호텔·리조트가 모여 있고 공항까지 15분이에요|kpc|mk,sn
+다낭 시내 (한강 주변)|용다리·한시장이 걸어서 가깝고 숙소비가 저렴해요|rs|ct
+호이안|올드타운 등불 야경을 밤늦게까지 즐기고 싶다면 1~2박 추천해요|c|ha`,
+  nhatrang: `나트랑 해변 (쩐푸 거리)|해변·야시장·식당이 모두 걸어서 가까워요|rcs|bc,nt
+깜라인 리조트 단지|공항이 가깝고 조용한 올인클루시브 리조트가 많아요|kp|
+혼째섬 빈펄|빈원더스와 바로 이어진 섬 리조트|k|vw`,
+  bangkok: `수쿰윗 (아속·프롬퐁)|BTS·MRT 환승이 편하고 맛집·마사지 가게가 많아요|rcs|sk
+짜오프라야 강변|강변 호텔에서 보트로 왕궁까지 가고, 강 야경이 좋아요|pc|rt
+시암|대형 쇼핑몰 바로 앞, BTS 환승역이라 어디든 가기 쉬워요|k|sk
+카오산|숙소비가 저렴하고 왕궁이 가까워요|r|ks,rt`,
+  taipei: `타이베이역·중산|공항 MRT 직행, 예스진지 투어 모이는 곳이 가까워요|pkrs|xm,da
+시먼딩|밤늦게까지 먹거리가 많은 젊은 동네|r|xm
+신이 (101 주변)|고급 호텔과 101 야경|c|xy`,
+  singapore: `마리나 베이|야경이 보이는 호텔, 가든스 바이 더 베이가 걸어서 가까워요|c|mb
+클락키·차이나타운|호커센터와 강변 바, MRT가 편하고 비교적 합리적이에요|rs|cq
+센토사|리조트·유니버설 스튜디오·해변이 한곳에 있어 아이와 좋아요|k|ss
+오차드|쇼핑 거리의 조용한 대형 호텔|p|oc`,
+  cebu: `막탄 리조트 단지|공항 20분, 리조트 안에서 바다와 수영장을 즐겨요|kpc|mt
+세부 시티 (IT파크)|숙소비가 저렴하고 맛집이 많아요. 남부 투어 출발도 편해요|rs|ct`,
+  bali: `스미냑|비치클럽·레스토랑이 모인 곳, 노을 보기 좋아요|rc|kt
+우붓|정글 뷰 풀빌라, 논·사원 투어의 거점이에요|pcs|ub
+누사두아|조용한 대형 리조트와 잔잔한 해변, 아이와 안전해요|kp|nd,ul`,
+  hongkong: `침사추이|야경·쇼핑 중심, 공항버스로 바로 와요|kpcrs|ts,mk
+센트럴·셩완|피크트램·소호가 가깝고 공항철도 홍콩역이 있어요|rc|ct
+몽콕|숙소비가 저렴하고 야시장이 가까워요|rs|mk`,
+  paris: `마레|루브르·노트르담까지 걸어서 가고, 카페·편집숍이 많아요|rcs|lv
+생제르맹|비교적 조용하고 안전한 편, 카페 거리|pc|lb
+에펠탑 주변 (7·15구)|창밖으로 에펠탑이 보이는 호텔이 있어요|kc|ef
+오페라|공항버스(루아시버스) 종점, 백화점 쇼핑이 편해요|p|`,
+  london: `코벤트 가든·소호|뮤지컬 극장과 맛집이 걸어서 가까워요|rcs|cv
+사우스 켄싱턴|박물관이 가깝고 조용해요. 히드로에서 피카딜리선 직행|kp|kn
+웨스트민스터·사우스뱅크|빅벤·런던 아이 바로 앞|c|wm,sb`,
+  rome: `트레비·판테온 (첸트로 스토리코)|대부분의 명소를 걸어서 다닐 수 있어요|pc|ct
+테르미니역|공항 열차·피렌체 기차 출발점, 숙소비가 합리적이에요 (밤엔 소지품 주의)|rs|cl
+트라스테베레|골목 레스토랑이 많아 저녁 분위기가 좋아요|c|tr`,
+  barcelona: `에이샴플레 (그라시아 거리)|가우디 건물과 쇼핑 중심, 비교적 안전해요|kpc|eg,gr
+고딕 지구·엘 보른|골목 감성과 타파스 바 (소매치기 주의)|rs|gt
+바르셀로네타|해변 바로 앞|kc|bc`,
+  newyork: `미드타운 (타임스스퀘어 주변)|뮤지컬·전망대가 걸어서 가까워요. 처음이라면 가장 무난해요|kpcrs|mt,cp
+첼시·그리니치빌리지|하이라인·첼시마켓 근처, 현지 분위기|cs|lm
+브루클린|맨해튼보다 저렴하고 덤보 야경이 가까워요|r|bk`,
+  hawaii: `와이키키|해변·쇼핑·식당이 모두 모여 있어요|kpcrs|wk,dh
+코올리나|서쪽 리조트 단지, 잔잔한 라군이 있어 아이와 좋아요|k|pt
+노스쇼어 (터틀 베이)|조용한 리조트에서 쉬고 싶을 때|c|ns`,
+  guam: `투몬|호텔·해변·쇼핑이 모두 모여 있어요|kpcrs|tm
+하갓냐|숙소비가 저렴하고 남부 드라이브 출발이 편해요|r|hg`,
+  seoul: `명동·을지로|공항버스·지하철이 편하고 남산·종로가 가까워요. 처음이라면 가장 무난해요|kpcrs|ms,jg
+홍대·연남|밤늦게까지 놀기 좋고, 홍대입구역에서 인천공항 직행 공항철도를 타요|rs|mp,yd
+종로·광화문 (한옥 스테이)|고궁·북촌을 걸어서 다니고 한옥 숙소도 체험해요|pc|jg
+강남·잠실|롯데월드·코엑스가 가깝고 깔끔한 호텔이 많아요|k|gn,ss
+성수|요즘 가장 핫한 카페 거리, 서울숲 바로 옆|cs|ss`,
+  jeju: `서귀포·중문|리조트·호텔 단지, 아이와 가기 좋아요|kpc|sw,hl
+제주시 (공항 근처)|첫날·마지막 날 공항 이동이 편하고 동문시장이 가까워요|rs|jc
+애월·협재|바다가 보이는 감성 숙소가 많아요|c|ws
+성산|아침 일찍 일출 보러 가기 좋아요|p|ew`,
+  busan: `해운대|해변 앞 호텔, 블루라인파크가 가까워요|kpc|hu,gj
+광안리|광안대교가 보이는 숙소|rc|gw
+부산역·남포|KTX 이동이 편하고 숙소비가 저렴해요|s|nm,yd`,
+  gangneung: `경포|해변 호텔·리조트가 모여 있어요|kpc|gm,jm
+안목·강문|오션뷰 감성 숙소, 커피거리가 가까워요|c|ac
+강릉역 주변|KTX 이동이 편하고 중앙시장이 가까워요|rs|ct`,
+  gyeongju: `황리단길 (한옥 숙소)|걸어서 대릉원·첨성대·동궁과 월지까지, 한옥 스테이|crs|hw,wl
+보문단지|리조트·호텔이 모여 있고 경주월드가 가까워요|kp|bm,bg`,
+};
+
+const COUNTRY_ORDER = ['한국', '일본', '베트남', '태국', '대만', '홍콩', '싱가포르', '필리핀', '인도네시아', '미국', '프랑스', '영국', '이탈리아', '스페인'];
+const COUNTRY_ALIAS = { '한국': ['국내', '대한민국', 'korea'], '일본': ['japan'], '베트남': ['vietnam'], '태국': ['thailand'], '대만': ['taiwan'], '홍콩': [], '싱가포르': [], '필리핀': ['philippines'], '인도네시아': ['indonesia'], '미국': ['usa', 'america'], '프랑스': ['france'], '영국': ['uk', 'england'], '이탈리아': ['italy'], '스페인': ['spain'] };
+
+/* ------------------------------------------------------------------
+   상태
+------------------------------------------------------------------- */
+const state = {
+  month: null, days: 4, who: null,
+  cityId: null,
+  musts: [],      // { text, spotId|null }
+  routes: [],     // { kind, title, intro, days, ... }
+  active: 0,
+  answered: null, // 'yes' | 'no'
+};
+
+/* ------------------------------------------------------------------
+   유틸
+------------------------------------------------------------------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const norm = s => String(s).toLowerCase().replace(/[\s·()\-/,.'"]/g, '');
+const cityById = id => CITIES.find(c => c.id === id);
+const dayLabel = d => d === 1 ? '당일치기' : `${d - 1}박 ${d}일`;
+const whoLabel = id => { const w = WHO.find(x => x.id === id); return w.sub ? `${w.label}(${w.sub})` : w.label; };
+function hasBatchim(word) {
+  const ch = word.charCodeAt(word.length - 1);
+  if (ch < 0xAC00 || ch > 0xD7A3) return false;
+  return (ch - 0xAC00) % 28 !== 0;
+}
+const josa = (word, a, b) => word + (hasBatchim(word) ? a : b);
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove('on'), 1800);
+}
+const mapUrl = (name, c) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(`${name.replace(/\(.*?\)/g, '')} ${c.name.replace(/\(.*?\)/g, '')}`);
+
+/* ------------------------------------------------------------------
+   루트 만들기
+------------------------------------------------------------------- */
+const SLOT_ORDER = ['오전', '점심', '오후', '저녁'];
+const SLOT_KINDS = { '오전': ['s'], '점심': ['f'], '오후': ['s'], '저녁': ['n', 'f'] };
+
+function dayTemplates(days) {
+  if (days === 1) return [['오전', '점심', '오후', '저녁']];
+  return Array.from({ length: days }, (_, i) =>
+    i === 0 ? ['점심', '오후', '저녁'] : i === days - 1 ? ['오전', '점심'] : ['오전', '점심', '오후', '저녁']);
+}
+
+function scoreSpot(s, opts, variant, avoid) {
+  const must = opts.mustIds.has(s.id);
+  if (!must && s.m && !s.m.includes(opts.month)) return null;
+  if (!must && s.no.includes(opts.who)) return null;
+  let sc = variant === 'alt'
+    ? (s.alt ? 5 : 0) + s.p * 0.7 - (avoid.has(s.id) ? 8 : 0)
+    : s.p * 2 - (s.alt ? 1.5 : 0);
+  if (s.w.includes(opts.who)) sc += 3;
+  if (s.m) sc += 4;
+  if (must) sc += 100;
+  return sc;
+}
+
+function buildRoute(c, opts, variant, avoid = new Set()) {
+  const pool = [];
+  c.spots.forEach((s, i) => {
+    const sc = scoreSpot(s, opts, variant, avoid);
+    if (sc !== null) pool.push({ s, sc: sc - i * 0.001, order: i });
+  });
+  // 비슷한 곳(같은 #그룹)은 사람들이 가장 많이 가는(인기 최고) 한 곳만 남긴다.
+  // 가고 싶은 곳으로 고른 곳이 있으면 그곳을 남기고, 다른 루트는 대표 루트에 없던 곳 중에서 고른다.
+  const groups = {};
+  pool.forEach(x => { if (x.s.g) (groups[x.s.g] = groups[x.s.g] || []).push(x); });
+  const drop = new Set();
+  Object.values(groups).forEach(list => {
+    if (list.length < 2) return;
+    const musts = list.filter(x => opts.mustIds.has(x.s.id));
+    let keep = musts;
+    if (!musts.length) {
+      const fresh = list.filter(x => !avoid.has(x.s.id));
+      const cand = variant === 'alt' && fresh.length ? fresh : list;
+      keep = [cand.slice().sort((a, b) => b.s.p - a.s.p || a.order - b.order)[0]];
+    }
+    list.forEach(x => { if (!keep.includes(x)) drop.add(x.s.id); });
+  });
+  const byArea = {};
+  pool.filter(x => !drop.has(x.s.id)).forEach(x => (byArea[x.s.a] = byArea[x.s.a] || []).push(x));
+  Object.values(byArea).forEach(list => list.sort((a, b) => b.sc - a.sc));
+  const areaOf = id => c.areas.find(a => a.id === id);
+
+  // 1) 날마다 머물 지역 고르기
+  //    사용자가 고른 근교(opts.nearby: {지역 id: 'day' | 'night'})는 먼저 날을 떼어 두고, 그때는 자동 근교를 넣지 않는다.
+  const days = opts.days;
+  const nearby = opts.nearby || {};
+  const forced = Object.keys(nearby).filter(id => areaOf(id) && areaOf(id).trip);
+  const tripEntries = [];
+  forced.forEach(id => {
+    if (nearby[id] === 'night') tripEntries.push([{ area: id, part: 'nightA' }, { area: id, part: 'nightB' }]);
+    else tripEntries.push([{ area: id, part: 'day' }]);
+  });
+  const localDays = Math.max(1, days - tripEntries.flat().length);
+  const tripLimit = forced.length ? 0
+    : variant === 'alt' ? Math.max(days >= 3 ? 1 : 0, Math.floor((days - 1) / 2)) : (days >= 4 ? 1 : 0);
+  const sim = new Set();
+  const chosen = [];
+  const value = {};
+  const take = aid => {
+    const top = (byArea[aid] || []).filter(x => !sim.has(x.s.id)).slice(0, 3);
+    top.forEach(x => sim.add(x.s.id));
+    value[aid] = Math.max(value[aid] || 0, top.reduce((t, x) => t + x.sc, 0));
+    chosen.push(aid);
+  };
+  // 가고 싶은 곳으로 고른 근교 도시(opts.mustAreas)와 가고 싶은 장소가 있는 지역은 꼭 하루씩 잡는다
+  const mustAreas = [...new Set([...(opts.mustAreas || []).filter(areaOf), ...pool.filter(x => opts.mustIds.has(x.s.id)).map(x => x.s.a)])];
+  mustAreas.filter(a => !forced.includes(a)).slice(0, localDays).forEach(take);
+  let trips = chosen.filter(a => areaOf(a).trip).length;
+  while (chosen.length < localDays) {
+    let best = null, bestV = -Infinity;
+    for (const a of c.areas) {
+      if (a.trip && trips >= tripLimit) continue;
+      const left = (byArea[a.id] || []).filter(x => !sim.has(x.s.id));
+      if (!left.some(x => x.s.k.includes('s'))) continue;
+      let v = left.slice(0, 3).reduce((t, x) => t + x.sc, 0);
+      if (a.trip) v += variant === 'alt' ? 6 : -1;
+      if (chosen.includes(a.id)) v -= 4;
+      if (v > bestV) { bestV = v; best = a; }
+    }
+    if (!best) best = c.areas.filter(a => !a.trip)[chosen.length % c.areas.filter(a => !a.trip).length];
+    take(best.id);
+    if (best.trip) trips++;
+  }
+
+  // 2) 지역 순서: 가까운 순(지역 목록 순서), 근교는 가운데로.
+  //    반나절뿐인 마지막 날에는 볼거리가 가장 적은 지역을, 하루 종일 걸리는 곳(테마파크)이 있는 지역은 빼고 둔다.
+  const local = chosen.filter(a => !areaOf(a).trip).sort((a, b) => areaOf(a).idx - areaOf(b).idx);
+  let lastArea = null;
+  if (days >= 2 && local.length >= 2) {
+    const allDay = a => (byArea[a] || []).slice(0, 2).some(x => x.s.k.includes('a'));
+    lastArea = local.slice().sort((a, b) => (allDay(a) - allDay(b)) || (value[a] - value[b]))[0];
+    local.splice(local.lastIndexOf(lastArea), 1);
+  }
+  chosen.filter(a => areaOf(a).trip).forEach(a => tripEntries.push([{ area: a, part: 'day' }]));
+  const order = local.map(a => ({ area: a, part: 'local' }));
+  let at = Math.min(order.length, Math.max(1, Math.ceil(local.length / 2)));
+  tripEntries.forEach(group => { order.splice(at, 0, ...group); at += group.length; });
+  if (lastArea) order.push({ area: lastArea, part: 'local' });
+
+  // 3) 칸 채우기
+  const templates = dayTemplates(days);
+  const placed = new Set();
+  const plan = order.map(o => ({ area: o.area, part: o.part, items: [] }));
+  // 근교 날에 그 도시에서 보내는 칸: 당일은 근교 정보의 use(없으면 하루 전체),
+  // 1박 첫날은 오전에 출발해 점심부터(볼거리를 이틀에 나눠 쓰도록), 둘째 날은 오전·점심
+  const tripSlotsOf = (day, slots) => {
+    if (day.part === 'local') return [];
+    if (day.part === 'nightA') return slots.filter(s => s !== '오전');
+    if (day.part === 'nightB') return slots.filter(s => s === '오전' || s === '점심');
+    const use = (areaOf(day.area).nb || {}).use;
+    return use ? slots.filter(s => use.includes(s)) : slots;
+  };
+  // 근교에서 돌아온 뒤의 칸은 시내 지역 중 점수가 가장 높은 남은 곳으로
+  const findLocal = kinds => {
+    const list = c.areas.filter(a => !a.trip).flatMap(a => byArea[a.id] || [])
+      .filter(x => !placed.has(x.s.id) && !x.s.k.includes('a')).sort((a, b) => b.sc - a.sc);
+    for (const k of kinds) { const hit = list.find(x => x.s.k.includes(k)); if (hit) return hit; }
+    return null;
+  };
+  // 먼저 모든 날을 그날 지역으로 채우고(1차), 남은 빈칸만 바로 옆 지역에서 빌려 온다(2차).
+  // 이렇게 해야 앞날이 뒷날 지역의 명소를 먼저 가져가지 않는다.
+  const tiersFor = (aid, borrow) => {
+    const a = areaOf(aid);
+    if (!borrow) return [aid];
+    if (a.trip) return [];
+    return c.areas.filter(x => !x.trip && x.id !== aid && Math.abs(x.idx - a.idx) === 1).map(x => x.id);
+  };
+  const findSpot = (aid, kinds, fullDay, borrow) => {
+    const ok = x => !placed.has(x.s.id) && (fullDay || !x.s.k.includes('a'));
+    for (const tier of tiersFor(aid, borrow)) {
+      const list = (byArea[tier] || []).filter(ok);
+      for (const k of kinds) {
+        // 낮 칸에는 야경이 아닌 곳을 먼저 (야경도 되는 곳은 저녁에 쓰이도록)
+        const hit = (k === 's' && list.find(x => x.s.k.includes('s') && !x.s.k.includes('n'))) ||
+          list.find(x => x.s.k.includes(k));
+        if (hit) return hit;
+      }
+    }
+    return null;
+  };
+  plan.forEach((day, i) => {
+    const slots = templates[i];
+    const tripSlots = tripSlotsOf(day, slots);
+    const fullDay = ['오전', '점심', '오후'].every(s => day.part === 'local' ? slots.includes(s) : tripSlots.includes(s));
+    let allDaySpot = null;
+    slots.forEach(slot => {
+      if (allDaySpot && slot === '점심') { day.items.push({ slot, placeholder: true, inside: allDaySpot }); return; }
+      if (allDaySpot && slot === '오후') { day.items.push({ slot, cont: allDaySpot }); return; }
+      const base = day.part !== 'local' && !tripSlots.includes(slot);
+      const hit = base ? findLocal(SLOT_KINDS[slot]) : findSpot(day.area, SLOT_KINDS[slot], fullDay && slot === '오전', false);
+      if (hit) {
+        placed.add(hit.s.id);
+        day.items.push({ slot, spot: hit.s, must: opts.mustIds.has(hit.s.id) });
+        if (hit.s.k.includes('a') && slot === '오전') allDaySpot = hit.s;
+      } else {
+        day.items.push({ slot, placeholder: true });
+      }
+    });
+  });
+  plan.forEach(day => {
+    if (day.part !== 'local') return;
+    day.items.forEach((it, j) => {
+      if (!it.placeholder || it.inside) return;
+      const hit = findSpot(day.area, SLOT_KINDS[it.slot], false, true);
+      if (hit) {
+        placed.add(hit.s.id);
+        day.items[j] = { slot: it.slot, spot: hit.s, must: opts.mustIds.has(hit.s.id) };
+      }
+    });
+  });
+
+  // 4) 아직 못 넣은 '가고 싶은 곳'은 같은(가까운) 지역의 날에 끼워 넣기
+  const middleFirst = plan.map((_, i) => i).sort((a, b) => {
+    const score = i => (i === 0 || i === days - 1) && days > 2 ? 1 : 0;
+    return score(a) - score(b) || a - b;
+  });
+  const insert = (dayIdx, item, preferSlot) => {
+    const day = plan[dayIdx];
+    const slots = templates[dayIdx];
+    const slot = slots.includes(preferSlot) ? preferSlot
+      : slots.find(s => SLOT_KINDS[s].some(k => item.spot && item.spot.k.includes(k))) || slots[slots.length - 1];
+    // 하루 종일 일정(테마파크)과 그 이어지는 칸은 지우지 않는다
+    const free = it => it.slot === slot && !it.must && !it.custom && !it.cont && !it.inside && !(it.spot && it.spot.k.includes('a'));
+    const at = day.items.findIndex(it => free(it) && it.placeholder) >= 0
+      ? day.items.findIndex(it => free(it) && it.placeholder) : day.items.findIndex(free);
+    if (at >= 0) {
+      const removed = day.items[at];
+      if (removed.spot) placed.delete(removed.spot.id);
+      day.items[at] = { ...item, slot };
+    } else {
+      day.items.push({ ...item, slot });
+    }
+    sortItems(day.items);
+    return dayIdx;
+  };
+  const notes = [];
+  pool.filter(x => opts.mustIds.has(x.s.id) && !placed.has(x.s.id)).forEach(x => {
+    const a = areaOf(x.s.a);
+    let dayIdx = plan.findIndex(d => d.area === x.s.a);
+    if (dayIdx < 0) {
+      dayIdx = middleFirst.slice().sort((p, q) =>
+        Math.abs(areaOf(plan[p].area).idx - a.idx) - Math.abs(areaOf(plan[q].area).idx - a.idx))[0];
+    }
+    const prefer = x.s.k.includes('s') ? '오후' : x.s.k.includes('n') ? '저녁' : '점심';
+    insert(dayIdx, { spot: x.s, must: true }, prefer);
+    placed.add(x.s.id);
+  });
+
+  // 5) 정보가 없는 장소(직접 입력)는 가운데 날부터 오후에 넣기
+  //    근교에 가는 날은 피한다 (시내 날이 하나도 없을 때만 근교 날에)
+  const customDays = middleFirst.filter(i => plan[i].part === 'local').length ? middleFirst.filter(i => plan[i].part === 'local') : middleFirst;
+  opts.customs.forEach((text, i) => {
+    const dayIdx = customDays[i % customDays.length];
+    const prefer = templates[dayIdx].includes('오후') ? '오후' : '오전';
+    insert(dayIdx, { custom: text }, prefer);
+    notes.push(`'${text}'${hasBatchim(text) ? '은' : '는'} 위치 정보가 없어 ${dayIdx + 1}일차 ${prefer}에 넣었어요. 지도로 동선을 확인해 보세요.`);
+  });
+
+  // 6) 근교 날에 이동·복귀·숙박 칸 넣기 (근교에서 보내는 칸 앞뒤로)
+  plan.forEach((day, i) => {
+    if (day.part === 'local') return;
+    const tripSlots = tripSlotsOf(day, templates[i]);
+    const idx = s => SLOT_SORT.indexOf(s);
+    const first = Math.min(...tripSlots.map(idx)), last = Math.max(...tripSlots.map(idx));
+    if (day.part !== 'nightB') day.items.push({ slot: '이동', travel: 'go', area: day.area, ord: first - 0.5 });
+    if (day.part === 'nightA') day.items.push({ slot: '숙박', travel: 'stay', area: day.area, ord: 8 });
+    else day.items.push({ slot: '복귀', travel: 'back', area: day.area, ord: last + 0.5 });
+    sortItems(day.items);
+  });
+
+  // 7) 첫날 맨 앞에 도착, 마지막 날 맨 뒤에 출발(공항·역)
+  const gw = GATEWAYS[c.id];
+  if (gw) {
+    plan[0].items.unshift({ slot: '도착', gate: 'in' });
+    plan[plan.length - 1].items.push({ slot: '출발', gate: 'out' });
+  }
+
+  return { days: plan, notes, usedIds: new Set(plan.flatMap(d => d.items.filter(it => it.spot).map(it => it.spot.id))) };
+}
+
+/* ------------------------------------------------------------------
+   화면 1: 여행 정보
+------------------------------------------------------------------- */
+function renderPlan() {
+  $('months').innerHTML = Array.from({ length: 12 }, (_, i) =>
+    `<button type="button" class="chip" data-m="${i + 1}" aria-pressed="${state.month === i + 1}">${i + 1}월</button>`).join('');
+  $('whoChips').innerHTML = WHO.map(w =>
+    `<button type="button" class="chip" data-w="${w.id}" aria-pressed="${state.who === w.id}">${w.label}${w.sub ? `<small>${w.sub}</small>` : ''}</button>`).join('');
+  $('dayVal').textContent = dayLabel(state.days);
+  $('daySub').textContent = state.days === 1 ? '하루 일정' : `${state.days}일 일정`;
+  $('dayMinus').disabled = state.days <= 1;
+  $('dayPlus').disabled = state.days >= 10;
+  $('toDest').disabled = !(state.month && state.who);
+}
+$('months').addEventListener('click', e => {
+  const b = e.target.closest('[data-m]'); if (!b) return;
+  state.month = Number(b.dataset.m); renderPlan();
+});
+$('whoChips').addEventListener('click', e => {
+  const b = e.target.closest('[data-w]'); if (!b) return;
+  state.who = b.dataset.w; renderPlan();
+});
+$('dayMinus').onclick = () => { state.days = Math.max(1, state.days - 1); renderPlan(); };
+$('dayPlus').onclick = () => { state.days = Math.min(10, state.days + 1); renderPlan(); };
+$('toDest').onclick = () => show('screenDest');
+$('backPlan').onclick = () => show('screenPlan');
+// 왼쪽 위 '<': 결과 → 여행지 고르기 → 여행 정보 순으로 한 단계씩 돌아간다
+$('backBtn').onclick = () => show($('screenResult').classList.contains('on') ? 'screenDest' : 'screenPlan');
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  $('stepLabel').textContent = id === 'screenPlan' ? '1 / 2' : id === 'screenDest' ? '2 / 2' : '추천 루트';
+  if (id !== 'screenResult') delete document.documentElement.dataset.country;
+  $('backBtn').hidden = id === 'screenPlan';
+  window.scrollTo({ top: 0 });
+  if (id === 'screenDest') { renderCountries(); setTimeout(() => $('searchInput').focus(), 50); }
+}
+
+/* ------------------------------------------------------------------
+   화면 2: 여행지 검색
+------------------------------------------------------------------- */
+function renderCountries() {
+  $('countryList').innerHTML = COUNTRY_ORDER.map(country => {
+    const cs = CITIES.filter(c => c.country === country);
+    return `<div class="country"><h3>${country}</h3><div class="chips">${cs.map(c =>
+      `<button type="button" class="chip" data-city="${c.id}">${c.flag} ${c.name}</button>`).join('')}</div></div>`;
+  }).join('');
+}
+function searchDest(q) {
+  const t = norm(q);
+  if (!t) return [];
+  const out = new Map();
+  const add = (c, reason) => { if (!out.has(c.id)) out.set(c.id, reason); };
+  CITIES.forEach(c => {
+    if (norm(c.name).includes(t) || c.alias.some(a => norm(a) === t || (t.length >= 2 && norm(a).includes(t)))) add(c, c.country);
+  });
+  COUNTRY_ORDER.forEach(country => {
+    if ([country, ...COUNTRY_ALIAS[country]].some(a => norm(a) === t || (t.length >= 2 && norm(a).includes(t))))
+      CITIES.filter(c => c.country === country).forEach(c => add(c, `${country}의 도시`));
+  });
+  if (t.length >= 2) CITIES.forEach(c => {
+    const s = c.spots.find(s => norm(s.name).includes(t));
+    if (s) add(c, `'${s.name}'${hasBatchim(s.name) ? '이' : '가'} 있는 도시`);
+  });
+  if (t.length >= 2) CITIES.forEach(c => {
+    const a = c.areas.find(a => a.trip && norm(a.name).includes(t));
+    if (a) add(c, `근교에 '${a.name}'${hasBatchim(a.name) ? '이' : '가'} 있는 도시`);
+  });
+  return [...out].map(([id, reason]) => ({ c: cityById(id), reason }));
+}
+$('searchForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const q = $('searchInput').value.trim();
+  const found = searchDest(q);
+  if (!q) { $('results').innerHTML = ''; return; }
+  if (!found.length) {
+    $('results').innerHTML = `<div class="notice">
+      <b>'${esc(q)}'</b>${hasBatchim(q) ? '은' : '는'} 아직 루트가 준비되지 않은 곳이에요.<br>
+      아래 목록에서 고르거나, <a href="https://search.naver.com/search.naver?where=blog&query=${encodeURIComponent(q + ' ' + dayLabel(state.days) + ' 여행 코스')}" target="_blank" rel="noopener">네이버 블로그에서 '${esc(q)}' 코스 찾아보기 ↗</a></div>`;
+    return;
+  }
+  $('results').innerHTML = found.map(({ c, reason }) =>
+    `<button type="button" class="result" data-city="${c.id}"><span class="flag">${c.flag}</span><div><b>${c.name}</b><span>${esc(reason)}</span></div></button>`).join('');
+});
+$('searchInput').addEventListener('input', () => {
+  const q = $('searchInput').value.trim();
+  if (q.length >= 1) $('searchForm').requestSubmit(); else $('results').innerHTML = '';
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-city]');
+  if (!b) return;
+  pickCity(b.dataset.city);
+});
+
+function pickCity(id) {
+  state.cityId = id;
+  state.musts = [];
+  state.nearby = {};
+  state.answered = null;
+  const c = cityById(id);
+  const opts = routeOpts();
+  const r = buildRoute(c, opts, 'classic');
+  state.routes = [{ kind: 'classic', title: '대표 루트', head: '블로그에서 가장 많이 가는 대표 루트', ...r }];
+  state.active = 0;
+  document.documentElement.dataset.country = c.country;
+  show('screenResult');
+  renderResult();
+  playFlight(c);
+}
+
+/* ---------- 로딩: 구름 위를 두둥실 나는 비행기를 보여 준 뒤 카드가 하나씩 내려앉는다 (화면을 누르면 건너뜀) ---------- */
+function playFlight(c) {
+  const f = $('flight');
+  const quick = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('flightText').innerHTML = `<small>${c.flag} ${c.country}</small><b>${c.name}</b><span>${dayLabel(state.days)} 루트 짜는 중<i>.</i><i>.</i><i>.</i></span>`;
+  clearTimeout(playFlight.land); clearTimeout(playFlight.done);
+  f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+  const finish = () => { clearTimeout(playFlight.land); clearTimeout(playFlight.done); f.classList.remove('on'); };
+  playFlight.land = setTimeout(landCards, quick ? 500 : 2300);
+  playFlight.done = setTimeout(finish, quick ? 1000 : 2800);
+  f.onclick = () => { finish(); landCards(); };
+}
+function landCards() {
+  [...document.querySelectorAll('#screenResult .ticket, #screenResult .card')].slice(0, 8).forEach((el, i) => {
+    el.style.animationDelay = `${i * 80}ms`;
+    el.classList.remove('land'); void el.offsetWidth; el.classList.add('land');
+    el.addEventListener('animationend', () => { el.classList.remove('land'); el.style.animationDelay = ''; }, { once: true });
+  });
+}
+function routeOpts() {
+  return {
+    month: state.month, days: state.days, who: state.who,
+    mustIds: new Set(state.musts.filter(m => m.spotId).map(m => m.spotId)),
+    mustAreas: state.musts.filter(m => m.areaId).map(m => m.areaId),
+    customs: state.musts.filter(m => !m.spotId && !m.areaId).map(m => m.text),
+    nearby: { ...state.nearby },
+  };
+}
+
+/* ------------------------------------------------------------------
+   화면 3: 결과
+------------------------------------------------------------------- */
+function clothes(t) {
+  if (t <= 5) return '두꺼운 패딩·목도리';
+  if (t <= 12) return '코트나 니트';
+  if (t <= 18) return '가벼운 겉옷';
+  if (t <= 24) return '긴팔과 얇은 겉옷';
+  if (t <= 29) return '반팔';
+  return '반팔·선크림·모자';
+}
+function renderResult() {
+  const c = cityById(state.cityId);
+  $('ticket').innerHTML = `
+    <button class="edit" type="button" id="editPlan">조건 바꾸기</button>
+    <div class="country-name">${c.flag} ${c.country}</div>
+    <div class="city">${c.name}</div>
+    <div class="meta"><span>${state.month}월</span><span>${dayLabel(state.days)}</span><span>${whoLabel(state.who)}</span></div>`;
+  $('editPlan').onclick = () => show('screenPlan');
+
+  const hi = c.hi[state.month - 1];
+  const seasonNotes = c.notes.filter(([range]) => parseMonths(range).includes(state.month)).map(([, t]) => t);
+  $('tips').innerHTML = `
+    <div class="tip"><span class="ic">🌡️</span><div>${state.month}월 ${c.name} 평균 최고기온은 <b>${hi}°C</b> 정도예요. ${josa(clothes(hi), '을', '를')} 챙기세요.</div></div>
+    ${seasonNotes.map(t => `<div class="tip"><span class="ic">📅</span><div>${t}</div></div>`).join('')}
+    <div class="tip"><span class="ic">🧳</span><div>${WHO_TIP[state.who]}</div></div>`;
+
+  renderTabs();
+  renderRoute();
+  renderNearby();
+  renderAsk();
+  renderRefs();
+}
+
+/* ---------- 근교 도시 ---------- */
+// 근교에 쓸 수 있는 날: 첫날(도착)과 마지막 날(출발)은 시내에 두고 나머지
+const nearbyCap = () => Math.max(0, state.days - 2);
+const nearbyUsed = () => Object.values(state.nearby).reduce((t, v) => t + (v === 'night' ? 2 : 1), 0);
+// 그 근교에서 할 거리: 이 달·동행에 맞는 곳만, 동행이 맞는 곳을 앞으로
+function tripSpots(c, a) {
+  const sc = s => s.p + (s.w.includes(state.who) ? 2 : 0);
+  return c.spots.filter(s => s.a === a.id && (!s.m || s.m.includes(state.month)) && !s.no.includes(state.who))
+    .sort((x, y) => sc(y) - sc(x));
+}
+const tripLength = a => a.nb && a.nb.plan === 'half' ? '반나절' : '당일치기';
+const dirUrl = (from, to) => `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`;
+const plainName = n => n.replace(/\s*\(.*?\)/g, '').trim();
+function renderNearby() {
+  const c = cityById(state.cityId);
+  const box = $('nearbyArea');
+  const list = c.areas.filter(a => a.trip && a.nb);
+  if (!list.length) { box.innerHTML = ''; return; }
+  const cap = nearbyCap(), used = nearbyUsed();
+  const whoName = WHO.find(w => w.id === state.who);
+  const items = list.map((a, rank) => {
+    const nb = a.nb;
+    const spots = tripSpots(c, a);
+    const length = nb.plan === 'half' ? '반나절 (4~5시간)' : '하루 꼬박';
+    const stayTxt = nb.rec === 'night' ? ' · <b>1박 추천</b>' : nb.stay ? ' · 1박도 좋아요' : '';
+    const best = nb.best && parseMonths(nb.best[0]).includes(state.month) ? `<span class="badge season">${state.month}월 추천</span>` : '';
+    const fit = nb.who && nb.who.includes(state.who) ? `<span class="badge who">${whoName.sub || whoName.label} 추천</span>` : '';
+    const cur = state.nearby[a.id] || 'off';
+    const extra = v => (v === 'night' ? 2 : v === 'day' ? 1 : 0) - (cur === 'night' ? 2 : cur === 'day' ? 1 : 0);
+    const dis = v => v !== cur && used + extra(v) > cap;
+    return `<div class="nb-item">
+      <div class="nb-name">${a.name}${rank === 0 ? '<span class="badge must">가장 많이 함께 가요</span>' : ''}${fit}${best}</div>
+      <div class="nb-facts">
+        <div>${nb.icon || '🚆'} 가는 법 · <b>${esc(nb.how)}</b></div>
+        <div>⏱ 머무는 시간 · <b>${length}</b>${stayTxt}</div>
+        <div>✨ ${esc(nb.what)}${nb.best && best ? ` — ${esc(nb.best[1])}` : ''}</div>
+        ${spots.length ? `<div>📍 ${spots.slice(0, 4).map(s => s.name).join(', ')}</div>` : ''}
+      </div>
+      <div class="seg" role="group" aria-label="${a.name} 일정">
+        <button type="button" data-nb="${a.id}" data-plan="off" aria-pressed="${cur === 'off'}">안 가요</button>
+        <button type="button" data-nb="${a.id}" data-plan="day" aria-pressed="${cur === 'day'}" ${dis('day') ? 'disabled' : ''}>${nb.plan === 'half' ? '반나절' : '당일'}</button>
+        ${nb.stay ? `<button type="button" data-nb="${a.id}" data-plan="night" aria-pressed="${cur === 'night'}" ${dis('night') ? 'disabled' : ''}>1박 2일</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  box.innerHTML = `<div class="card nearby">
+    <h2>🚆 근교 도시도 가 볼까요?</h2>
+    <p class="lead" style="margin-bottom:8px">${c.name} 여행에서 블로그에 자주 함께 나오는 근교예요. 고르면 이동 시간까지 넣어서 루트를 다시 짜요.</p>
+    <p class="nb-cap">${cap ? `${dayLabel(state.days)} 중 첫날·마지막 날을 빼고 <b>${cap}일</b>까지 근교에 쓸 수 있어요. (지금 ${used}일)` : `${dayLabel(state.days)}은 일정이 짧아서 근교를 넣기 어려워요. 3일 이상이면 넣을 수 있어요.`}</p>
+    ${items}
+    <div style="margin-top:14px"><button type="button" class="btn" id="nbBuild" ${used ? '' : 'disabled'}>근교 넣어서 루트 다시 짜기</button></div>
+  </div>`;
+  box.querySelectorAll('[data-nb]').forEach(b => b.onclick = () => {
+    if (b.dataset.plan === 'off') delete state.nearby[b.dataset.nb];
+    else state.nearby[b.dataset.nb] = b.dataset.plan;
+    renderNearby();
+  });
+  $('nbBuild').onclick = rebuildWithNearby;
+}
+function rebuildWithNearby() {
+  const c = cityById(state.cityId);
+  const r = buildRoute(c, routeOpts(), 'classic');
+  const picked = Object.entries(state.nearby).map(([id, v]) => {
+    const a = c.areas.find(x => x.id === id);
+    return `${a.name}(${v === 'night' ? '1박' : a.nb.plan === 'half' ? '반나절' : '당일'})`;
+  });
+  const route = {
+    kind: 'nearby', title: '근교 포함',
+    head: '근교 도시까지 넣은 루트',
+    intro: `${picked.join(', ')}을 넣었어요. 가는 길·돌아오는 길과 걸리는 시간까지 일정에 넣었어요.`
+      + (state.musts.length ? ' 가고 싶은 곳도 함께 넣었어요.' : ''),
+    ...r,
+  };
+  const at = state.routes.findIndex(x => x.kind === 'nearby');
+  if (at >= 0) state.routes[at] = route; else state.routes.push(route);
+  state.active = state.routes.indexOf(route);
+  renderTabs(); renderRoute(); renderRefs();
+  $('tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function renderTabs() {
+  state.moving = null;
+  $('tabs').innerHTML = state.routes.length < 2 ? '' : state.routes.map((r, i) =>
+    `<button type="button" class="tab" role="tab" data-tab="${i}" aria-selected="${i === state.active}">${r.title}</button>`).join('');
+}
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if (!b) return;
+  state.active = Number(b.dataset.tab);
+  renderTabs(); renderRoute(); renderRefs();
+});
+
+function renderRoute() {
+  const c = cityById(state.cityId);
+  const r = state.routes[state.active];
+  const areaName = id => c.areas.find(a => a.id === id).name;
+  const whoName = WHO.find(w => w.id === state.who);
+  let html = '';
+  if (r.intro) html += `<div class="intro-msg">${r.intro}</div>`;
+  html += `<div class="route-head"><h2>${r.head}</h2><p>${c.name} · ${dayLabel(state.days)} · 하루 한 지역씩 묶어 이동을 줄였어요.</p></div>`;
+  html += r.notes.map(n => `<div class="notice" style="margin-bottom:12px">${esc(n)}</div>`).join('');
+  r.days.forEach((day, i) => {
+    const areas = [...new Set(day.items.filter(it => it.spot).map(it => it.spot.a))];
+    const title = (areas.length ? areas : [day.area]).map(areaName).join(' → ');
+    // 근교 장소는 근교 도시 이름을 붙여 검색해야 지도가 맞게 찾는다
+    const where = it => {
+      const a = it.spot && c.areas.find(x => x.id === it.spot.a);
+      return (a && a.trip ? a.name : c.name).replace(/\(.*?\)/g, '').trim();
+    };
+    const stops = day.items.filter(it => it.spot || it.custom || it.gate)
+      .map(it => `${(it.spot ? it.spot.name : it.gate ? GATEWAYS[c.id][0].split('·')[0] : it.custom).replace(/\(.*?\)/g, '').trim()} ${where(it)}`);
+    let dir = '';
+    if (stops.length >= 2) {
+      const q = encodeURIComponent;
+      dir = `https://www.google.com/maps/dir/?api=1&origin=${q(stops[0])}&destination=${q(stops[stops.length - 1])}` +
+        (stops.length > 2 ? `&waypoints=${stops.slice(1, -1).map(q).join('%7C')}` : '');
+    }
+    const tripArea = day.part && day.part !== 'local' ? c.areas.find(a => a.id === day.area) : null;
+    const sub = !tripArea ? ''
+      : day.part === 'nightA' ? `근교 1박 · ${tripArea.name} 첫째 날`
+      : day.part === 'nightB' ? `근교 1박 · ${tripArea.name} 둘째 날`
+      : `근교 ${tripArea.nb && tripArea.nb.plan === 'half' ? '반나절' : '당일치기'} · ${tripArea.name}`;
+    html += `<div class="card day">
+      <div class="day-head"><div><div class="d">DAY ${i + 1}${state.days > 1 && i === 0 ? ' · 도착' : ''}${state.days > 1 && i === state.days - 1 ? ' · 출발' : ''}</div><div class="area">${title}</div>${sub ? `<span class="sub">${sub}</span>` : ''}</div>
+      ${dir ? `<a href="${dir}" target="_blank" rel="noopener">동선 지도 ↗</a>` : ''}</div>
+      <ol class="timeline">${day.items.map((it, j) => renderItem(it, c, whoName, i, j)).join('')}</ol></div>`;
+  });
+  r.usedIds = new Set(r.days.flatMap(d => d.items.filter(it => it.spot).map(it => it.spot.id)));
+  // 시내 볼거리가 모자라 통째로 비는 날이 있으면 근교를 권한다
+  const emptyDays = r.days.map((d, i) => (d.part || 'local') === 'local' && !d.items.some(it => it.spot || it.custom) ? i + 1 : 0).filter(Boolean);
+  if (emptyDays.length && c.areas.some(a => a.trip && a.nb) && nearbyUsed() < nearbyCap()) {
+    html += `<div class="notice" style="margin-bottom:14px">DAY ${emptyDays.join(', ')}에는 시내 일정이 거의 없어요. 아래 <b>근교 도시</b>에서 하루 다녀오는 건 어때요?</div>`;
+  }
+  html += renderStay(c, r, whoName);
+  html += `<div class="row" style="margin-bottom:14px">${r.orig ? '<button type="button" class="btn ghost" id="resetRoute">처음 루트로 되돌리기</button>' : ''}<button type="button" class="btn ghost" id="copyRoute">루트 복사하기</button></div>`;
+  $('route').innerHTML = html;
+  $('copyRoute').onclick = copyRoute;
+  if (r.orig) $('resetRoute').onclick = () => {
+    r.days = r.orig; r.orig = null; state.moving = null;
+    renderRoute(); toast('처음 루트로 되돌렸어요');
+  };
+}
+// 숙소 동네: 기본 순서 + 동행 일치 + 이번 루트에서 그 근처에 머무는 날 수로 순위를 매겨 3곳까지
+function rankStays(c, r) {
+  const text = STAYS[c.id];
+  if (!text) return [];
+  return text.split('\n').map((line, i) => {
+    const [name, why, who, areas = ''] = line.split('|');
+    const ids = areas.split(',').filter(Boolean);
+    const days = state.days > 1 ? r.days.filter(d => ids.includes(d.area)).length : 0;
+    const fit = who.includes(state.who);
+    return { name, why, fit, days, score: 3 - i * 0.8 + (fit ? 2 : 0) + days };
+  }).sort((a, b) => b.score - a.score).slice(0, 3);
+}
+function renderStay(c, r, whoName) {
+  const list = rankStays(c, r);
+  if (!list.length) return '';
+  const cityName = c.name.replace(/\s*\(.*?\)/, '');
+  const enc = encodeURIComponent;
+  return `<div class="card stay">
+    <h2>🛏️ 숙소는 이 동네 추천</h2>
+    ${list.map((s, i) => `<div class="stay-item">
+      <div class="spot-name">${i === 0 ? '<span class="badge must">가장 추천</span>' : ''}${s.name}
+        ${s.fit ? `<span class="badge who">${whoName.sub || whoName.label} 추천</span>` : ''}
+        ${s.days ? `<span class="badge season">루트 ${s.days}일 동선</span>` : ''}</div>
+      <div class="spot-desc">${s.why}</div>
+      <div class="stay-links">
+        <a href="https://www.google.com/maps/search/?api=1&query=${enc(s.name.replace(/\s*\(.*?\)/, '') + ' 호텔 ' + cityName)}" target="_blank" rel="noopener">지도에서 숙소 보기 ↗</a>
+        <a href="https://search.naver.com/search.naver?where=blog&query=${enc(cityName + ' ' + s.name.replace(/\s*\(.*?\)/, '') + ' 숙소 추천')}" target="_blank" rel="noopener">블로그 후기 ↗</a>
+      </div></div>`).join('')}
+    <p class="fine">${state.days === 1 ? '당일치기라 숙소가 필요 없다면 참고만 하세요.'
+      : '이번 루트에서 오래 머무는 지역과 동행을 함께 보고 골랐어요.' + (r.days.some(d => c.areas.find(a => a.id === d.area).trip) ? ' 근교 당일치기 날은 숙소를 옮기지 않아도 돼요.' : '')}</p>
+  </div>`;
+}
+
+const josaRo = w => {
+  const ch = w.charCodeAt(w.length - 1);
+  if (ch < 0xAC00 || ch > 0xD7A3) return w + '로';
+  const jong = (ch - 0xAC00) % 28;
+  return w + (jong === 0 || jong === 8 ? '로' : '으로');
+};
+function renderTravel(it, c) {
+  const a = c.areas.find(x => x.id === it.area);
+  const nb = a.nb || {};
+  const icon = nb.icon || '🚆';
+  const home = c.name.replace(/\s*\(.*?\)/, '');
+  let title, desc;
+  if (it.travel === 'go') { title = `${icon} ${josaRo(a.name)} 이동`; desc = nb.how || ''; }
+  else if (it.travel === 'back') { title = `${icon} ${josaRo(home)} 돌아오기`; desc = nb.how || ''; }
+  else { title = `🛏️ ${a.name}에서 1박`; desc = nb.stay ? `숙소는 ${nb.stay} 추천` : ''; }
+  return `<li class="travel"><span class="slot">${it.slot}</span><div><div class="spot-name">${title}</div><div class="spot-desc">${esc(desc)}</div></div></li>`;
+}
+
+function renderItem(it, c, whoName, d, i) {
+  if (it.travel) return renderTravel(it, c);
+  if (it.gate) {
+    const [name, how, train] = GATEWAYS[c.id];
+    const desc = it.gate === 'in' ? how
+      : train ? '열차 출발 20~30분 전까지 역에 도착하세요.' : `${c.country === '한국' ? '국내선은 1시간' : '국제선은 2~3시간'} 전까지 공항에 도착하세요.`;
+    return `<li class="gate"><span class="slot">${it.slot}</span><div><div class="spot-name"><a href="${mapUrl(name.split('·')[0], c)}" target="_blank" rel="noopener">${train ? '🚄' : '✈️'} ${name}</a></div><div class="spot-desc">${desc}</div></div></li>`;
+  }
+  if (it.cont) {
+    return `<li class="placeholder"><span class="slot">${it.slot}</span><div><div class="spot-name">${it.cont.name} 계속</div><div class="spot-desc">하루 종일 즐기는 곳이라 오후까지 비워 뒀어요.</div></div></li>`;
+  }
+  if (it.placeholder) {
+    const t = it.inside ? '파크 안에서 점심' : it.slot === '점심' ? '근처 맛집에서 점심' : it.slot === '저녁' ? '숙소 근처에서 저녁·휴식' : '자유 시간 (카페·쇼핑)';
+    return `<li class="placeholder"><span class="slot">${it.slot}</span><div><div class="spot-name">${t}</div></div></li>`;
+  }
+  const moved = it.moved ? '<span class="badge moved">옮김</span>' : '';
+  const tools = moveTools(d, i);
+  if (it.custom) {
+    return `<li><span class="slot">${it.slot}</span><div><div class="spot-name"><a href="${mapUrl(it.custom, c)}" target="_blank" rel="noopener">${esc(it.custom)}</a><span class="badge custom">직접 추가</span>${moved}${tools.btn}</div><div class="spot-desc">내가 가고 싶은 곳 · <a href="${dirUrl(plainName(c.name) + ' ' + c.country, it.custom)}" target="_blank" rel="noopener">가는 길·거리 ↗</a> · <a href="https://search.naver.com/search.naver?where=blog&query=${encodeURIComponent(it.custom + ' 가볼만한 곳')}" target="_blank" rel="noopener">주변 가볼 만한 곳 ↗</a></div>${tools.panel}</div></li>`;
+  }
+  const s = it.spot;
+  const badges = [];
+  if (it.must) badges.push('<span class="badge must">가고 싶은 곳</span>');
+  if (s.m) badges.push('<span class="badge season">이 달 추천</span>');
+  if (!it.must && s.w.includes(state.who)) badges.push(`<span class="badge who">${whoName.sub || whoName.label} 추천</span>`);
+  const sa = c.areas.find(x => x.id === s.a);
+  return `<li><span class="slot">${it.slot}</span><div><div class="spot-name"><a href="${mapUrl(s.name, sa && sa.trip ? sa : c)}" target="_blank" rel="noopener">${s.name}</a>${badges.join('')}${moved}${tools.btn}</div><div class="spot-desc">${s.desc}</div>${tools.panel}</div></li>`;
+}
+
+/* ---------- 일정 옮기기·빼기 ---------- */
+// 칸 순서. 이동·복귀·숙박 칸은 만들 때 정한 ord(앞뒤 칸 사이 값)로 자리를 지킨다
+const SLOT_SORT = ['도착', '오전', '점심', '오후', '저녁'];
+const slotRank = it => it.ord !== undefined ? it.ord : it.slot === '출발' ? 9 : SLOT_SORT.indexOf(it.slot);
+const sortItems = items => items.sort((a, b) => slotRank(a) - slotRank(b));
+const isAllDay = (day, it) => it.spot && it.spot.k.includes('a') && day.items.some(x => x.cont === it.spot);
+const isFullDay = day => ['오전', '점심', '오후'].every(s => day.items.some(x => x.slot === s));
+// 하루를 통째로 쓰는 일정: 테마파크(종류 a)와 근교 당일치기 날의 근교 장소
+const isPark = it => !!(it.spot && it.spot.k.includes('a'));
+const isTripSpot = (day, it) => !!(day.part === 'day' && it.spot && it.spot.a === day.area);
+const daySlots = day => SLOT_ORDER.filter(s => day.items.some(x => x.slot === s)).join();
+const moveKind = (day, it) => isTripSpot(day, it) ? 'trip' : isPark(it) ? 'park' : 'one';
+
+// 옮길 수 있는 날: 테마파크는 오전·점심·오후가 모두 있는 날로만,
+// 근교 당일치기는 하루를 통째로 맞바꾸므로 칸 구성이 같은 날(근교 1박 날 제외)로만
+function moveTargets(r, d, i) {
+  const from = r.days[d], kind = moveKind(from, from.items[i]);
+  return r.days.map((_, j) => j).filter(j => {
+    if (j === d) return false;
+    const to = r.days[j];
+    if (kind === 'trip') return daySlots(to) === daySlots(from) && (to.part || 'local') !== 'nightA' && to.part !== 'nightB';
+    if (kind === 'park') return isFullDay(to) && (to.part || 'local') === 'local';
+    return true;
+  });
+}
+function moveTools(d, i) {
+  const btn = `<button type="button" class="move-btn" data-move="${d}:${i}" aria-expanded="${!!(state.moving && state.moving.d === d && state.moving.i === i)}">옮기기</button>`;
+  if (!state.moving || state.moving.d !== d || state.moving.i !== i) return { btn, panel: '' };
+  const r = state.routes[state.active];
+  const targets = moveTargets(r, d, i);
+  const kind = moveKind(r.days[d], r.days[d].items[i]);
+  const hint = kind === 'trip' ? ' <small>(근교에 다녀오는 날이라 그날 일정 전체를 서로 바꿔요)</small>'
+    : kind === 'park' ? ' <small>(하루 종일 일정이라 그날 낮 일정을 이 일정으로 바꾸고, 원래 일정은 지금 날로 옮겨요)</small>' : '';
+  return {
+    btn,
+    panel: `<div class="move-panel">
+      <div class="move-q">${targets.length ? '몇 일차로 옮길까요?' : '옮길 수 있는 날이 없어요.'}${hint}</div>
+      <div class="chips small">${targets.map(j => `<button type="button" class="chip" data-to="${j}">DAY ${j + 1}</button>`).join('')}</div>
+      <div class="move-actions"><button type="button" class="link-btn" data-remove>일정에서 빼기</button><button type="button" class="link-btn" data-cancel>취소</button></div>
+    </div>`,
+  };
+}
+function snapshot(days) {
+  return days.map(d => ({ ...d, items: d.items.map(it => ({ ...it })) }));
+}
+function moveItem(r, d, i, j) {
+  if (!r.orig) r.orig = snapshot(r.days);
+  const from = r.days[d], to = r.days[j];
+  const it = from.items[i];
+  const mark = x => ({ ...x, moved: x.spot || x.custom ? true : x.moved });
+  const kind = moveKind(from, it);
+  if (kind === 'trip') {
+    // 근교 당일치기는 이동·복귀 칸까지 그날 일정 전체를 맞바꾼다 (공항·역 도착/출발 칸은 그 날에 남긴다)
+    const body = day => day.items.filter(x => !x.gate).map(mark);
+    const fromBody = body(from), toBody = body(to);
+    from.items = sortItems(from.items.filter(x => x.gate).concat(toBody));
+    to.items = sortItems(to.items.filter(x => x.gate).concat(fromBody));
+    [from.area, to.area] = [to.area, from.area];
+    [from.part, to.part] = [to.part, from.part];
+    return;
+  }
+  const part = x => ['오전', '점심', '오후'].includes(x.slot);
+  if (kind === 'park') {
+    if (to.items.some(x => part(x) && isPark(x))) {
+      // 옮길 날에도 테마파크가 있으면 두 날의 낮 일정을 그대로 맞바꾼다
+      const mine = from.items.filter(part), theirs = to.items.filter(part);
+      from.items = sortItems(from.items.filter(x => !part(x)).concat(theirs.map(mark)));
+      to.items = sortItems(to.items.filter(x => !part(x)).concat(mine.map(x => x === it ? mark(x) : x)));
+      return;
+    }
+    // 원래 날에서 파크와 이어지는 칸을 비우고, 옮길 날의 오전·점심·오후는 파크 하루로 바꾼다.
+    // 옮길 날에 원래 있던 일정은 지워지지 않게 원래 날의 빈칸으로 옮긴다.
+    from.items = from.items.map(x => x === it || x.cont === it.spot || x.inside === it.spot ? { slot: x.slot, placeholder: true } : x);
+    const displaced = to.items.filter(x => part(x) && (x.spot || x.custom));
+    to.items = sortItems(to.items.filter(x => !part(x)).concat([
+      { ...it, slot: '오전', moved: true },
+      { slot: '점심', placeholder: true, inside: it.spot },
+      { slot: '오후', cont: it.spot },
+    ]));
+    displaced.forEach(x => placeInto(from, x));
+    return;
+  }
+  from.items[i] = { slot: it.slot, placeholder: true };
+  placeInto(to, it);
+}
+// 옮길 날의 칸: 같은 시간대 → 장소 종류에 맞는 시간대 → 아무 칸. 빈칸이면 채우고 아니면 하나 더 넣는다
+function placeInto(to, it) {
+  const slots = SLOT_ORDER.filter(s => to.items.some(x => x.slot === s));
+  const kinds = it.spot ? it.spot.k : 's';
+  const slot = slots.includes(it.slot) ? it.slot
+    : slots.find(s => SLOT_KINDS[s].some(k => kinds.includes(k))) || slots[slots.length - 1] || it.slot;
+  const empty = to.items.findIndex(x => x.slot === slot && x.placeholder && !x.inside);
+  const item = { ...it, slot, moved: true };
+  if (empty >= 0) to.items[empty] = item;
+  else { to.items.push(item); sortItems(to.items); }
+}
+function removeItem(r, d, i) {
+  if (!r.orig) r.orig = snapshot(r.days);
+  const day = r.days[d];
+  const it = day.items[i];
+  if (isAllDay(day, it)) day.items = day.items.map(x => x.cont === it.spot || x.inside === it.spot ? { slot: x.slot, placeholder: true } : x);
+  day.items[day.items.indexOf(it)] = { slot: it.slot, placeholder: true };
+}
+$('route').addEventListener('click', e => {
+  const r = state.routes[state.active];
+  const mv = e.target.closest('[data-move]');
+  if (mv) {
+    const [d, i] = mv.dataset.move.split(':').map(Number);
+    state.moving = state.moving && state.moving.d === d && state.moving.i === i ? null : { d, i };
+    renderRoute();
+    return;
+  }
+  if (!state.moving) return;
+  const { d, i } = state.moving;
+  const to = e.target.closest('[data-to]');
+  if (to) {
+    const j = Number(to.dataset.to);
+    const name = r.days[d].items[i].spot ? r.days[d].items[i].spot.name : r.days[d].items[i].custom;
+    const kind = moveKind(r.days[d], r.days[d].items[i]);
+    moveItem(r, d, i, j);
+    state.moving = null;
+    renderRoute();
+    toast(kind === 'trip' ? `DAY ${d + 1} ↔ DAY ${j + 1} 일정을 통째로 바꿨어요`
+      : kind === 'park' ? `${name} → DAY ${j + 1}, 그날 일정은 DAY ${d + 1}로 옮겼어요` : `${name} → DAY ${j + 1}로 옮겼어요`);
+  } else if (e.target.closest('[data-remove]')) {
+    removeItem(r, d, i);
+    state.moving = null;
+    renderRoute();
+    toast('일정에서 뺐어요');
+  } else if (e.target.closest('[data-cancel]')) {
+    state.moving = null;
+    renderRoute();
+  }
+});
+
+function copyRoute() {
+  const c = cityById(state.cityId);
+  const r = state.routes[state.active];
+  const lines = [`[${c.name} ${dayLabel(state.days)} · ${state.month}월 · ${whoLabel(state.who)}] ${r.head}`];
+  r.days.forEach((d, i) => {
+    lines.push('', `DAY ${i + 1}`);
+    d.items.forEach(it => {
+      if (it.travel) {
+        const a = c.areas.find(x => x.id === it.area);
+        const how = a.nb && a.nb.how ? ` (${a.nb.how})` : '';
+        lines.push(`- ${it.slot}: ${it.travel === 'go' ? josaRo(a.name) + ' 이동' + how : it.travel === 'back' ? josaRo(c.name) + ' 돌아오기' + how : a.name + '에서 1박'}`);
+        return;
+      }
+      lines.push(`- ${it.slot}: ${it.spot ? it.spot.name : it.gate ? GATEWAYS[c.id][0] : it.custom || (it.cont ? it.cont.name + ' 계속' : '자유 시간')}`);
+    });
+  });
+  const text = lines.join('\n');
+  const done = () => toast('루트를 복사했어요');
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { toast('복사하지 못했어요'); }
+  ta.remove();
+}
+
+/* ---------- 가고 싶은 여행지가 있나요? ---------- */
+function renderAsk() {
+  const c = cityById(state.cityId);
+  const box = $('askArea');
+  if (state.answered === null) {
+    box.innerHTML = `<div class="card ask">
+      <h2>가고 싶은 여행지가 있나요?</h2>
+      <p class="lead" style="margin-bottom:14px">꼭 넣고 싶은 곳이 있으면 그곳을 포함해서 루트를 다시 짜 드릴게요.</p>
+      <div class="row"><button type="button" class="btn" id="askYes">예</button><button type="button" class="btn ghost" id="askNo">아니오</button></div></div>`;
+    $('askYes').onclick = () => { state.answered = 'yes'; renderAsk(); $('mustText').focus(); };
+    $('askNo').onclick = answerNo;
+    return;
+  }
+  if (state.answered === 'yes') {
+    const used = state.routes[state.active].usedIds;
+    const sugg = c.spots.filter(s => !used.has(s.id) && !state.musts.some(m => m.spotId === s.id)).slice(0, 10);
+    const r = state.routes[state.active];
+    const tripSugg = c.areas.filter(a => a.trip && !r.days.some(d => d.area === a.id) && !state.musts.some(m => m.areaId === a.id) && tripSpots(c, a).length);
+    box.innerHTML = `<div class="card ask">
+      <h2>어디에 가고 싶나요?</h2>
+      <p class="lead" style="margin-bottom:6px">장소 이름을 직접 입력하세요. 여러 곳을 넣어도 돼요. 근교 도시 이름을 넣으면 가는 길과 그 도시의 가볼 만한 곳까지 함께 넣어요.</p>
+      <form class="must-input" id="mustForm"><input id="mustText" placeholder="예: ${esc(sugg[0] ? plainName(sugg[0].name) : '가고 싶은 장소')}${tripSugg[0] ? `, ${esc(plainName(tripSugg[0].name))}` : ''}" autocomplete="off"><button type="submit">추가</button></form>
+      <div class="picked" id="picked">${state.musts.map((m, i) => `<span>${esc(m.text)}${m.areaId ? ' (근교)' : ''}<button type="button" data-rm="${i}" aria-label="${esc(m.text)} 빼기">×</button></span>`).join('')}</div>
+      ${mustInfo(c)}
+      ${tripSugg.length ? `<div class="suggest-label">근교 도시도 함께 가 볼까요?</div><div class="chips small">${tripSugg.map(a => `<button type="button" class="chip" data-trip="${a.id}">+ ${a.name}</button>`).join('')}</div>` : ''}
+      ${sugg.length ? `<div class="suggest-label">이번 루트에 없는 ${c.name} 명소</div><div class="chips small" id="sugg">${sugg.map(s => `<button type="button" class="chip" data-add="${s.id}">+ ${s.name}</button>`).join('')}</div>` : ''}
+      <div style="margin-top:16px"><button type="button" class="btn coral" id="rebuild" ${state.musts.length ? '' : 'disabled'}>이 장소를 넣어서 루트 다시 짜기</button></div>
+      <div style="text-align:center"><button type="button" class="link-btn" id="toNo">가고 싶은 곳은 없어요 · 다른 루트 보기</button></div></div>`;
+    $('mustForm').onsubmit = e => {
+      e.preventDefault();
+      const text = $('mustText').value.trim();
+      if (!text) return;
+      addMust(text);
+    };
+    box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => {
+      const s = c.spots.find(x => x.id === b.dataset.add);
+      state.musts.push({ text: s.name, spotId: s.id });
+      renderAsk();
+    });
+    box.querySelectorAll('[data-trip]').forEach(b => b.onclick = () => addTripMust(c, c.areas.find(a => a.id === b.dataset.trip)));
+    box.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { state.musts.splice(Number(b.dataset.rm), 1); renderAsk(); });
+    $('rebuild').onclick = rebuildWithMusts;
+    $('toNo').onclick = answerNo;
+    return;
+  }
+  // 'no' 또는 다시 짠 뒤
+  box.innerHTML = `<div class="card">
+    <div class="row"><button type="button" class="btn ghost" id="moreYes">가고 싶은 곳 넣기</button>${state.routes.some(r => r.kind === 'alt') ? '' : '<button type="button" class="btn ghost" id="moreNo">다른 루트 보기</button>'}</div></div>`;
+  $('moreYes').onclick = () => { state.answered = 'yes'; renderAsk(); $('mustText').focus(); };
+  if ($('moreNo')) $('moreNo').onclick = answerNo;
+}
+
+// 이름 조각이 이런 흔한 말뿐이면 같은 곳으로 보지 않는다 ('스미요시 신사'가 '후시미 이나리 신사'로 바뀌지 않도록)
+const GENERIC_WORDS = new Set(['신사', '공원', '시장', '야시장', '거리', '골목', '사원', '사찰', '해변', '비치', '해수욕장', '타워', '전망대',
+  '박물관', '미술관', '수족관', '동물원', '섬', '역', '다리', '호수', '카페', '성당', '궁', '투어', '쇼핑', '센터', '광장', '마을', '산', '폭포', '야경', '맛집']);
+function matchSpot(c, text) {
+  const t = norm(text);
+  if (t.length < 2) return null;
+  let best = null, bestLen = 0;
+  c.spots.forEach(s => {
+    const full = norm(s.name);
+    const parts = s.name.split(/[·()\s,]+/).map(norm).filter(p => p.length >= 2 && !GENERIC_WORDS.has(p));
+    let len = 0;
+    if (full === t) len = 999;
+    else if (full.includes(t) || t.includes(full)) len = Math.min(full.length, t.length);
+    else parts.forEach(p => { if (p.includes(t) || t.includes(p)) len = Math.max(len, Math.min(p.length, t.length)); });
+    if (len > bestLen) { bestLen = len; best = s; }
+  });
+  return bestLen >= 2 ? best : null;
+}
+// 근교 도시 이름(예: 교토, 가마쿠라, 속초)을 넣었는지. '수원시', '교토 여행'처럼 붙여 써도 찾는다
+function matchTripArea(c, text) {
+  const t = norm(text).replace(/(당일치기|여행|시)$/, '');
+  if (t.length < 2) return null;
+  return c.areas.find(a => a.trip &&
+    [a.name, ...a.name.split(/[·()\s,]+/)].map(norm).some(p => p.length >= 2 && p === t)) || null;
+}
+function addTripMust(c, a) {
+  if (state.musts.some(m => m.areaId === a.id)) { toast('이미 넣은 곳이에요'); return; }
+  state.musts.push({ text: a.name, areaId: a.id });
+  toast(`${josa(plainName(a.name), '은', '는')} 근교라 가는 길과 가볼 만한 곳까지 함께 넣을게요`);
+  renderAsk();
+}
+// 고른 곳 중 근교에 있는 곳은 가는 법·같이 넣을 곳을, 정보가 없는 곳은 거리·볼거리를 찾아볼 링크를 보여 준다
+function mustInfo(c) {
+  const home = plainName(c.name);
+  const areas = [];
+  state.musts.forEach(m => {
+    const id = m.areaId || (m.spotId && c.spots.find(s => s.id === m.spotId).a);
+    const a = id && c.areas.find(x => x.id === id);
+    if (a && a.trip && !areas.includes(a)) areas.push(a);
+  });
+  const trips = areas.map(a => {
+    const nb = a.nb || {};
+    const spots = tripSpots(c, a).slice(0, 4);
+    return `<div class="trip-box">
+      <div class="nb-name">${nb.icon || '🚆'} ${a.name}<span class="badge who">근교 ${tripLength(a)}</span></div>
+      <div class="nb-facts">
+        <div>가는 법 · <b>${esc(nb.how || `${home}에서 하루 다녀올 수 있는 거리`)}</b> <a href="${dirUrl(home + ' ' + c.country, plainName(a.name) + ' ' + c.country)}" target="_blank" rel="noopener">지도로 거리 보기 ↗</a></div>
+        ${nb.what ? `<div>✨ ${esc(nb.what)}</div>` : ''}
+        ${spots.length ? `<div>📍 가볼 만한 곳 · <b>${spots.map(s => s.name).join(', ')}</b></div>` : ''}
+      </div></div>`;
+  });
+  const customs = state.musts.filter(m => !m.spotId && !m.areaId).map(m => `<div class="trip-box">
+      <div class="nb-name">📍 ${esc(m.text)}<span class="badge custom">직접 추가</span></div>
+      <div class="nb-facts">
+        <div>정보가 없는 곳이라 거리와 주변 볼거리는 링크로 확인해 주세요.</div>
+        <div><a href="${dirUrl(home + ' ' + c.country, m.text)}" target="_blank" rel="noopener">${home}에서 가는 길·거리 ↗</a> · <a href="https://search.naver.com/search.naver?where=blog&query=${encodeURIComponent(m.text + ' 가볼만한 곳')}" target="_blank" rel="noopener">${esc(m.text)} 가볼 만한 곳 ↗</a></div>
+      </div></div>`);
+  const tripDays = state.musts.filter(m => m.areaId).length + nearbyUsed();
+  const warn = areas.length && tripDays > nearbyCap()
+    ? `<div class="notice" style="margin-bottom:10px">${dayLabel(state.days)} 일정에 근교를 넣으면 ${c.name} 시내 일정이 많이 줄어요.</div>` : '';
+  return warn + trips.join('') + customs.join('');
+}
+function addMust(text) {
+  const c = cityById(state.cityId);
+  const a = matchTripArea(c, text);
+  if (a) { addTripMust(c, a); $('mustText').focus(); return; }
+  const s = matchSpot(c, text);
+  if (s) {
+    if (state.musts.some(m => m.spotId === s.id)) { toast('이미 넣은 곳이에요'); return; }
+    state.musts.push({ text: s.name, spotId: s.id });
+    if (norm(s.name) !== norm(text)) toast(`'${s.name}'(으)로 찾았어요`);
+  } else {
+    if (state.musts.some(m => norm(m.text) === norm(text))) { toast('이미 넣은 곳이에요'); return; }
+    state.musts.push({ text, spotId: null });
+  }
+  renderAsk();
+  $('mustText').focus();
+}
+function rebuildWithMusts() {
+  const c = cityById(state.cityId);
+  const base = state.routes[state.active].kind === 'alt' ? 'alt' : 'classic';
+  const classic = state.routes.find(r => r.kind === 'classic');
+  const r = buildRoute(c, routeOpts(), base, base === 'alt' ? classic.usedIds : new Set());
+  const names = state.musts.map(m => m.text);
+  // 근교에 있는 곳을 골랐으면 몇 일차에, 어떻게 가서, 무엇을 함께 넣었는지 알려 준다
+  const home = plainName(c.name);
+  const tripIds = [...new Set(state.musts.map(m => m.areaId || (m.spotId && c.spots.find(s => s.id === m.spotId).a)))]
+    .filter(id => id && c.areas.find(a => a.id === id).trip);
+  tripIds.reverse().forEach(id => {
+    const a = c.areas.find(x => x.id === id);
+    const di = r.days.map((d, i) => d.area === id ? i : -1).filter(i => i >= 0);
+    if (!di.length) return;
+    const len = r.days[di[0]].part === 'nightA' ? '1박 2일' : tripLength(a);
+    const spots = di.flatMap(i => r.days[i].items.filter(it => it.spot && it.spot.a === id).map(it => it.spot.name));
+    const how = a.nb && a.nb.how ? `${home}에서 ${a.nb.how}` : `${home}에서 가까운 근교`;
+    r.notes.unshift(`${a.name}(${how}) — DAY ${di.map(i => i + 1).join('~')}에 ${len}로 넣었어요. 가는 길·돌아오는 길${spots.length ? `과 함께 ${spots.join(', ')}도 넣었어요.` : '도 함께 넣었어요.'}`);
+  });
+  const route = {
+    kind: 'must', title: '가고 싶은 곳 포함',
+    head: '가고 싶은 곳을 넣어 다시 짠 루트',
+    intro: `${names.map(n => `'${esc(n)}'`).join(', ')}${hasBatchim(names[names.length - 1]) ? '을' : '를'} 넣어서 루트를 다시 짰어요.`,
+    ...r,
+  };
+  const at = state.routes.findIndex(x => x.kind === 'must');
+  if (at >= 0) state.routes[at] = route; else state.routes.push(route);
+  state.active = state.routes.indexOf(route);
+  state.answered = 'done';
+  renderTabs(); renderRoute(); renderAsk(); renderRefs();
+  $('tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function answerNo() {
+  const c = cityById(state.cityId);
+  state.answered = 'no';
+  let at = state.routes.findIndex(r => r.kind === 'alt');
+  if (at < 0) {
+    const classic = state.routes.find(r => r.kind === 'classic');
+    const opts = { ...routeOpts(), mustIds: new Set(), mustAreas: [], customs: [], nearby: {} };
+    const r = buildRoute(c, opts, 'alt', classic.usedIds);
+    state.routes.push({
+      kind: 'alt', title: '다른 루트',
+      head: '근교·숨은 명소를 넣은 다른 루트',
+      intro: '이 전에 추천한 루트 말고 다른 것도 있어요! 대표 명소는 줄이고 근교 여행지와 현지인이 좋아하는 곳을 더 넣었어요.',
+      ...r,
+    });
+    at = state.routes.length - 1;
+  }
+  state.active = at;
+  renderTabs(); renderRoute(); renderAsk(); renderRefs();
+  $('tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ---------- 참고 링크 ---------- */
+function renderRefs() {
+  const c = cityById(state.cityId);
+  const cityName = c.name.replace(/\s*\(.*?\)/, '');
+  const whoWord = { k: '아이와', p: '부모님과', r: '친구와', c: '커플', s: '혼자' }[state.who];
+  const q = `${cityName} ${dayLabel(state.days)} ${whoWord} 여행 코스`;
+  const enc = encodeURIComponent;
+  $('refs').innerHTML = `
+    <h2>블로그·여행 사이트에서 더 보기</h2>
+    <a href="https://search.naver.com/search.naver?where=blog&query=${enc(q)}" target="_blank" rel="noopener">네이버 블로그 후기 <span>${esc(q)} ↗</span></a>
+    <a href="https://www.google.com/search?q=${enc(q)}" target="_blank" rel="noopener">구글 검색 <span>여행 코스 글 모아보기 ↗</span></a>
+    <a href="https://www.tripadvisor.co.kr/Search?q=${enc(cityName)}" target="_blank" rel="noopener">트립어드바이저 <span>${esc(cityName)} 명소 순위·리뷰 ↗</span></a>
+    <a href="https://www.youtube.com/results?search_query=${enc(cityName + ' ' + state.month + '월 여행 브이로그')}" target="_blank" rel="noopener">유튜브 <span>${state.month}월 ${esc(cityName)} 브이로그 ↗</span></a>
+    <p class="fine">추천 루트는 블로그·여행 사이트에서 자주 소개되는 코스를 정리한 예시예요. 영업시간·휴무일·예약 여부는 가기 전에 꼭 확인하세요.</p>`;
+}
+
+renderPlan();
+</script>
+</body>
+</html>
